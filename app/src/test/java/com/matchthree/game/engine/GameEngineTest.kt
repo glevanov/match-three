@@ -2,6 +2,8 @@ package com.matchthree.game.engine
 
 import com.matchthree.game.Boards
 import com.matchthree.game.model.Board
+import com.matchthree.game.model.Gem
+import com.matchthree.game.model.GemType
 import com.matchthree.game.model.Position
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -102,5 +104,73 @@ class GameEngineTest {
         assertTrue(spawnedIds.all { it !in fixtureIds })       // never clash with pre-existing gems
         assertTrue(spawnedIds.all { it !in sessionIds })      // nor with earlier session gems
         assertEquals(spawnedIds.size, spawnedIds.toSet().size) // pairwise distinct
+    }
+
+    @Test
+    fun `each cascade round emits a score step with unique-cell delta and depth`() {
+        val engine = engine()
+        val resolution = engine.resolveSwap(cascadeFixture(), Position(5, 3), Position(4, 3))!!
+
+        val destroys = resolution.steps.filterIsInstance<Step.Destroy>()
+        val scores = resolution.steps.filterIsInstance<Step.Score>()
+        assertTrue("expected a cascade", destroys.size >= 2)
+        assertEquals(destroys.size, scores.size)
+
+        scores.forEachIndexed { index, score ->
+            val destroyed = destroys[index].positions
+            assertEquals(
+                "round ${index + 1}: delta = uniqueCells * 10 * depth",
+                destroyed.size * Scorer.BASE_POINTS_PER_GEM * (index + 1),
+                score.delta,
+            )
+            assertEquals(index + 1, score.cascadeDepth)
+        }
+
+        assertEquals(scores.sumOf { it.delta }, Scorer.totalScore(scores.map { it.delta }))
+    }
+
+    @Test
+    fun `score steps alternate with destroy steps in cascade order`() {
+        val engine = engine()
+        val resolution = engine.resolveSwap(cascadeFixture(), Position(5, 3), Position(4, 3))!!
+
+        val paired = resolution.steps.filter { it is Step.Destroy || it is Step.Score }
+        assertTrue(paired.size >= 4)
+        paired.forEachIndexed { index, step ->
+            // Destroy and Score strictly alternate, Destroy first, per cascade round.
+            val expected = if (index % 2 == 0) "Destroy" else "Score"
+            assertEquals(expected, step::class.simpleName)
+        }
+    }
+
+    @Test
+    fun `reshuffle preserves the gem multiset and restores legal moves`() {
+        val engine = engine()
+        // A 3x6 checker pattern: no pre-existing matches, and the balanced
+        // 6-color multiset makes a match-free legal rearrangement easy to hit.
+        val board = Boards.fromRows(
+            "RYRYRY",
+            "GBGBGB",
+            "YOYOYP",
+        )
+
+        val reshuffled = engine.reshuffle(board)
+        assertTrue("reshuffle should fix a small board", reshuffled != null)
+
+        val originalIds = board.positions().mapNotNull { board.gemAt(it)?.id }.sorted()
+        val shuffledIds = reshuffled!!.positions().mapNotNull { reshuffled.gemAt(it)?.id }.sorted()
+        assertEquals("same gem multiset (ids preserved)", originalIds, shuffledIds)
+
+        assertEquals(0, MatchDetector.findMatches(reshuffled).size)
+        assertTrue(LegalMoveDetector.hasLegalMove(reshuffled))
+    }
+
+    @Test
+    fun `reshuffle returns null when the board cannot be fixed`() {
+        val engine = engine()
+        // A 2x2 board of a single type: every shuffle has matches from the start
+        // and no 3-run can ever be formed, so no legal move can appear.
+        val dead = Board.create(2, 2) { pos -> Gem(pos.row * 2 + pos.col, GemType.fromIndex(0)) }
+        assertNull(engine.reshuffle(dead))
     }
 }
