@@ -31,6 +31,7 @@ import kotlin.math.abs
 class StepPlayer(
     private val config: BoardConfig = BoardConfig(),
     private val onSettled: (Board) -> Unit,
+    private val onScore: (Int) -> Unit = {},
 ) {
     private val _actors = mutableStateMapOf<Int, GemActor>()
 
@@ -79,6 +80,7 @@ class StepPlayer(
         when (step) {
             is Step.Swap -> swapActors(step.a, step.b)
             is Step.Destroy -> destroyActors(step.positions)
+            is Step.Score -> onScore(step.delta) // points accumulate live
             is Step.Fall -> fallActors(step.moves)
             is Step.Spawn -> spawnActors(step.gems)
             is Step.Settled -> Unit // handled in play()

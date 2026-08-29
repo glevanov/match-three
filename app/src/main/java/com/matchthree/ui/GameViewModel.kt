@@ -1,16 +1,21 @@
 package com.matchthree.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.matchthree.game.engine.GameEngine
+import com.matchthree.game.engine.LegalMoveDetector
 import com.matchthree.game.engine.Step
 import com.matchthree.game.model.Board
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.rng.SeededRandom
 import com.matchthree.ui.game.SwapIntent
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * UI-side game state. Pure logic lives in the engine; this ViewModel owns the
@@ -19,6 +24,10 @@ import kotlinx.coroutines.flow.update
  * Input lock (MECHANICS.md/decisions log): while steps are resolving OR a
  * rejection animation is playing, new swap intents are buffered (most recent
  * wins) and executed when the current animation settles. Nothing is dropped.
+ *
+ * M3: score accumulates as Score steps are played; Classic mode runs a
+ * countdown timer (placeholder until the M5 mode menu); Zen mode ends when the
+ * board is dead AND reshuffle fails (MECHANICS.md).
  */
 class GameViewModel : ViewModel() {
 
@@ -28,12 +37,19 @@ class GameViewModel : ViewModel() {
     private var board: Board = engine.newGame()
     private var phase = GamePhase.Idle
     private var bufferedSwap: SwapIntent? = null
+    private var mode = GameMode.CLASSIC
+    private var timerJob: Job? = null
 
-    private val _uiState = MutableStateFlow(GameUiState(board = board, phase = phase))
+    private val _uiState = MutableStateFlow(GameUiState(board = board, phase = phase, mode = mode))
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+
+    init {
+        startTimerIfClassic()
+    }
 
     /** Called by the UI when it starts a swap/drag intent. */
     fun submitSwap(intent: SwapIntent) {
+        if (phase == GamePhase.GameOver) return
         if (phase != GamePhase.Idle) {
             bufferedSwap = intent
             return
@@ -43,12 +59,46 @@ class GameViewModel : ViewModel() {
 
     /** Called by the StepPlayer after it has played a full resolution. */
     fun onStepsPlayed(settledBoard: Board) {
+        if (phase == GamePhase.GameOver) return
         attach(settledBoard)
     }
 
     /** Called by the StepPlayer after an invalid-swap there-and-back. */
     fun onRejectionPlayed() {
+        if (phase == GamePhase.GameOver) return
         attach(board)
+    }
+
+    /** Called by the StepPlayer as each Score step is played back. */
+    fun addScore(delta: Int) {
+        if (phase == GamePhase.GameOver) return
+        _uiState.update { it.copy(score = it.score + delta) }
+    }
+
+    /** M3 placeholder for the M5 mode menu: switching modes starts a new game. */
+    fun setMode(newMode: GameMode) {
+        if (mode == newMode) return
+        mode = newMode
+        restart()
+    }
+
+    /** New game with the current mode (used by the GameOver screen). */
+    fun restart() {
+        timerJob?.cancel()
+        board = engine.newGame()
+        phase = GamePhase.Idle
+        bufferedSwap = null
+        _uiState.update {
+            it.copy(
+                board = board,
+                phase = GamePhase.Idle,
+                pendingPlayback = null,
+                rejectedSwap = null,
+                score = 0,
+                gameOverReason = null,
+            )
+        }
+        startTimerIfClassic()
     }
 
     /**
@@ -106,15 +156,65 @@ class GameViewModel : ViewModel() {
         _uiState.update {
             it.copy(board = board, phase = GamePhase.Idle, pendingPlayback = null, rejectedSwap = null)
         }
+
+        // Board invariants (MECHANICS.md): a dead board is reshuffled; if even
+        // the reshuffle fails there is no way to keep playing.
+        if (!LegalMoveDetector.hasLegalMove(board)) {
+            val reshuffled = engine.reshuffle(board)
+            if (reshuffled == null) {
+                endGame("No moves left")
+                return
+            }
+            bufferedSwap = null // layout changed; stale intents are dropped
+            board = reshuffled
+            _uiState.update { it.copy(board = board) }
+        }
+
         bufferedSwap?.let { swap ->
             bufferedSwap = null
             startResolution(swap)
         }
     }
+
+    private fun endGame(reason: String) {
+        timerJob?.cancel()
+        phase = GamePhase.GameOver
+        bufferedSwap = null
+        _uiState.update {
+            it.copy(phase = GamePhase.GameOver, gameOverReason = reason, pendingPlayback = null, rejectedSwap = null)
+        }
+    }
+
+    /** Classic mode: 75s countdown placeholder (timer spec: M3 detail). */
+    private fun startTimerIfClassic() {
+        timerJob?.cancel()
+        if (mode != GameMode.CLASSIC) {
+            _uiState.update { it.copy(secondsLeft = null) }
+            return
+        }
+        timerJob = viewModelScope.launch {
+            var remaining = CLASSIC_TIMER_SECONDS
+            while (remaining > 0) {
+                _uiState.update { it.copy(secondsLeft = remaining) }
+                delay(1_000)
+                remaining--
+            }
+            _uiState.update { it.copy(secondsLeft = 0) }
+            endGame("Time's up!")
+        }
+    }
+
+    private companion object {
+        /** Placeholder Classic round length; tunable when the M5 menu lands. */
+        const val CLASSIC_TIMER_SECONDS = 75
+    }
 }
 
 /** Input/lock state + what the UI should play next. */
-enum class GamePhase { Idle, Resolving, Rejecting }
+enum class GamePhase { Idle, Resolving, Rejecting, GameOver }
+
+/** M3 placeholder: real mode selection arrives with the M5 menu. */
+enum class GameMode { CLASSIC, ZEN }
 
 data class GameUiState(
     val board: Board,
@@ -122,6 +222,9 @@ data class GameUiState(
     val pendingPlayback: Playback? = null,
     val rejectedSwap: SwapIntent? = null,
     val score: Int = 0,
+    val mode: GameMode = GameMode.CLASSIC,
+    val secondsLeft: Int? = null,
+    val gameOverReason: String? = null,
 )
 
 /** A batch of engine steps handed to the UI for playback. */

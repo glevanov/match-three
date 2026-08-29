@@ -3,6 +3,7 @@ package com.matchthree.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.Position
+import com.matchthree.ui.GameMode
 import com.matchthree.ui.GameViewModel
 import com.matchthree.ui.game.BoardCanvas
 import com.matchthree.ui.game.FrameStats
@@ -34,10 +36,9 @@ import com.matchthree.ui.game.StepPlayer
 import java.util.Locale
 
 /**
- * Minimal M2 game screen: the board, a score placeholder (scoring is M3), a
- * debug control that stresses the worst-case full-board-clear animation and
- * reports the measured frame stats (design decision: Canvas-first rendering is
- * validated against a target frame budget — see ROADMAP.md).
+ * M3 game screen: the board with HUD (score + Classic timer), a placeholder
+ * Classic/Zen mode toggle (the real menu is M5), the debug frame-stress control
+ * from M2, and the GameOver screen when a round ends.
  */
 @Composable
 fun GameScreen(viewModel: GameViewModel = viewModel()) {
@@ -47,7 +48,11 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
     var frameReport by remember { mutableStateOf<FrameStats?>(null) }
 
     val player = remember(config) {
-        StepPlayer(config) { settled -> viewModel.onStepsPlayed(settled) }
+        StepPlayer(
+            config = config,
+            onSettled = { settled -> viewModel.onStepsPlayed(settled) },
+            onScore = { delta -> viewModel.addScore(delta) },
+        )
     }
 
     // Reconcile the actor pool whenever a settlement lands (initial + each move).
@@ -79,50 +84,96 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "Score: ${state.score}",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 8.dp),
+        val gameOverReason = state.gameOverReason
+        if (gameOverReason != null) {
+            GameOverScreen(
+                reason = gameOverReason,
+                score = state.score,
+                onRestart = { viewModel.restart() },
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.95f)
-                    .aspectRatio(1f),
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-                BoardCanvas(
-                    player = player,
-                    config = config,
-                    selected = selected,
-                    modifier = Modifier.fillMaxSize(),
-                    onSelect = { selected = it },
-                    onSwapIntent = { viewModel.submitSwap(it) },
-                )
-            }
-            TextButton(onClick = { viewModel.debugFullClear() }) {
-                Text("debug: worst-case clear (measures frames)")
-            }
-            frameReport?.let { report ->
-                Text(
-                    text = String.format(
-                        Locale.US,
-                        "frames=%d avg=%.1fms p95=%.1fms p99=%.1fms budget=%.1fms withinBudget=%b",
-                        report.sampleCount,
-                        report.avgMillis,
-                        report.p95Millis,
-                        report.p99Millis,
-                        FrameStats.FRAME_BUDGET_MILLIS,
-                        report.withinBudget,
-                    ),
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                // HUD: score, Classic timer, placeholder mode toggle.
+                Row(
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Score: ${state.score}",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    state.secondsLeft?.let { left ->
+                        Text(
+                            text = "Time: $left",
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ModeToggleButton(
+                        label = "Classic",
+                        active = state.mode == GameMode.CLASSIC,
+                        onClick = { viewModel.setMode(GameMode.CLASSIC) },
+                    )
+                    ModeToggleButton(
+                        label = "Zen",
+                        active = state.mode == GameMode.ZEN,
+                        onClick = { viewModel.setMode(GameMode.ZEN) },
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f)
+                        .aspectRatio(1f),
+                ) {
+                    BoardCanvas(
+                        player = player,
+                        config = config,
+                        selected = selected,
+                        modifier = Modifier.fillMaxSize(),
+                        onSelect = { selected = it },
+                        onSwapIntent = { viewModel.submitSwap(it) },
+                    )
+                }
+                TextButton(onClick = { viewModel.debugFullClear() }) {
+                    Text("debug: worst-case clear (measures frames)")
+                }
+                frameReport?.let { report ->
+                    Text(
+                        text = String.format(
+                            Locale.US,
+                            "frames=%d avg=%.1fms p95=%.1fms p99=%.1fms budget=%.1fms withinBudget=%b",
+                            report.sampleCount,
+                            report.avgMillis,
+                            report.p95Millis,
+                            report.p99Millis,
+                            FrameStats.FRAME_BUDGET_MILLIS,
+                            report.withinBudget,
+                        ),
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun ModeToggleButton(label: String, active: Boolean, onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        enabled = !active,
+    ) {
+        Text(label)
     }
 }
