@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +57,7 @@ fun GameScreen(
     var selected by remember { mutableStateOf<Position?>(null) }
     var frameReport by remember { mutableStateOf<FrameStats?>(null) }
     var savedNewHigh by remember { mutableStateOf(false) }
+    var exitConfirmVisible by remember { mutableStateOf(false) }
 
     val player = remember(config) {
         StepPlayer(
@@ -112,6 +115,28 @@ fun GameScreen(
                 onExitToMenu = onExitToMenu,
             )
         } else {
+            // System back exits through the same confirmation as the button.
+            BackHandler { exitConfirmVisible = true }
+            if (exitConfirmVisible) {
+                AlertDialog(
+                    onDismissRequest = { exitConfirmVisible = false },
+                    title = { Text("Exit game?") },
+                    text = { Text("The current round will be lost.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                exitConfirmVisible = false
+                                onExitToMenu()
+                            },
+                        ) { Text("Exit") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { exitConfirmVisible = false }) {
+                            Text("Keep playing")
+                        }
+                    },
+                )
+            }
             Column(
                 modifier = Modifier.fillMaxSize().padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -122,6 +147,9 @@ fun GameScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    TextButton(onClick = { exitConfirmVisible = true }) {
+                        Text("Menu")
+                    }
                     Text(
                         text = "Score: ${state.score}",
                         style = MaterialTheme.typography.titleLarge,
