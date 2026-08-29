@@ -47,11 +47,14 @@ class GameEngine(
 
         var current = board.withSwapped(a, b)
         var rounds = 0
+        var cascadeDepth = 0
         while (true) {
             val matches = MatchDetector.findMatches(current)
             if (matches.isEmpty()) break
             val destroyed = matches.flatMap { it.positions }.toSet()
+            cascadeDepth++
             steps += Step.Destroy(destroyed)
+            steps += Step.Score(Scorer.roundScore(destroyed, cascadeDepth), cascadeDepth)
 
             val gravity = Gravity.apply(current, destroyed)
             if (gravity.falls.isNotEmpty()) steps += Step.Fall(gravity.falls)
@@ -75,9 +78,43 @@ class GameEngine(
         return Resolution(board = current, steps = steps.toList())
     }
 
+    /**
+     * Fisher-Yates reshuffle of the existing gem multiset (MECHANICS.md):
+     * re-validates that the result has no pre-existing match and at least one
+     * legal move. Retries up to [MAX_RESHUFFLE_ATTEMPTS]; returns null when the
+     * board stays dead, which triggers game over in Zen mode.
+     */
+    fun reshuffle(board: Board): Board? {
+        repeat(MAX_RESHUFFLE_ATTEMPTS) {
+            val candidate = shuffleMultiset(board)
+            if (MatchDetector.findMatches(candidate).isEmpty() && LegalMoveDetector.hasLegalMove(candidate)) {
+                return candidate
+            }
+        }
+        return null
+    }
+
+    /** Shuffles the gems into a fresh layout, preserving ids and types. */
+    private fun shuffleMultiset(board: Board): Board {
+        val gems = board.positions().mapNotNull { board.gemAt(it) }.toMutableList()
+        for (i in gems.size - 1 downTo 1) {
+            val j = rng.nextInt(i + 1)
+            val tmp = gems[i]
+            gems[i] = gems[j]
+            gems[j] = tmp
+        }
+        var next = 0
+        return Board.create(board.width, board.height) { position ->
+            if (next < gems.size) gems[next++] else null
+        }
+    }
+
     private companion object {
         /** Safety valve against an unlucky refill streak looping forever. */
         const val MAX_CASCADE_ROUNDS = 1_000
+
+        /** MECHANICS.md: reshuffle retries before handing the board to game over. */
+        const val MAX_RESHUFFLE_ATTEMPTS = 20
     }
 }
 

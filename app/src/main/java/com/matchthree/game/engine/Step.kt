@@ -19,6 +19,9 @@ sealed interface Step {
     /** The gems at these positions are cleared (a run now; blasts/combos later). */
     data class Destroy(val positions: Set<Position>) : Step
 
+    /** Points awarded for one cascade round; depth 1 is the initiating match. */
+    data class Score(val delta: Int, val cascadeDepth: Int) : Step
+
     /** Gems dropping straight down after a clear; one entry per moved gem. */
     data class Fall(val moves: List<FallMove>) : Step {
         data class FallMove(val gemId: Int, val from: Position, val to: Position)
