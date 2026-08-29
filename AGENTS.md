@@ -12,6 +12,7 @@ Android match-three game (Bejeweled-style). Kotlin + Jetpack Compose, no game en
 
 ## Non-negotiable conventions
 
+- **Conventional Commits.** All commit messages use the conventional format: `<type>(<scope>): <subject>` (e.g. `feat(engine): add MatchDetector`, `fix(scoring): dedupe overlapping clears`). Types: feat, fix, docs, test, refactor, chore.
 - **Engine is pure Kotlin.** No Android imports under `game/`. It compiles and tests on the JVM.
 - **Steps, not state.** Engine emits ordered `Step` events; UI plays them back. Don't mutate a single mutable board in place and render it.
 - **Gems have stable `id`s.** Every fall/spawn/carried match keeps the id so animations can track.
