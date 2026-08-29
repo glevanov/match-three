@@ -1,7 +1,9 @@
 package com.matchthree.game.engine
 
 import com.matchthree.game.model.Board
+import com.matchthree.game.model.Gem
 import com.matchthree.game.model.Position
+import com.matchthree.game.model.Special
 
 /** Scans a board for maximal runs of 3+ same-type gems (horizontal and vertical). */
 object MatchDetector {
@@ -23,8 +25,15 @@ object MatchDetector {
                     start++
                     continue
                 }
+                // M4: Hypercubes are colorless and can never be part of a run.
+                if (containsHypercube(first)) {
+                    start++
+                    continue
+                }
                 var end = start + 1
-                while (end < inner && gemAt(board, line, end, horizontal)?.type == first.type) {
+                while (end < inner && !containsHypercube(gemAt(board, line, end, horizontal)) &&
+                    gemAt(board, line, end, horizontal)?.type == first.type
+                ) {
                     end++
                 }
                 if (end - start >= 3) {
@@ -36,6 +45,10 @@ object MatchDetector {
             }
         }
     }
+
+    private fun containsHypercube(gem: Gem?): Boolean =
+        gem?.special == Special.HYPERCUBE
+
 
     private fun gemAt(board: Board, line: Int, index: Int, horizontal: Boolean) =
         if (horizontal) board.gemAt(line, index) else board.gemAt(index, line)

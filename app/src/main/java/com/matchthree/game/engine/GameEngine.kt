@@ -2,14 +2,20 @@ package com.matchthree.game.engine
 
 import com.matchthree.game.model.Board
 import com.matchthree.game.model.BoardConfig
+import com.matchthree.game.model.Gem
 import com.matchthree.game.model.GemType
 import com.matchthree.game.model.Position
+import com.matchthree.game.model.Special
 import com.matchthree.game.rng.SeededRandom
 
 /**
  * The pure-Kotlin game engine (AGENTS.md: engine is pure Kotlin, no Android
  * imports under game/). Consumes a board + swap, and emits an ordered list of
  * [Step]s which the UI plays back for animation.
+ *
+ * M4: the resolution loop also handles special gems — births (one matched gem
+ * transforms, precedence 5 > T/L > 4 > 3), cascade-swept detonation, player
+ * swap combos, and Hypercube+Hypercube board regeneration.
  */
 class GameEngine(
     private val config: BoardConfig = BoardConfig(),
@@ -26,12 +32,18 @@ class GameEngine(
         idSource = idSource,
     ).newBoard()
 
-    /** True if swapping these adjacent cells would create at least one match. */
+    /**
+     * True if swapping these adjacent cells would create a match, OR the swap
+     * puts two specials into contact, OR a Hypercube contacts any gem
+     * (MECHANICS.md: hypercube trigger and the combo table).
+     */
     fun isLegalSwap(board: Board, a: Position, b: Position): Boolean {
         if (!board.isInside(a) || !board.isInside(b)) return false
         if (!a.isOrthogonallyAdjacentTo(b)) return false
         if (board.gemAt(a) == null || board.gemAt(b) == null) return false
-        return MatchDetector.findMatches(board.withSwapped(a, b)).isNotEmpty()
+        val swapped = board.withSwapped(a, b)
+        if (MatchDetector.findMatches(swapped).isNotEmpty()) return true
+        return SpecialRules.swapContactLegal(swapped.gemAt(a), swapped.gemAt(b))
     }
 
     /**
@@ -46,21 +58,84 @@ class GameEngine(
         steps += Step.Swap(a, b)
 
         var current = board.withSwapped(a, b)
-        var rounds = 0
         var cascadeDepth = 0
-        while (true) {
-            val matches = MatchDetector.findMatches(current)
-            if (matches.isEmpty()) break
-            val destroyed = matches.flatMap { it.positions }.toSet()
-            cascadeDepth++
-            steps += Step.Destroy(destroyed)
-            steps += Step.Score(Scorer.roundScore(destroyed, cascadeDepth), cascadeDepth)
+        var rounds = 0
 
-            val gravity = Gravity.apply(current, destroyed)
+        // 1) Player-swap special activation: combos and hypercube triggers fire
+        //    before any match detection (depth-1 round).
+        val swapActivation = swapActivation(current, a, b)
+        if (swapActivation != null) {
+            cascadeDepth = 1
+            steps += Step.ComboActivate(
+                specialA = swapActivation.specialA,
+                specialB = swapActivation.specialB,
+                affectedCells = swapActivation.affected,
+            )
+            steps += Step.Destroy(swapActivation.affected)
+            steps += Step.Score(
+                Scorer.roundScore(swapActivation.affected, cascadeDepth),
+                cascadeDepth,
+            )
+
+            // Hypercube+Hypercube: full-board clear is followed by an immediate
+            // regeneration (invariant-checked by the generator), not a refill.
+            if (swapActivation.regenerate) {
+                val fresh = newGame()
+                steps += Step.Settled(fresh)
+                return Resolution(board = fresh, steps = steps.toList())
+            }
+
+            val gravity = Gravity.apply(current, swapActivation.affected)
             if (gravity.falls.isNotEmpty()) steps += Step.Fall(gravity.falls)
 
             val refill = Refill.fill(
                 board = gravity.board,
+                gemTypeCount = config.gemTypeCount,
+                nextId = idSource::next,
+                gemType = { count -> GemType.fromIndex(rng.nextInt(count)) },
+            )
+            if (refill.spawned.isNotEmpty()) steps += Step.Spawn(refill.spawned)
+            current = refill.board
+            rounds++
+        }
+
+        // 2) Standard cascade loop: match -> (births, swept detonations) ->
+        //    gravity -> refill -> re-check, until the board is stable.
+        while (true) {
+            val matches = MatchDetector.findMatches(current)
+            if (matches.isEmpty()) break
+            cascadeDepth++
+
+            val matched = matches.flatMap { it.positions }.toSet()
+            val extra = SpecialRules.sweptBlastCells(current, matched)
+            val destroyed = matched + extra
+
+            val birth = SpecialRules.resolveBirth(current, matches)
+            val destroyedEx = if (birth != null) destroyed - birth.cell else destroyed
+
+            steps += Step.Destroy(destroyedEx)
+            steps += Step.Score(Scorer.roundScore(destroyedEx, cascadeDepth), cascadeDepth)
+
+            val gravity = Gravity.apply(current, destroyedEx)
+            if (gravity.falls.isNotEmpty()) steps += Step.Fall(gravity.falls)
+
+            // The birth gem is a surviving gem: apply its transformation on the
+            // fallen board (same id, same color, new special kind).
+            var afterBirth = gravity.board
+            if (birth != null) {
+                val finalPos = positionOfGem(afterBirth, birth.gemId)
+                if (finalPos != null) {
+                    val gem = afterBirth.gemAt(finalPos) ?: return null
+                    afterBirth = afterBirth.withGem(
+                        finalPos,
+                        Gem(gem.id, gem.type, birth.special),
+                    )
+                    steps += Step.SpecialBirth(finalPos, gem.id, birth.special)
+                }
+            }
+
+            val refill = Refill.fill(
+                board = afterBirth,
                 gemTypeCount = config.gemTypeCount,
                 nextId = idSource::next,
                 gemType = { count -> GemType.fromIndex(rng.nextInt(count)) },
@@ -108,6 +183,62 @@ class GameEngine(
             if (next < gems.size) gems[next++] else null
         }
     }
+
+    /**
+     * Computes what (if anything) a player swap of two gems activates: a combo
+     * between two specials, or a single hypercube trigger against a normal gem.
+     * Returns null when neither gem is a special (plain match path).
+     */
+    private fun swapActivation(
+        board: Board,
+        a: Position,
+        b: Position,
+    ): SwapActivation? {
+        val gemA = board.gemAt(a)
+        val gemB = board.gemAt(b)
+        val specA = gemA?.special
+        val specB = gemB?.special
+        if (specA == null && specB == null) return null
+
+        // Hypercube against a plain gem: clears every gem of the swapped color
+        // plus the hypercube itself (single-attivator, no combo partner).
+        if (specA == Special.HYPERCUBE && specB == null || specB == Special.HYPERCUBE && specA == null) {
+            val hyperPos = if (specA == Special.HYPERCUBE) a else b
+            val otherPos = if (hyperPos == a) b else a
+            val partner = board.gemAt(otherPos)
+            if (partner == null || partner.special != null) return null
+            val color = partner.type
+            val affected = mutableSetOf(hyperPos)
+            for (pos in board.positions()) {
+                if (board.gemAt(pos)?.type == color) affected += pos
+            }
+            return SwapActivation(
+                specialA = Special.HYPERCUBE,
+                specialB = null,
+                affected = affected,
+                regenerate = false,
+            )
+        }
+
+        // Combo table: the two swapped gems are both specials.
+        if (specA != null && specB != null) {
+            val affected = SpecialRules.comboAffectedCells(board, a, b, specA, specB)
+            val regenerate = specA == Special.HYPERCUBE && specB == Special.HYPERCUBE
+            return SwapActivation(specA, specB, affected, regenerate)
+        }
+        return null
+    }
+
+    private fun positionOfGem(board: Board, gemId: Int): Position? =
+        board.positions().firstOrNull { board.gemAt(it)?.id == gemId }
+
+    /** Result of a player-swap special activation. */
+    private data class SwapActivation(
+        val specialA: Special,
+        val specialB: Special?,
+        val affected: Set<Position>,
+        val regenerate: Boolean,
+    )
 
     private companion object {
         /** Safety valve against an unlucky refill streak looping forever. */

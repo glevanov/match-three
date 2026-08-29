@@ -23,7 +23,10 @@ object LegalMoveDetector {
                 )
                 for (b in neighbors) {
                     if (board.isInside(b) && board.gemAt(b) != null) {
-                        if (MatchDetector.findMatches(board.withSwapped(a, b)).isNotEmpty()) count++
+                        val swapped = board.withSwapped(a, b)
+                        val matchLegal = MatchDetector.findMatches(swapped).isNotEmpty()
+                        val specialLegal = SpecialRules.swapContactLegal(swapped.gemAt(a), swapped.gemAt(b))
+                        if (matchLegal || specialLegal) count++
                     }
                 }
             }

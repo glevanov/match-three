@@ -10,6 +10,7 @@ import com.matchthree.game.engine.Step
 import com.matchthree.game.model.Board
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.Position
+import com.matchthree.game.model.Special
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -58,7 +59,7 @@ class StepPlayer(
                 val gem = board.gemAt(row, col) ?: continue
                 ids[row][col] = gem.id
                 _actors[gem.id]?.snapTo(cellCenter(row, col))
-                    ?: run { _actors[gem.id] = GemActor(gem.id, gem.type, cellCenter(row, col)) }
+                    ?: run { _actors[gem.id] = GemActor(gem.id, gem.type, cellCenter(row, col), gem.special) }
             }
         }
     }
@@ -79,12 +80,19 @@ class StepPlayer(
     private suspend fun playStep(step: Step) {
         when (step) {
             is Step.Swap -> swapActors(step.a, step.b)
+            is Step.ComboActivate -> Unit // the following Destroy animates the clear
+            is Step.SpecialBirth -> markSpecial(step.position, step.gemId, step.special)
             is Step.Destroy -> destroyActors(step.positions)
             is Step.Score -> onScore(step.delta) // points accumulate live
             is Step.Fall -> fallActors(step.moves)
             is Step.Spawn -> spawnActors(step.gems)
             is Step.Settled -> Unit // handled in play()
         }
+    }
+
+    /** Marks an existing actor as a special after a birth step. */
+    private fun markSpecial(position: Position, gemId: Int, special: Special) {
+        _actors[gemId]?.special = special
     }
 
     private suspend fun swapActors(a: Position, b: Position) {
@@ -149,7 +157,7 @@ class StepPlayer(
                     val gem = placement.gem
                     val target = cellCenter(placement.position.row, placement.position.col)
                     val start = Offset(target.x, target.y - distance)
-                    val actor = GemActor(gem.id, gem.type, start)
+                    val actor = GemActor(gem.id, gem.type, start, gem.special)
                     _actors[gem.id] = actor
                     ids[placement.position.row][placement.position.col] = gem.id
                     actor.moveTo(target, fallSpec(distance))

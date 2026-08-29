@@ -5,6 +5,7 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.ui.geometry.Offset
 import com.matchthree.game.engine.Step
 import com.matchthree.game.model.GemType
+import com.matchthree.game.model.Special
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -20,6 +21,7 @@ class GemActor internal constructor(
     val id: Int,
     val type: GemType,
     start: Offset,
+    var special: Special? = null,
 ) {
     // Position progress 0..1 between startPos and endPos.
     private val progress = Animatable(0f)

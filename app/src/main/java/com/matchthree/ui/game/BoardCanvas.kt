@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.IntSize
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.GemType
 import com.matchthree.game.model.Position
+import com.matchthree.game.model.Special
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -70,9 +71,42 @@ fun BoardCanvas(
                 drawCircle(
                     color = Color.Black.copy(alpha = 0.25f),
                     radius = radius,
-                    center = center,
+                    center = centerPixels,
                     style = Stroke(width = max(1f, radius * 0.15f), cap = StrokeCap.Round),
                 )
+            }
+
+            // M4 special markers (simple Canvas marks): Flame = bright core,
+            // Star = white cross, Hypercube = hollow square.
+            when (actor.special) {
+                Special.FLAME -> drawCircle(
+                    color = Color.White.copy(alpha = 0.9f),
+                    radius = radius * 0.35f,
+                    center = centerPixels,
+                )
+                Special.STAR -> {
+                    val arm = radius * 0.55f
+                    val stroke = max(1f, radius * 0.16f)
+                    drawLine(
+                        Color.White.copy(alpha = 0.9f),
+                        Offset(centerPixels.x - arm, centerPixels.y - arm),
+                        Offset(centerPixels.x + arm, centerPixels.y + arm),
+                        strokeWidth = stroke,
+                    )
+                    drawLine(
+                        Color.White.copy(alpha = 0.9f),
+                        Offset(centerPixels.x - arm, centerPixels.y + arm),
+                        Offset(centerPixels.x + arm, centerPixels.y - arm),
+                        strokeWidth = stroke,
+                    )
+                }
+                Special.HYPERCUBE -> drawRect(
+                    color = Color.White.copy(alpha = 0.9f),
+                    topLeft = Offset(centerPixels.x - radius * 0.45f, centerPixels.y - radius * 0.45f),
+                    size = Size(radius * 0.9f, radius * 0.9f),
+                    style = Stroke(width = max(1f, radius * 0.16f)),
+                )
+                null -> Unit
             }
         }
 
