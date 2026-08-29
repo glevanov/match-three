@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.matchthree.BuildConfig
 import com.matchthree.data.HighScoreStore
 import com.matchthree.data.HighScores
 import com.matchthree.game.model.BoardConfig
@@ -151,25 +152,27 @@ fun GameScreen(
                         onSwapIntent = { viewModel.submitSwap(it) },
                     )
                 }
-                TextButton(onClick = { viewModel.debugFullClear() }) {
-                    Text("debug: worst-case clear (measures frames)")
-                }
-                frameReport?.let { report ->
-                    Text(
-                        text = String.format(
-                            Locale.US,
-                            "frames=%d avg=%.1fms p95=%.1fms p99=%.1fms budget=%.1fms withinBudget=%b",
-                            report.sampleCount,
-                            report.avgMillis,
-                            report.p95Millis,
-                            report.p99Millis,
-                            FrameStats.FRAME_BUDGET_MILLIS,
-                            report.withinBudget,
-                        ),
-                        fontSize = 10.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                if (BuildConfig.DEBUG) {
+                    TextButton(onClick = { viewModel.debugFullClear() }) {
+                        Text("debug: worst-case clear (measures frames)")
+                    }
+                    frameReport?.let { report ->
+                        Text(
+                            text = String.format(
+                                Locale.US,
+                                "frames=%d avg=%.1fms p95=%.1fms p99=%.1fms budget=%.1fms withinBudget=%b",
+                                report.sampleCount,
+                                report.avgMillis,
+                                report.p95Millis,
+                                report.p99Millis,
+                                FrameStats.FRAME_BUDGET_MILLIS,
+                                report.withinBudget,
+                            ),
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
             }
         }
