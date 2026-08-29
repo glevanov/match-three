@@ -1,14 +1,19 @@
 package com.matchthree
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.matchthree.ui.screens.GameScreen
+import com.matchthree.ui.theme.MatchThreeTheme
 
-/**
- * Minimal entry point for Milestone 1.
- * UI (Compose) lands in Milestone 2; the engine is entirely under [com.matchthree.game].
- */
-class MainActivity : Activity() {
+/** M2: Compose shell hosting the game screen. */
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent {
+            MatchThreeTheme {
+                GameScreen()
+            }
+        }
     }
 }
