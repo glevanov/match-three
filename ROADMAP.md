@@ -4,7 +4,7 @@ Progress tracker. Update checkboxes as milestones land.
 
 - [x] **M1 — Engine core** — Board, swap validation, MatchDetector, Gravity, Refill, SeededRandom. JVM unit tests incl. simulated board validation (9×9/6).
 - [x] **M2 — UI render & input** (p95=16.71 within 16.67 budget on Pixel 8) — Single-Canvas board, drag-to-swap + tap fallback, animation playback of Step events. Frame-time measured on worst case (full-board clear).
-- [ ] **M3 — Scoring & timer** — Cascade scoping, HUD (score/time), Classic timer, GameOver screen.
+- [x] **M3 — Scoring & timer** — Step.Score emission, Scorer (unique-cell, linear depth), HUD score/time, Classic 75s placeholder timer, dead-board reshuffle + game over, GameOverScreen placeholder.
 - [ ] **M4 — Specials & combos** — Birth/precedence rules, all 6 combo pairs, unique-cell scoring tests.
 - [ ] **M5 — Modes & polish** — Menu screen, Classic/Zen selection, high scores (DataStore), sounds/haptics optional.
 
@@ -20,3 +20,4 @@ others clear |
 | Cascade-swept specials | They detonate |
 | Unique-cell scoring | Set<Position>, tested |
 | Game over | Timer (Classic) or dead board + failed reshuffle (Zen) |
+| Classic timer (M3) | 75 s placeholder per round, no bonuses yet |

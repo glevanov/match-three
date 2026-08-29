@@ -56,8 +56,9 @@ Fire when a player swap swaps two specials. Emits `Step.ComboActivate(specialA, 
 
 ## Game over
 
-- **Classic mode:** ends on timer expiry (timer spec to be detailed in Milestone 3).
+- **Classic mode:** ends on timer expiry. Timer spec (defined in M3): **75 s per round**, a tunable constant (`GameViewModel.CLASSIC_TIMER_SECONDS`); no time bonuses in v1 (candidate tuning item for later).
 - **Zen mode:** ends only when the board is dead AND reshuffle has failed after 20 retries.
+- Both modes: a dead board (no legal moves) triggers a reshuffle; if the reshuffle cannot find a playable layout after 20 attempts, the round ends.
 
 ## Explicit non-goals for v1
 
