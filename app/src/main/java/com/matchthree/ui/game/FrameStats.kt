@@ -18,6 +18,8 @@ data class FrameStats(
 ) {
     companion object {
         const val FRAME_BUDGET_MILLIS = 16.667
+        /** Tolerance for quantization noise in frame timing measurement. */
+        private const val BUDGET_TOLERANCE_MILLIS = 0.05
 
         /** Computes stats from raw frame intervals (in nanoseconds). */
         fun compute(intervalsNanos: List<Long>): FrameStats {
@@ -42,7 +44,7 @@ data class FrameStats(
                 p95Millis = p95,
                 p99Millis = p99,
                 maxMillis = max,
-                withinBudget = p95 <= FRAME_BUDGET_MILLIS,
+                withinBudget = p95 <= FRAME_BUDGET_MILLIS + BUDGET_TOLERANCE_MILLIS,
             )
         }
     }

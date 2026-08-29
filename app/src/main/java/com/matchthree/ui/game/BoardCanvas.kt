@@ -57,14 +57,14 @@ fun BoardCanvas(
 
         // All gems in one pass.
         for (actor in player.actors.values) {
-            if (actor.alpha.value <= 0f) continue
-            val center = Offset(actor.x.value * cellSize, actor.y.value * cellSize)
-            val radius = cellSize * 0.36f * actor.scale.value
+            if (actor.alpha <= 0f) continue
+            val centerPixels = Offset(actor.x * cellSize, actor.y * cellSize)
+            val radius = cellSize * 0.36f * actor.scale
             drawCircle(
                 color = actor.type.color(),
                 radius = radius,
-                center = center,
-                alpha = actor.alpha.value,
+                center = centerPixels,
+                alpha = actor.alpha,
             )
             if (radius >= 2f) {
                 drawCircle(
