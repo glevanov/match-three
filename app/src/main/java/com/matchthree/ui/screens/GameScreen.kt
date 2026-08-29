@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.matchthree.data.HighScoreStore
+import com.matchthree.data.HighScores
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.Position
 import com.matchthree.ui.GameMode
@@ -36,16 +38,22 @@ import com.matchthree.ui.game.StepPlayer
 import java.util.Locale
 
 /**
- * M3 game screen: the board with HUD (score + Classic timer), a placeholder
- * Classic/Zen mode toggle (the real menu is M5), the debug frame-stress control
- * from M2, and the GameOver screen when a round ends.
+ * M5 game screen: the board with HUD (score + Classic timer), started in the
+ * mode chosen on the menu screen. Game-over saves the high score and offers
+ * Play again / Back to menu. The debug frame-stress control from M2 remains.
  */
 @Composable
-fun GameScreen(viewModel: GameViewModel = viewModel()) {
+fun GameScreen(
+    mode: GameMode,
+    store: HighScoreStore,
+    onExitToMenu: () -> Unit,
+    viewModel: GameViewModel = viewModel(factory = GameViewModel.factory(mode)),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val config = remember { BoardConfig() }
     var selected by remember { mutableStateOf<Position?>(null) }
     var frameReport by remember { mutableStateOf<FrameStats?>(null) }
+    var savedNewHigh by remember { mutableStateOf(false) }
 
     val player = remember(config) {
         StepPlayer(
@@ -80,6 +88,14 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
         viewModel.onRejectionPlayed()
     }
 
+    // Persist a new high score exactly once when a round ends.
+    LaunchedEffect(state.gameOverReason) {
+        val reason = state.gameOverReason ?: return@LaunchedEffect
+        savedNewHigh = store.saveIfBeats(state.mode, state.score)
+    }
+
+    val scores by store.scores.collectAsStateWithLifecycle(initialValue = HighScores())
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -89,7 +105,10 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             GameOverScreen(
                 reason = gameOverReason,
                 score = state.score,
+                highScore = maxOf(scores.forMode(mode), state.score),
+                isNewHighScore = savedNewHigh,
                 onRestart = { viewModel.restart() },
+                onExitToMenu = onExitToMenu,
             )
         } else {
             Column(
@@ -97,7 +116,6 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                // HUD: score, Classic timer, placeholder mode toggle.
                 Row(
                     modifier = Modifier.padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -113,20 +131,10 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                             style = MaterialTheme.typography.titleLarge,
                         )
                     }
-                }
-                Row(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ModeToggleButton(
-                        label = "Classic",
-                        active = state.mode == GameMode.CLASSIC,
-                        onClick = { viewModel.setMode(GameMode.CLASSIC) },
-                    )
-                    ModeToggleButton(
-                        label = "Zen",
-                        active = state.mode == GameMode.ZEN,
-                        onClick = { viewModel.setMode(GameMode.ZEN) },
+                    Text(
+                        text = if (mode == GameMode.CLASSIC) "Classic" else "Zen",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     )
                 }
                 Box(
@@ -165,15 +173,5 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ModeToggleButton(label: String, active: Boolean, onClick: () -> Unit) {
-    TextButton(
-        onClick = onClick,
-        enabled = !active,
-    ) {
-        Text(label)
     }
 }

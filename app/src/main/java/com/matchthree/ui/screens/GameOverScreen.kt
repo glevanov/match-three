@@ -9,19 +9,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * M3 placeholder game-over screen. Polish (high scores, mode menu) is M5.
+ * M5 game-over screen: final score, mode high score (with a "new high score"
+ * note when the round beat it), Play again, and a Back-to-menu button.
  */
 @Composable
 fun GameOverScreen(
     reason: String,
     score: Int,
+    highScore: Int,
+    isNewHighScore: Boolean,
     onRestart: () -> Unit,
+    onExitToMenu: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
@@ -42,9 +47,27 @@ fun GameOverScreen(
             text = "Score: $score",
             style = MaterialTheme.typography.titleLarge,
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        if (isNewHighScore) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "New high score!",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Best: $highScore",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+        )
+        Spacer(modifier = Modifier.height(32.dp))
         Button(onClick = onRestart) {
             Text("Play again")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(onClick = onExitToMenu) {
+            Text("Menu")
         }
     }
 }

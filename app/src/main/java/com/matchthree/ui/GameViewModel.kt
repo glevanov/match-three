@@ -1,7 +1,10 @@
 package com.matchthree.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.matchthree.game.engine.GameEngine
 import com.matchthree.game.engine.LegalMoveDetector
 import com.matchthree.game.engine.Step
@@ -26,10 +29,21 @@ import kotlinx.coroutines.launch
  * wins) and executed when the current animation settles. Nothing is dropped.
  *
  * M3: score accumulates as Score steps are played; Classic mode runs a
- * countdown timer (placeholder until the M5 mode menu); Zen mode ends when the
- * board is dead AND reshuffle fails (MECHANICS.md).
+ * countdown timer; Zen mode ends when the board is dead AND reshuffle fails
+ * (MECHANICS.md). M5: the mode is chosen on the menu screen and passed in at
+ * construction via the companion [factory].
  */
-class GameViewModel : ViewModel() {
+class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
+
+    companion object {
+        /** Creates a ViewModel for the given mode (used by the M5 menu). */
+        fun factory(mode: GameMode): ViewModelProvider.Factory = viewModelFactory {
+            initializer { GameViewModel(mode) }
+        }
+
+        /** Placeholder Classic round length; tunable when the M5 menu lands. */
+        const val CLASSIC_TIMER_SECONDS = 75
+    }
 
     private val config = BoardConfig()
     private val engine = GameEngine(config, rng = SeededRandom(System.nanoTime()))
@@ -37,7 +51,7 @@ class GameViewModel : ViewModel() {
     private var board: Board = engine.newGame()
     private var phase = GamePhase.Idle
     private var bufferedSwap: SwapIntent? = null
-    private var mode = GameMode.CLASSIC
+    private var mode = initialMode
     private var timerJob: Job? = null
 
     private val _uiState = MutableStateFlow(GameUiState(board = board, phase = phase, mode = mode))
@@ -73,13 +87,6 @@ class GameViewModel : ViewModel() {
     fun addScore(delta: Int) {
         if (phase == GamePhase.GameOver) return
         _uiState.update { it.copy(score = it.score + delta) }
-    }
-
-    /** M3 placeholder for the M5 mode menu: switching modes starts a new game. */
-    fun setMode(newMode: GameMode) {
-        if (mode == newMode) return
-        mode = newMode
-        restart()
     }
 
     /** New game with the current mode (used by the GameOver screen). */
@@ -203,17 +210,12 @@ class GameViewModel : ViewModel() {
             endGame("Time's up!")
         }
     }
-
-    private companion object {
-        /** Placeholder Classic round length; tunable when the M5 menu lands. */
-        const val CLASSIC_TIMER_SECONDS = 75
-    }
 }
 
 /** Input/lock state + what the UI should play next. */
 enum class GamePhase { Idle, Resolving, Rejecting, GameOver }
 
-/** M3 placeholder: real mode selection arrives with the M5 menu. */
+/** Game mode chosen on the M5 menu screen. */
 enum class GameMode { CLASSIC, ZEN }
 
 data class GameUiState(
