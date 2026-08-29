@@ -2,7 +2,7 @@
 
 Progress tracker. Update checkboxes as milestones land.
 
-- [ ] **M1 — Engine core** — Board, swap validation, MatchDetector, Gravity, Refill, SeededRandom. JVM unit tests incl. simulated board validation (9×9/6).
+- [x] **M1 — Engine core** — Board, swap validation, MatchDetector, Gravity, Refill, SeededRandom. JVM unit tests incl. simulated board validation (9×9/6).
 - [ ] **M2 — UI render & input** — Single-Canvas board, drag-to-swap + tap fallback, animation playback of Step events. Frame-time measured on worst case (full-board clear).
 - [ ] **M3 — Scoring & timer** — Cascade scoping, HUD (score/time), Classic timer, GameOver screen.
 - [ ] **M4 — Specials & combos** — Birth/precedence rules, all 6 combo pairs, unique-cell scoring tests.
