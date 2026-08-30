@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +31,12 @@ fun MenuScreen(
 ) {
     val scores by store.scores.collectAsStateWithLifecycle(initialValue = HighScores())
 
+    // Dark surface matching the game screen; without it the window background
+    // leaks through and light-scheme text is unreadable in light mode.
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -59,6 +66,7 @@ fun MenuScreen(
             highScore = scores.zen,
             onClick = { onSelectMode(GameMode.ZEN) },
         )
+    }
     }
 }
 

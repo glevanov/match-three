@@ -5,7 +5,7 @@ Game rules live in [MECHANICS.md](MECHANICS.md); plan and progress in [ROADMAP.m
 
 ## Tech stack
 
-- **Kotlin + Jetpack Compose** — no game engine; keeps the APK small and builds fast. Rendering is **single-`Canvas`-first** (all gem positions driven from animatable state); per-composable-per-gem is a known perf trap, fallback only.
+- **Kotlin + Jetpack Compose** — no game engine; keeps the APK small and builds fast. Rendering is **single-`Canvas`-first** (all gem positions driven from animatable state); per-composable-per-gem is a known perf trap, fallback only. Gem art lives in `app/src/main/assets` (PNG sprites decoded by `GemSprites` and aspect-fit into cells); Flame/Star specials are center overlays on the color sprite, Hypercube has its own sprite (originals for re-export stay in repo-root `assets/`).
 - **Gradle / AGP** — `./gradlew assembleDebug`, `adb install`.
 - **JUnit** — the engine is pure Kotlin with no Android imports; game logic is JVM-testable.
 

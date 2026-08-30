@@ -8,10 +8,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.GemType
 import com.matchthree.game.model.Position
@@ -60,64 +66,59 @@ fun BoardCanvas(
         for (actor in player.actors.values) {
             if (actor.alpha <= 0f) continue
             val centerPixels = Offset(actor.x * cellSize, actor.y * cellSize)
-            val radius = cellSize * 0.36f * actor.scale
-            drawCircle(
-                color = actor.type.color(),
-                radius = radius,
-                center = centerPixels,
-                alpha = actor.alpha,
-            )
-            if (radius >= 2f) {
-                drawCircle(
-                    color = Color.Black.copy(alpha = 0.25f),
-                    radius = radius,
-                    center = centerPixels,
-                    style = Stroke(width = max(1f, radius * 0.15f), cap = StrokeCap.Round),
-                )
-            }
-
-            // M4 special markers (simple Canvas marks): Flame = bright core,
-            // Star = white cross, Hypercube = hollow square.
-            when (actor.special) {
-                Special.FLAME -> drawCircle(
-                    color = Color.White.copy(alpha = 0.9f),
-                    radius = radius * 0.35f,
-                    center = centerPixels,
-                )
-                Special.STAR -> {
-                    val arm = radius * 0.55f
-                    val stroke = max(1f, radius * 0.16f)
-                    drawLine(
-                        Color.White.copy(alpha = 0.9f),
-                        Offset(centerPixels.x - arm, centerPixels.y - arm),
-                        Offset(centerPixels.x + arm, centerPixels.y + arm),
-                        strokeWidth = stroke,
+            val sprite = GemSprites.spriteFor(actor.special, actor.type)
+            if (sprite != null) {
+                // Sprite spans most of the cell; the remainder is gutter between gems.
+                val gemSpan = cellSize * GemSprites.GEM_WIDTH_FRACTION * actor.scale
+                drawCentered(sprite, centerPixels, gemSpan, actor.alpha)
+                // Special overlays: Flame sits small in the middle, Star spans
+                // the gem at half opacity (see GemSprites).
+                val overlay = GemSprites.overlayFor(actor.special)
+                if (overlay != null) {
+                    val overlaySpan = gemSpan * GemSprites.overlayFraction(actor.special)
+                    drawCentered(
+                        overlay,
+                        centerPixels,
+                        overlaySpan,
+                        actor.alpha * GemSprites.overlayAlpha(actor.special),
                     )
-                    drawLine(
-                        Color.White.copy(alpha = 0.9f),
-                        Offset(centerPixels.x - arm, centerPixels.y + arm),
-                        Offset(centerPixels.x + arm, centerPixels.y - arm),
-                        strokeWidth = stroke,
-                    )
+                    // Outlines traced from the sprite's alpha channel so they hug
+                    // the silhouette (flame, sparkle) instead of its bounding box.
+                    val outline = GemSprites.outlineFor(actor.special)
+                    if (outline != null) {
+                        val scale = overlaySpan / maxOf(overlay.width, overlay.height)
+                        val matrix = androidx.compose.ui.graphics.Matrix().apply {
+                            translate(centerPixels.x - overlay.width * scale / 2f, centerPixels.y - overlay.height * scale / 2f)
+                            scale(scale, scale)
+                        }
+                        val color = when (actor.special) {
+                            Special.FLAME -> Color.Black
+                            Special.STAR -> Color.White.copy(alpha = GemSprites.STAR_OUTLINE_ALPHA)
+                            else -> Color.Unspecified
+                        }
+                        drawScaledPath(
+                            outline,
+                            color,
+                            matrix,
+                            strokePx = 2f / scale,
+                            alpha = actor.alpha * GemSprites.outlineAlpha(actor.special),
+                        )
+                    }
                 }
-                Special.HYPERCUBE -> drawRect(
-                    color = Color.White.copy(alpha = 0.9f),
-                    topLeft = Offset(centerPixels.x - radius * 0.45f, centerPixels.y - radius * 0.45f),
-                    size = Size(radius * 0.9f, radius * 0.9f),
-                    style = Stroke(width = max(1f, radius * 0.16f)),
-                )
-                null -> Unit
+            } else {
+                drawCenteredCircle(actor, centerPixels, cellSize)
             }
         }
 
-        // Selection ring for the tap-tap fallback.
+        // Selection marker for the tap-tap fallback: white outline around the
+        // cell, roughly tracking the square silhouette of the gem sprites.
         if (selected != null) {
-            val c = Offset((selected.col + 0.5f) * cellSize, (selected.row + 0.5f) * cellSize)
-            drawCircle(
+            val topLeft = Offset(selected.col * cellSize, selected.row * cellSize)
+            drawRect(
                 color = Color.White,
-                radius = cellSize * 0.42f,
-                center = c,
-                style = Stroke(width = 2f),
+                topLeft = topLeft,
+                size = Size(cellSize, cellSize),
+                style = Stroke(width = max(2f, cellSize * 0.035f)),
             )
         }
     }
@@ -205,13 +206,58 @@ private fun neighborInDominantAxis(
     return if (target.row in 0 until rows && target.col in 0 until columns) target else null
 }
 
-private fun GemType.color(): Color = when (this) {
-    GemType.RED -> Color(0xFFE53935)
-    GemType.GREEN -> Color(0xFF43A047)
-    GemType.BLUE -> Color(0xFF1E88E5)
-    GemType.YELLOW -> Color(0xFFFDD835)
-    GemType.PURPLE -> Color(0xFF8E24AA)
-    GemType.ORANGE -> Color(0xFFFB8C00)
+private val GEM_COLORS = mapOf(
+    GemType.RED to Color(0xFFE53935),
+    GemType.GREEN to Color(0xFF43A047),
+    GemType.BLUE to Color(0xFF1E88E5),
+    GemType.YELLOW to Color(0xFFFDD835),
+    GemType.PURPLE to Color(0xFF8E24AA),
+    GemType.ORANGE to Color(0xFFFB8C00),
+)
+
+/** Draws [path] with [matrix] applied, using a stroke of [strokePx] in the path's own space. */
+private fun DrawScope.drawScaledPath(path: Path, color: Color, matrix: Matrix, strokePx: Float, alpha: Float) {
+    if (color == Color.Unspecified) return
+    withTransform({ transform(matrix) }) {
+        drawPath(
+            path = path,
+            color = color,
+            alpha = alpha,
+            style = Stroke(width = strokePx),
+        )
+    }
+}
+
+/** Draws [image] centered at [center], fit inside [span]px with aspect preserved, at [alpha]. */
+private fun DrawScope.drawCentered(image: ImageBitmap, center: Offset, span: Float, alpha: Float) {
+    val scale = span.coerceAtLeast(1f) / maxOf(image.width, image.height)
+    val dw = (image.width * scale).roundToInt()
+    val dh = (image.height * scale).roundToInt()
+    drawImage(
+        image = image,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(image.width, image.height),
+        dstOffset = IntOffset(
+            (center.x - dw / 2f).roundToInt(),
+            (center.y - dh / 2f).roundToInt(),
+        ),
+        dstSize = IntSize(dw, dh),
+        alpha = alpha,
+    )
+}
+
+/** Circle fallback when sprite art is unavailable (pre-load tests, missing PNG). */
+private fun DrawScope.drawCenteredCircle(actor: GemActor, center: Offset, cellSize: Float) {
+    val radius = cellSize * 0.36f * actor.scale
+    if (radius < 2f) return
+    val color = GEM_COLORS[actor.type] ?: Color.Magenta
+    drawCircle(color = color, radius = radius, center = center, alpha = actor.alpha)
+    drawCircle(
+        color = Color.Black.copy(alpha = 0.25f),
+        radius = radius,
+        center = center,
+        style = Stroke(width = max(1f, radius * 0.15f)),
+    )
 }
 
 private val BOARD_BACKGROUND = Color(0xFF263238)

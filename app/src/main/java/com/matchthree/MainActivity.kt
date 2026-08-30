@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.matchthree.data.HighScoreStore
 import com.matchthree.data.highScoreStore
 import com.matchthree.ui.GameMode
+import com.matchthree.ui.game.GemSprites
 import com.matchthree.ui.screens.GameScreen
 import com.matchthree.ui.screens.MenuScreen
 import com.matchthree.ui.theme.MatchThreeTheme
@@ -29,6 +30,7 @@ import com.matchthree.ui.theme.MatchThreeTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        GemSprites.load(applicationContext.assets)
         setContent {
             MatchThreeTheme {
                 val context = LocalContext.current
