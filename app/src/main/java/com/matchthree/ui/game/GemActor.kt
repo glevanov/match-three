@@ -56,31 +56,8 @@ class GemActor internal constructor(
         progress.animateTo(1f, spec)
     }
 
-    /**
-     * Places the gem at [position] with progress already settled.
-     * Used for batch-pinning before batch fall/spawn (keeps per-actor bookkeeping).
-     */
-    suspend fun setPosition(position: Offset) {
-        progress.snapTo(1f)
-        startPos = position
-        endPos = position
-    }
-
-    /** Begin fall from current position toward [target] over [spec], progress 0->1. */
-    suspend fun fallTo(target: Offset, spec: AnimationSpec<Float>) {
-        progress.snapTo(0f)
-        startPos = Offset(x, y)
-        endPos = target
-        progress.animateTo(1f, spec)
-    }
-
     /** Vanish (scale+alpha -> 0) over [spec]. */
     suspend fun vanish(spec: AnimationSpec<Float>) {
         scaleAlpha.animateTo(0f, spec)
-    }
-
-    /** Restore visible state (used at start of vanish if re-shown). */
-    suspend fun show() {
-        scaleAlpha.snapTo(1f)
     }
 }

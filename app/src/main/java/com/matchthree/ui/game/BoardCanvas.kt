@@ -48,6 +48,11 @@ fun BoardCanvas(
     Canvas(
         modifier = modifier.boardInput(player, config, selected, onSelect, onSwapIntent),
     ) {
+        // Square-board assumption: cellSize from minDimension/config.width is
+        // only correct while width == height (BoardConfig is locked 9x9 today).
+        // A non-square config would need letterboxed cell math —
+        // min(w/width, h/height) plus a centering origin offset — or the grid
+        // and gem placement silently misalign.
         val cellSize = size.minDimension / config.width
 
         // Board background + faint grid.
@@ -87,7 +92,7 @@ fun BoardCanvas(
                     val outline = GemSprites.outlineFor(actor.special)
                     if (outline != null) {
                         val scale = overlaySpan / maxOf(overlay.width, overlay.height)
-                        val matrix = androidx.compose.ui.graphics.Matrix().apply {
+                        val matrix = Matrix().apply {
                             translate(centerPixels.x - overlay.width * scale / 2f, centerPixels.y - overlay.height * scale / 2f)
                             scale(scale, scale)
                         }
