@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MatchThree" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.MatchThree" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <!-- Pre-Android 12 launch theme. core-splashscreen replicates the system
+         splash; per its adaptive-icon guidance the icon is the adaptive
+         foreground and its background layer goes under it as icon background. -->
+    <style name="Theme.MatchThree.Splash" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.MatchThree</item>
+    </style>
 </resources>
