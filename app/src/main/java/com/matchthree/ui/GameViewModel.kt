@@ -1,5 +1,6 @@
 package com.matchthree.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,12 @@ import kotlinx.coroutines.launch
 /**
  * UI-side game state. Pure logic lives in the engine; this ViewModel owns the
  * run loop: submit -> engine resolves -> steps handed to the UI to play back.
+ *
+ * The UI receives work as an ORDERED op queue ([GameUiState.pendingOps]) that
+ * exactly one consumer drains sequentially. StepPlayer animation state is only
+ * ever mutated from that one consumer coroutine: two coroutines touching the
+ * same GemActor cancel each other's Animatable runs (MutatorMutex), which used
+ * to abort playback before the settle callback and wedge the phase for good.
  *
  * Input lock (MECHANICS.md/decisions log): while steps are resolving OR a
  * rejection animation is playing, new swap intents are buffered (most recent
@@ -108,8 +115,7 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
             it.copy(
                 board = board,
                 phase = GamePhase.Idle,
-                pendingPlayback = null,
-                rejectedSwap = null,
+                pendingOps = emptyList(),
                 score = 0,
                 gameOverReason = null,
             )
@@ -132,46 +138,50 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
         }
         val steps = listOf(destroyedStep, Step.Spawn(placements), Step.Settled(target))
         phase = GamePhase.Resolving
-        _uiState.update {
-            it.copy(
-                phase = GamePhase.Resolving,
-                pendingPlayback = Playback(
-                    label = "debug full-board-clear (81 gems)",
-                    steps = steps,
-                    measureFrames = true,
-                ),
+        enqueue(
+            BoardOp.Play(
+                label = "debug full-board-clear (81 gems)",
+                steps = steps,
+                measureFrames = true,
             )
-        }
+        )
+        _uiState.update { it.copy(phase = GamePhase.Resolving) }
     }
 
     private fun startResolution(intent: SwapIntent) {
         val resolved = engine.resolveSwap(board, intent.a, intent.b)
         if (resolved == null) {
             phase = GamePhase.Rejecting
-            _uiState.update {
-                it.copy(phase = GamePhase.Rejecting, rejectedSwap = intent)
-            }
+            enqueue(BoardOp.Reject(intent))
+            _uiState.update { it.copy(phase = GamePhase.Rejecting) }
             return
         }
         phase = GamePhase.Resolving
-        _uiState.update {
-            it.copy(
-                phase = GamePhase.Resolving,
-                pendingPlayback = Playback(
-                    label = "swap @(${intent.a.row},${intent.a.col})<->(${intent.b.row},${intent.b.col})",
-                    steps = resolved.steps,
-                    measureFrames = false,
-                ),
+        enqueue(
+            BoardOp.Play(
+                label = "swap @(${intent.a.row},${intent.a.col})<->(${intent.b.row},${intent.b.col})",
+                steps = resolved.steps,
+                measureFrames = false,
             )
+        )
+        _uiState.update { it.copy(phase = GamePhase.Resolving) }
+    }
+
+    private fun enqueue(vararg ops: BoardOp) {
+        _uiState.update { it.copy(pendingOps = it.pendingOps + ops) }
+    }
+
+    /** Called by the UI after it has consumed (played) [op]. */
+    fun onOpConsumed(op: BoardOp) {
+        _uiState.update { state ->
+            state.copy(pendingOps = state.pendingOps - op)
         }
     }
 
     private fun attach(settledBoard: Board) {
         board = settledBoard
         phase = GamePhase.Idle
-        _uiState.update {
-            it.copy(board = board, phase = GamePhase.Idle, pendingPlayback = null, rejectedSwap = null)
-        }
+        _uiState.update { it.copy(board = board, phase = GamePhase.Idle) }
 
         // Board invariants (MECHANICS.md): a dead board is reshuffled; if even
         // the reshuffle fails there is no way to keep playing.
@@ -183,6 +193,7 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
             }
             bufferedSwap = null // layout changed; stale intents are dropped
             board = reshuffled
+            enqueue(BoardOp.Resync(board))
             _uiState.update { it.copy(board = board) }
         }
 
@@ -204,9 +215,11 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
     private fun endGame(reason: String) {
         timerJob?.cancel()
         phase = GamePhase.GameOver
-        bufferedSwap = null
+        // Queued ops intentionally survive: the UI drains what's left (a
+        // resolution's own callbacks re-check the phase and no-op), then
+        // settles the actor pool onto the final board before GameOver shows.
         _uiState.update {
-            it.copy(phase = GamePhase.GameOver, gameOverReason = reason, pendingPlayback = null, rejectedSwap = null)
+            it.copy(phase = GamePhase.GameOver, gameOverReason = reason)
         }
     }
 
@@ -239,17 +252,31 @@ enum class GameMode { CLASSIC, ZEN }
 data class GameUiState(
     val board: Board,
     val phase: GamePhase,
-    val pendingPlayback: Playback? = null,
-    val rejectedSwap: SwapIntent? = null,
+    /** Ordered work for the UI's single consumer; drained front-to-back. */
+    val pendingOps: List<BoardOp> = emptyList(),
     val score: Int = 0,
     val mode: GameMode = GameMode.CLASSIC,
     val secondsLeft: Int? = null,
     val gameOverReason: String? = null,
 )
 
-/** A batch of engine steps handed to the UI for playback. */
-data class Playback(
-    val label: String,
-    val steps: List<Step>,
-    val measureFrames: Boolean = false,
-)
+/**
+ * One unit of ordered UI work. The UI drains [GameUiState.pendingOps]
+ * sequentially from a single coroutine — the only writer of StepPlayer
+ * animation state — so playback, rejection and resync can never interleave
+ * and cancel each other's actor animations.
+ */
+sealed interface BoardOp {
+    /** A batch of engine steps handed to the UI for playback. */
+    data class Play(
+        val label: String,
+        val steps: List<Step>,
+        val measureFrames: Boolean = false,
+    ) : BoardOp
+
+    /** An invalid swap to animate there-and-back. */
+    data class Reject(val intent: SwapIntent) : BoardOp
+
+    /** Snap the actor pool to [board] (e.g. after a dead-board reshuffle). */
+    data class Resync(val board: Board) : BoardOp
+}

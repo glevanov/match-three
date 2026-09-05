@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -30,14 +31,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.matchthree.BuildConfig
 import com.matchthree.data.HighScoreStore
 import com.matchthree.data.HighScores
+import com.matchthree.game.engine.Step
+import com.matchthree.game.model.Board
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.model.Position
+import com.matchthree.ui.BoardOp
 import com.matchthree.ui.GameMode
 import com.matchthree.ui.GameViewModel
 import com.matchthree.ui.game.BoardCanvas
 import com.matchthree.ui.game.FrameStats
 import com.matchthree.ui.game.FrameTimeTracker
 import com.matchthree.ui.game.StepPlayer
+import kotlinx.coroutines.flow.first
 import java.util.Locale
 
 /**
@@ -67,32 +72,48 @@ fun GameScreen(
         )
     }
 
-    // Reconcile the actor pool, then play back pending steps — in ONE effect so
-    // the two never run as sibling coroutines. When a swipe lands the moment the
-    // previous resolution settles, attach() emits the settled board and the next
-    // playback back-to-back; as separate effects, applyBoard's snapTo() cancels
-    // play()'s in-flight actor animations (Animatable.snapTo cancels a running
-    // animateTo), play() aborts before onSettled, and the ViewModel stays in
-    // Resolving forever — input dead while the rest of the UI keeps working.
-    // applyBoard is idempotent, so re-running it on effect restart is safe.
-    val playback = state.pendingPlayback
-    LaunchedEffect(state.board, playback) {
-        player.applyBoard(state.board)
-        if (playback != null) {
-            frameReport = if (playback.measureFrames) {
-                FrameTimeTracker.measure(playback.label) { player.play(playback.steps) }
-            } else {
-                player.play(playback.steps)
-                null
+    // Drain the ViewModel's op queue from ONE coroutine — the only writer of
+    // StepPlayer animation state. StepPlayer's actors are per-gem Animatables
+    // (MutatorMutex): two coroutines touching the same actor cancel each
+    // other's animation, and a cancelled playback never reaches its settle
+    // callback, which used to leave the ViewModel stuck in Resolving/Rejecting
+    // — the fast-swap deadlock. Strict sequencing rules that race out.
+    //
+    // An op is removed from the queue only after it fully played, so a
+    // coroutine cancelled mid-op (game over, leaving the screen) re-runs that
+    // op on restart instead of skipping it.
+    LaunchedEffect(Unit) {
+        var settledBoard: Board? = null
+        while (true) {
+            val op = state.pendingOps.firstOrNull()
+            if (op == null) {
+                // Queue drained: reconcile the actor pool with the last board
+                // this consumer settled, or the published board on cold start.
+                // Never snap to a board newer than the last Play we consumed —
+                // its ops haven't animated yet.
+                player.applyBoard(settledBoard ?: state.board)
+                snapshotFlow { state.pendingOps }.first { it.isNotEmpty() }
+                continue
             }
+            when (op) {
+                is BoardOp.Play -> {
+                    frameReport = if (op.measureFrames) {
+                        FrameTimeTracker.measure(op.label) { player.play(op.steps) }
+                    } else {
+                        player.play(op.steps)
+                        null
+                    }
+                    settledBoard = op.steps.filterIsInstance<Step.Settled>().lastOrNull()?.board
+                        ?: settledBoard
+                }
+                is BoardOp.Reject -> player.playRejection(op.intent.a, op.intent.b)
+                is BoardOp.Resync -> {
+                    player.applyBoard(op.board)
+                    settledBoard = op.board
+                }
+            }
+            viewModel.onOpConsumed(op)
         }
-    }
-
-    // Invalid swaps shuffle across and back, then unlock input.
-    LaunchedEffect(state.rejectedSwap) {
-        val rejected = state.rejectedSwap ?: return@LaunchedEffect
-        player.playRejection(rejected.a, rejected.b)
-        viewModel.onRejectionPlayed()
     }
 
     // Persist a new high score exactly once when a round ends.
