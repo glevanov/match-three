@@ -132,6 +132,31 @@ object SpecialRules {
     }
 
     /**
+     * Cells cleared when [hyperPos]'s hypercube triggers against the gem at
+     * [partnerPos] (MECHANICS.md trigger rule and combo table). A plain partner
+     * clears every gem of its color; a special partner powers every gem of its
+     * color up into that special, which then detonates. The hypercube itself is
+     * always consumed and included.
+     */
+    fun hypercubeTriggerCells(
+        board: Board,
+        hyperPos: Position,
+        partnerPos: Position,
+        partnerSpecial: Special?,
+    ): Set<Position> {
+        val partnerGem = board.gemAt(partnerPos)
+            ?: return setOf(hyperPos)
+        val color = partnerGem.type
+        val affected = mutableSetOf(hyperPos)
+        for (pos in board.positions()) {
+            if (board.gemAt(pos)?.type != color) continue
+            if (partnerSpecial == null) affected += pos
+            else affected += detonationCells(board, pos, partnerSpecial)
+        }
+        return affected
+    }
+
+    /**
      * The cells cleared by a player-swap combo (MECHANICS.md combo table).
      * Both swapped positions count as cleared (the specials are consumed).
      */
@@ -152,14 +177,7 @@ object SpecialRules {
             val hyperPos = if (specA == Special.HYPERCUBE) swapA else swapB
             val partnerPos = if (hyperPos == swapA) swapB else swapA
             val partnerSpec = if (specA == Special.HYPERCUBE) specB else specA
-            val partnerGem = board.gemAt(partnerPos) ?: return emptySet()
-            val color = partnerGem.type
-            val mini = { center: Position -> detonationCells(board, center, partnerSpec) }
-            val affected = mutableSetOf(hyperPos)
-            for (pos in board.positions()) {
-                if (board.gemAt(pos)?.type == color) affected += mini(pos)
-            }
-            return affected
+            return hypercubeTriggerCells(board, hyperPos, partnerPos, partnerSpec)
         }
 
         return when (setOf(specA, specB)) {

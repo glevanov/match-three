@@ -205,21 +205,16 @@ class GameEngine(
         if (specA == null && specB == null) return null
 
         // Hypercube against a plain gem: clears every gem of the swapped color
-        // plus the hypercube itself (single-attivator, no combo partner).
+        // plus the hypercube itself (single-activator, no combo partner).
         if (specA == Special.HYPERCUBE && specB == null || specB == Special.HYPERCUBE && specA == null) {
             val hyperPos = if (specA == Special.HYPERCUBE) a else b
             val otherPos = if (hyperPos == a) b else a
             val partner = board.gemAt(otherPos)
             if (partner == null || partner.special != null) return null
-            val color = partner.type
-            val affected = mutableSetOf(hyperPos)
-            for (pos in board.positions()) {
-                if (board.gemAt(pos)?.type == color) affected += pos
-            }
             return SwapActivation(
                 specialA = Special.HYPERCUBE,
                 specialB = null,
-                affected = affected,
+                affected = SpecialRules.hypercubeTriggerCells(board, hyperPos, otherPos, null),
                 regenerate = false,
             )
         }

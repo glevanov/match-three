@@ -173,6 +173,19 @@ class SpecialComboTest {
         assertEquals(0, MatchDetector.findMatches(board).size)
     }
 
+    @Test
+    fun `hypercube trigger with a plain partner clears the partner color`() {
+        val board = board9(mapOf(
+            pos(4, 4) to gem(GemType.BLUE, Special.HYPERCUBE),
+            pos(4, 5) to gem(GemType.RED),
+            pos(0, 0) to gem(GemType.RED),
+            pos(8, 8) to gem(GemType.GREEN),
+        ))
+        val cells = SpecialRules.hypercubeTriggerCells(board, pos(4, 4), pos(4, 5), null)
+        // The hypercube itself plus every gem of the partner's color.
+        assertEquals(setOf(pos(4, 4), pos(4, 5), pos(0, 0)), cells)
+    }
+
     // --- combo affected cells (pure) ----------------------------------------
 
     @Test
