@@ -11,7 +11,9 @@ import com.matchthree.game.engine.Step
 import com.matchthree.game.model.Board
 import com.matchthree.game.model.BoardConfig
 import com.matchthree.game.rng.SeededRandom
+import com.matchthree.game.model.Gem
 import com.matchthree.ui.game.SwapIntent
+import com.matchthree.ui.game.bufferedSwapIsStale
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +28,10 @@ import kotlinx.coroutines.launch
  *
  * Input lock (MECHANICS.md/decisions log): while steps are resolving OR a
  * rejection animation is playing, new swap intents are buffered (most recent
- * wins) and executed when the current animation settles. Nothing is dropped.
+ * wins) and executed when the current animation settles. Nothing is dropped —
+ * except a stale intent whose pair gained or lost a Hypercube during the
+ * resolution (bufferedSwapIsStale): a Hypercube must only be consumed by a
+ * gesture that targeted it.
  *
  * M3: score accumulates as Score steps are played; Classic mode runs a
  * countdown timer; Zen mode ends when the board is dead AND reshuffle fails
@@ -50,7 +55,10 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
 
     private var board: Board = engine.newGame()
     private var phase = GamePhase.Idle
-    private var bufferedSwap: SwapIntent? = null
+    /** A swap buffered during input lock, with the pair's gems as the drag saw them. */
+    private data class BufferedSwap(val intent: SwapIntent, val a: Gem?, val b: Gem?)
+
+    private var bufferedSwap: BufferedSwap? = null
     private var mode = initialMode
     private var timerJob: Job? = null
 
@@ -65,7 +73,8 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
     fun submitSwap(intent: SwapIntent) {
         if (phase == GamePhase.GameOver) return
         if (phase != GamePhase.Idle) {
-            bufferedSwap = intent
+            // board is the last settled board — exactly what the drag was made against.
+            bufferedSwap = BufferedSwap(intent, board.gemAt(intent.a), board.gemAt(intent.b))
             return
         }
         startResolution(intent)
@@ -179,7 +188,16 @@ class GameViewModel(initialMode: GameMode = GameMode.CLASSIC) : ViewModel() {
 
         bufferedSwap?.let { swap ->
             bufferedSwap = null
-            startResolution(swap)
+            val stale = bufferedSwapIsStale(
+                submitA = swap.a,
+                submitB = swap.b,
+                settledA = board.gemAt(swap.intent.a),
+                settledB = board.gemAt(swap.intent.b),
+            )
+            if (!stale) startResolution(swap.intent)
+            // Stale per MECHANICS.md: a Hypercube entered or left the pair during
+            // resolution, so this gesture must not consume a Hypercube it never
+            // targeted. Same precedent as the reshuffle branch above.
         }
     }
 

@@ -6,7 +6,7 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 
 - **9×9, 6 gem types** — locked as initial constant, tunable later. Validated via simulated JVM tests (random-swap match probability, average legal-move count). Player-feel tuning deferred to post-Milestone 2.
 - Swaps: orthogonal adjacency only, via **drag-to-swap** (threshold ~40% of cell size measured at runtime). Tap-tap fallback supported.
-- **Input lock:** the engine ignores new swaps while resolving steps. Drag gestures during lock are **buffered** (most recent only) and executed after resolution — no silent drops.
+- **Input lock:** the engine ignores new swaps while resolving steps. Drag gestures during lock are **buffered** (most recent only) and executed after resolution — no silent drops. Exception: if a **Hypercube entered or left** the buffered swap's two cells during the resolution (by gem id), the intent is **stale and dropped** — a Hypercube is only ever consumed by a gesture made while that Hypercube already sat in the swapped pair.
 - Invalid swaps animate there-and-back (~150ms).
 
 ## Matching
@@ -25,7 +25,7 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 - **Birth rule:** runs sharing cells form one **shape** (a T/L is one shape of two intersecting runs); **each shape births one special** — one gem from the winning pattern of that shape **transforms**, the rest clear normally. Non-overlapping shapes in the same cascade round each birth their own special. Hypercube stays colorless.
 - **Precedence:** 5-in-row > T/L > 4-in-row > plain 3, applied within a shape. Max shape wins when multiple patterns share a cell; shapes that share no cells resolve independently. Deterministic and testable.
 - **Cascade rule:** a special caught in any later cascade match **detonates**; no silently-destroyed specials.
-- **Hypercube trigger:** has no color; swapping with a normal gem clears all gems of the swapped color.
+- **Hypercube trigger:** has no color; swapping with a normal gem clears all gems of the swapped color. A Hypercube only triggers on a gesture that targeted it — see Input lock (a stale buffered swap never consumes a newly-arrived Hypercube).
 
 ## Combos
 

@@ -14,7 +14,7 @@ Progress tracker. Update checkboxes as milestones land.
 |---|---|
 | Board size | 9×9 (locked; tunable later) |
 | Rendering | Single Canvas, fallback per-composable |
-| Input during lock | Buffer most-recent drag, not drop |
+| Input during lock | Buffer most-recent drag, not drop; stale-drop only when a Hypercube enters/leaves the buffered pair |
 | Special birth | Per shape (runs sharing cells): one gem transforms per shape per round; others clear |
 | Cascade-swept specials | They detonate |
 | Unique-cell scoring | Set<Position>, tested |
