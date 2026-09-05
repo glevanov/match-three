@@ -67,14 +67,17 @@ fun GameScreen(
         )
     }
 
-    // Reconcile the actor pool whenever a settlement lands (initial + each move).
-    LaunchedEffect(state.board) {
-        player.applyBoard(state.board)
-    }
-
-    // Play back engine steps; the debug playbacks also measure frame timing.
+    // Reconcile the actor pool, then play back pending steps — in ONE effect so
+    // the two never run as sibling coroutines. When a swipe lands the moment the
+    // previous resolution settles, attach() emits the settled board and the next
+    // playback back-to-back; as separate effects, applyBoard's snapTo() cancels
+    // play()'s in-flight actor animations (Animatable.snapTo cancels a running
+    // animateTo), play() aborts before onSettled, and the ViewModel stays in
+    // Resolving forever — input dead while the rest of the UI keeps working.
+    // applyBoard is idempotent, so re-running it on effect restart is safe.
     val playback = state.pendingPlayback
-    LaunchedEffect(playback) {
+    LaunchedEffect(state.board, playback) {
+        player.applyBoard(state.board)
         if (playback != null) {
             frameReport = if (playback.measureFrames) {
                 FrameTimeTracker.measure(playback.label) { player.play(playback.steps) }
