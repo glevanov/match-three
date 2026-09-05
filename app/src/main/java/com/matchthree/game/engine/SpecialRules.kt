@@ -9,10 +9,11 @@ import com.matchthree.game.model.Special
  * Pure M4 special-gem rules (MECHANICS.md). All functions are deterministic and
  * JVM-testable — the engine calls these, the tests call these directly.
  *
- * Precedence when a round contains several shapes (MECHANICS.md):
- * **5-in-row > T/L > 4-in-row > plain 3.** The highest-precedence shape present
- * in the round produces exactly one special; the remaining matched cells clear
- * normally ("one matched gem transforms").
+ * Birth is per shape (MECHANICS.md): runs sharing cells form one shape, and
+ * each shape births exactly one special by precedence **5-in-row > T/L >
+ * 4-in-row > plain 3** — one matched gem transforms, the rest clear normally.
+ * Non-overlapping shapes resolve independently, so one cascade round can birth
+ * several specials.
  */
 object SpecialRules {
 
@@ -27,33 +28,75 @@ object SpecialRules {
     }
 
     /**
-     * Decides the single special born from one cascade round (or null when the
-     * round only contains plain 3-runs). Precedence: 5-run > T/L > 4-run.
+     * Decides the specials born from one cascade round: runs are clustered into
+     * shapes by shared cells, and each shape births at most one special by
+     * precedence (5-run > T/L > 4-run; plain 3-runs birth nothing). Groups are
+     * ordered by their first run's index in [matches] — deterministic.
      */
-    fun resolveBirth(board: Board, matches: List<Match>): Birth? {
-        if (matches.isEmpty()) return null
+    fun resolveBirths(board: Board, matches: List<Match>): List<Birth> =
+        shapeGroups(matches).mapNotNull { birthForShape(board, it) }
 
+    /**
+     * Clusters runs into shapes: runs sharing any cell belong to the same shape
+     * (a T/L is one shape of two intersecting runs; a shared cell implies the
+     * same gem and color, since a cell holds one gem).
+     */
+    private fun shapeGroups(matches: List<Match>): List<List<Match>> {
+        val parent = IntArray(matches.size) { it }
+        fun find(i: Int): Int {
+            var root = i
+            while (parent[root] != root) root = parent[root]
+            var cur = i
+            while (parent[cur] != root) {
+                val next = parent[cur]
+                parent[cur] = root
+                cur = next
+            }
+            return root
+        }
+
+        val cellOwner = HashMap<Position, Int>()
+        for ((index, match) in matches.withIndex()) {
+            for (pos in match.positions) {
+                val owner = cellOwner.put(pos, index)
+                if (owner != null) {
+                    val a = find(owner)
+                    val b = find(index)
+                    if (a != b) parent[maxOf(a, b)] = minOf(a, b)
+                }
+            }
+        }
+
+        val groups = LinkedHashMap<Int, MutableList<Match>>()
+        for ((index, match) in matches.withIndex()) {
+            groups.getOrPut(find(index)) { mutableListOf() }.add(match)
+        }
+        return groups.values.toList()
+    }
+
+    /** The one special born from a single shape (or null for plain 3-runs). */
+    private fun birthForShape(board: Board, runs: List<Match>): Birth? {
         // 1. 5-in-row wins over everything (including a crossing T/L).
-        val five = matches.firstOrNull { it.positions.size >= 5 }
+        val five = runs.firstOrNull { it.positions.size >= 5 }
         if (five != null) {
             val cell = five.positions.firstOrNull { board.gemAt(it)?.special == null }
                 ?: five.positions[2]
-            val gem = board.gemAt(cell) ?: return null
+            val gem = checkNotNull(board.gemAt(cell)) { "matched run cell $cell is empty" }
             return Birth(Special.HYPERCUBE, gem.id, cell)
         }
 
         // 2. T/L: a position shared by a horizontal and a vertical run.
-        val cross = intersectionCell(board, matches)
+        val cross = intersectionCell(board, runs)
         if (cross != null) {
-            val gem = board.gemAt(cross) ?: return null
+            val gem = checkNotNull(board.gemAt(cross)) { "intersection cell $cross is empty" }
             return Birth(Special.STAR, gem.id, cross)
         }
 
         // 3. 4-in-row becomes a Flame.
-        val four = matches.firstOrNull { it.positions.size == 4 }
+        val four = runs.firstOrNull { it.positions.size == 4 }
         if (four != null) {
             val cell = four.positions.firstOrNull { board.gemAt(it)?.special == null } ?: four.positions[1]
-            val gem = board.gemAt(cell) ?: return null
+            val gem = checkNotNull(board.gemAt(cell)) { "matched run cell $cell is empty" }
             return Birth(Special.FLAME, gem.id, cell)
         }
 

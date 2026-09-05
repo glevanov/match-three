@@ -20,6 +20,10 @@ class Board private constructor(
 
     fun gemAt(position: Position): Gem? = gemAt(position.row, position.col)
 
+    /** The position holding the gem with [gemId], or null when absent. */
+    fun positionOf(gemId: Int): Position? =
+        positions().firstOrNull { gemAt(it)?.id == gemId }
+
     fun isInside(position: Position): Boolean =
         position.row in 0 until height && position.col in 0 until width
 

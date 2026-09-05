@@ -22,8 +22,8 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 | T or L shape | **Star** | Clears full row + full column |
 | 5-in-row | **Hypercube** | Wild — see trigger rule |
 
-- **Birth rule:** one gem from the matched line/cross **transforms** into the special; the rest clear normally. Hypercube stays colorless.
-- **Precedence:** 5-in-row > T/L > 4-in-row > plain 3. Max shape wins when multiple patterns share a cell. Deterministic and testable.
+- **Birth rule:** runs sharing cells form one **shape** (a T/L is one shape of two intersecting runs); **each shape births one special** — one gem from the winning pattern of that shape **transforms**, the rest clear normally. Non-overlapping shapes in the same cascade round each birth their own special. Hypercube stays colorless.
+- **Precedence:** 5-in-row > T/L > 4-in-row > plain 3, applied within a shape. Max shape wins when multiple patterns share a cell; shapes that share no cells resolve independently. Deterministic and testable.
 - **Cascade rule:** a special caught in any later cascade match **detonates**; no silently-destroyed specials.
 - **Hypercube trigger:** has no color; swapping with a normal gem clears all gems of the swapped color.
 

@@ -47,9 +47,9 @@ class SpecialComboTest {
             pos(0, 4) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        val birth = SpecialRules.resolveBirth(board, matches)
-        assertEquals(Special.HYPERCUBE, birth?.special)
-        assertEquals(pos(0, 0), birth?.cell)
+        val birth = SpecialRules.resolveBirths(board, matches).single()
+        assertEquals(Special.HYPERCUBE, birth.special)
+        assertEquals(pos(0, 0), birth.cell)
     }
 
     @Test
@@ -61,9 +61,9 @@ class SpecialComboTest {
             pos(1, 0) to gem(GemType.RED), pos(2, 0) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        val birth = SpecialRules.resolveBirth(board, matches)
-        assertEquals(Special.STAR, birth?.special)
-        assertEquals(pos(0, 0), birth?.cell)
+        val birth = SpecialRules.resolveBirths(board, matches).single()
+        assertEquals(Special.STAR, birth.special)
+        assertEquals(pos(0, 0), birth.cell)
     }
 
     @Test
@@ -73,8 +73,8 @@ class SpecialComboTest {
             pos(0, 2) to gem(GemType.RED), pos(0, 3) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        val birth = SpecialRules.resolveBirth(board, matches)
-        assertEquals(Special.FLAME, birth?.special)
+        val birth = SpecialRules.resolveBirths(board, matches).single()
+        assertEquals(Special.FLAME, birth.special)
     }
 
     @Test
@@ -84,7 +84,7 @@ class SpecialComboTest {
             pos(0, 2) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        assertNull(SpecialRules.resolveBirth(board, matches))
+        assertTrue(SpecialRules.resolveBirths(board, matches).isEmpty())
     }
 
     @Test
@@ -97,7 +97,7 @@ class SpecialComboTest {
             pos(1, 0) to gem(GemType.RED), pos(2, 0) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        assertEquals(Special.HYPERCUBE, SpecialRules.resolveBirth(board, matches)?.special)
+        assertEquals(Special.HYPERCUBE, SpecialRules.resolveBirths(board, matches).single().special)
     }
 
     @Test
@@ -108,7 +108,58 @@ class SpecialComboTest {
             pos(1, 0) to gem(GemType.RED), pos(2, 0) to gem(GemType.RED),
         ))
         val matches = MatchDetector.findMatches(board)
-        assertEquals(Special.STAR, SpecialRules.resolveBirth(board, matches)?.special)
+        assertEquals(Special.STAR, SpecialRules.resolveBirths(board, matches).single().special)
+    }
+
+    // --- per-shape-group births (pure) ---------------------------------------
+
+    @Test
+    fun `two non-overlapping 4-runs birth two flames`() {
+        val board = board9(mapOf(
+            pos(0, 0) to gem(GemType.RED), pos(0, 1) to gem(GemType.RED),
+            pos(0, 2) to gem(GemType.RED), pos(0, 3) to gem(GemType.RED),
+            pos(4, 0) to gem(GemType.BLUE), pos(4, 1) to gem(GemType.BLUE),
+            pos(4, 2) to gem(GemType.BLUE), pos(4, 3) to gem(GemType.BLUE),
+        ))
+        val births = SpecialRules.resolveBirths(board, MatchDetector.findMatches(board))
+        assertEquals(2, births.size)
+        assertEquals(listOf(Special.FLAME, Special.FLAME), births.map { it.special })
+        assertEquals(listOf(pos(0, 0), pos(4, 0)), births.map { it.cell })
+    }
+
+    @Test
+    fun `a 4-run and a separate 5-run birth a flame and a hypercube`() {
+        val board = board9(mapOf(
+            pos(0, 0) to gem(GemType.RED), pos(0, 1) to gem(GemType.RED),
+            pos(0, 2) to gem(GemType.RED), pos(0, 3) to gem(GemType.RED),
+            pos(4, 0) to gem(GemType.BLUE), pos(4, 1) to gem(GemType.BLUE),
+            pos(4, 2) to gem(GemType.BLUE), pos(4, 3) to gem(GemType.BLUE),
+            pos(4, 4) to gem(GemType.BLUE),
+        ))
+        val births = SpecialRules.resolveBirths(board, MatchDetector.findMatches(board))
+        assertEquals(2, births.size)
+        assertEquals(Special.FLAME, births[0].special)
+        assertEquals(pos(0, 0), births[0].cell)
+        assertEquals(Special.HYPERCUBE, births[1].special)
+        assertEquals(pos(4, 0), births[1].cell)
+    }
+
+    @Test
+    fun `a t-slash group and a separate 4-run birth one star and one flame`() {
+        val board = board9(mapOf(
+            pos(0, 0) to gem(GemType.RED), pos(0, 1) to gem(GemType.RED),
+            pos(0, 2) to gem(GemType.RED),
+            pos(1, 0) to gem(GemType.RED), pos(2, 0) to gem(GemType.RED),
+            pos(6, 0) to gem(GemType.BLUE), pos(6, 1) to gem(GemType.BLUE),
+            pos(6, 2) to gem(GemType.BLUE), pos(6, 3) to gem(GemType.BLUE),
+        ))
+        val births = SpecialRules.resolveBirths(board, MatchDetector.findMatches(board))
+        // The T/L is ONE group of two intersecting runs: it must not double-birth.
+        assertEquals(2, births.size)
+        assertEquals(Special.STAR, births[0].special)
+        assertEquals(pos(0, 0), births[0].cell)
+        assertEquals(Special.FLAME, births[1].special)
+        assertEquals(pos(6, 0), births[1].cell)
     }
 
     @Test
@@ -345,6 +396,50 @@ class SpecialComboTest {
         assertTrue(fresh.positions().all { fresh.gemAt(it)?.special == null })
         assertEquals(0, MatchDetector.findMatches(fresh).size)
         assertTrue(LegalMoveDetector.hasLegalMove(fresh))
+    }
+
+    @Test
+    fun `one swap creating two separate 4-runs births two flames`() {
+        val engine = engine()
+        // Swap (4,5)G <-> (5,5)R: RED lands at (4,5) completing the RED 4-run on
+        // row 4 (cols 3-6); GREEN lands at (5,5) completing the GREEN 4-run on
+        // col 5 (rows 5-8). The runs share no cells: two shapes, two births.
+        val board = board9(mapOf(
+            pos(4, 3) to gem(GemType.RED),
+            pos(4, 4) to gem(GemType.RED),
+            pos(4, 6) to gem(GemType.RED),
+            pos(4, 5) to gem(GemType.GREEN),
+            pos(5, 5) to gem(GemType.RED),
+            pos(6, 5) to gem(GemType.GREEN),
+            pos(7, 5) to gem(GemType.GREEN),
+            pos(8, 5) to gem(GemType.GREEN),
+        ))
+        // Note: the GREEN cells (6,5)-(8,5) are a pre-existing 3-run — any
+        // straight 4-run completed by one displaced gem contains three
+        // contiguous pre-swap cells, so a match-free fixture is impossible here
+        // (same situation as the 5-run birth test above). The engine resolves
+        // pre-existing matches in round 1 together with the swap-created runs;
+        // here they merge into the GREEN 4-run, so round 1 is still exactly the
+        // two intended shapes.
+        val steps = requireNotNull(engine.resolveSwap(board, pos(4, 5), pos(5, 5))).steps
+
+        val births = steps.filterIsInstance<Step.SpecialBirth>()
+        assertEquals(2, births.size)
+        assertTrue(births.all { it.special == Special.FLAME })
+        assertTrue("distinct birth gems", births[0].gemId != births[1].gemId)
+        // Birth gems fall with gravity: RED flame to the bottom of col 3, GREEN
+        // flame to the bottom of col 5 (all other column gems were cleared).
+        assertEquals(listOf(pos(8, 3), pos(8, 5)), births.map { it.position })
+
+        // Round 1 clears exactly the six non-birth matched cells.
+        val firstDestroy = steps.filterIsInstance<Step.Destroy>().first()
+        assertEquals(
+            setOf(pos(4, 4), pos(4, 5), pos(4, 6), pos(6, 5), pos(7, 5), pos(8, 5)),
+            firstDestroy.positions,
+        )
+        val firstScore = steps.filterIsInstance<Step.Score>().first()
+        assertEquals(6 * Scorer.BASE_POINTS_PER_GEM, firstScore.delta)
+        assertEquals(1, firstScore.cascadeDepth)
     }
 
     // --- integration: births and scoring ------------------------------------

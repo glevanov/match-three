@@ -13,9 +13,9 @@ import com.matchthree.game.rng.SeededRandom
  * imports under game/). Consumes a board + swap, and emits an ordered list of
  * [Step]s which the UI plays back for animation.
  *
- * M4: the resolution loop also handles special gems — births (one matched gem
- * transforms, precedence 5 > T/L > 4 > 3), cascade-swept detonation, player
- * swap combos, and Hypercube+Hypercube board regeneration.
+ * M4: the resolution loop also handles special gems — births (one gem per
+ * shape group transforms, precedence 5 > T/L > 4 > 3), cascade-swept
+ * detonation, player swap combos, and Hypercube+Hypercube board regeneration.
  */
 class GameEngine(
     private val config: BoardConfig = BoardConfig(),
@@ -110,8 +110,8 @@ class GameEngine(
             val extra = SpecialRules.sweptBlastCells(current, matched)
             val destroyed = matched + extra
 
-            val birth = SpecialRules.resolveBirth(current, matches)
-            val destroyedEx = if (birth != null) destroyed - birth.cell else destroyed
+            val births = SpecialRules.resolveBirths(current, matches)
+            val destroyedEx = destroyed - births.map { it.cell }.toSet()
 
             steps += Step.Destroy(destroyedEx)
             steps += Step.Score(Scorer.roundScore(destroyedEx, cascadeDepth), cascadeDepth)
@@ -119,19 +119,23 @@ class GameEngine(
             val gravity = Gravity.apply(current, destroyedEx)
             if (gravity.falls.isNotEmpty()) steps += Step.Fall(gravity.falls)
 
-            // The birth gem is a surviving gem: apply its transformation on the
-            // fallen board (same id, same color, new special kind).
+            // Birth gems are surviving gems: apply their transformations on the
+            // fallen board (same ids, same colors, new special kinds). These
+            // states are impossible by construction (birth cells are excluded
+            // from destruction), so invariant violations abort loudly.
             var afterBirth = gravity.board
-            if (birth != null) {
-                val finalPos = positionOfGem(afterBirth, birth.gemId)
-                if (finalPos != null) {
-                    val gem = afterBirth.gemAt(finalPos) ?: return null
-                    afterBirth = afterBirth.withGem(
-                        finalPos,
-                        Gem(gem.id, gem.type, birth.special),
-                    )
-                    steps += Step.SpecialBirth(finalPos, gem.id, birth.special)
+            for (birth in births) {
+                val finalPos = checkNotNull(afterBirth.positionOf(birth.gemId)) {
+                    "birth gem ${birth.gemId} vanished after gravity"
                 }
+                val gem = checkNotNull(afterBirth.gemAt(finalPos)) {
+                    "birth cell $finalPos is empty on the fallen board"
+                }
+                afterBirth = afterBirth.withGem(
+                    finalPos,
+                    Gem(gem.id, gem.type, birth.special),
+                )
+                steps += Step.SpecialBirth(finalPos, gem.id, birth.special)
             }
 
             val refill = Refill.fill(
@@ -228,9 +232,6 @@ class GameEngine(
         }
         return null
     }
-
-    private fun positionOfGem(board: Board, gemId: Int): Position? =
-        board.positions().firstOrNull { board.gemAt(it)?.id == gemId }
 
     /** Result of a player-swap special activation. */
     private data class SwapActivation(
