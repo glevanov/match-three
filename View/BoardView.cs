@@ -16,8 +16,6 @@ namespace MatchThree.View;
 public partial class BoardView : Node2D
 {
     private const float BoardFillFraction = 0.95f;
-    private const float HudStripPx = 72f;
-    private const float MarginPx = 12f;
     private static readonly Color BoardBackground = new(0x26 / 255f, 0x32 / 255f, 0x38 / 255f);
     private static readonly Color GridColor = new(1f, 1f, 1f, 0.08f);
 
@@ -62,14 +60,19 @@ public partial class BoardView : Node2D
     private void LayoutBoard()
     {
         var viewport = GetViewportRect().Size;
-        // Below the HUD strip; square board, ~95% of viewport width.
+        // The HUD bar sits DIRECTLY on top of the board (not pinned to the
+        // top of the screen): the bar + gap + square board are centered as
+        // one block in the area below the device cutout. The board stays in
+        // the middle of the screen and the bar follows its top edge (Hud.cs
+        // reads this position). ~95% of viewport width.
+        var clearanceTop = SafeArea.TopInsetPx + SafeArea.MarginPx;
+        var hudBlockPx = SafeArea.HudBarHeightPx + SafeArea.HudGapPx;
         var side = Mathf.Min(
             viewport.X * BoardFillFraction,
-            viewport.Y - HudStripPx - 2f * MarginPx);
+            viewport.Y - clearanceTop - hudBlockPx - 2f * SafeArea.MarginPx);
         _boardSize = new Vector2(side, side);
-        Position = new Vector2(
-            (viewport.X - side) / 2f,
-            HudStripPx + (viewport.Y - HudStripPx - side) / 2f);
+        var blockTop = clearanceTop + (viewport.Y - clearanceTop - hudBlockPx - side) / 2f;
+        Position = new Vector2((viewport.X - side) / 2f, blockTop + hudBlockPx);
         _cellSizePx = side / _config.Width;
     }
 

@@ -12,18 +12,25 @@ script = ExtResource("1_board")
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("2_hud")
 
+[node name="HudBackdrop" type="ColorRect" parent="HUD"]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.4)
+
 [node name="HudBox" type="HBoxContainer" parent="HUD"]
 layout_mode = 3
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 10.0
-offset_bottom = 56.0
-theme_override_constants/separation = 28
+mouse_filter = 0
+theme_override_constants/separation = 16
 alignment = 1
 
 [node name="MenuButton" type="Button" parent="HUD/HudBox"]
+custom_minimum_size = Vector2(120, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "Menu"
 
 [node name="ScoreLabel" type="Label" parent="HUD/HudBox"]
@@ -111,8 +118,8 @@ theme_override_font_sizes/font_size = 24
 text = "Play again"
 
 [node name="MenuButton" type="Button" parent="GameOver/Panel/VBox"]
-custom_minimum_size = Vector2(160, 44)
+custom_minimum_size = Vector2(220, 56)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 text = "Menu"
