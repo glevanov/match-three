@@ -185,8 +185,10 @@ Draft contents once the port starts:
       `GemSprites.cs`, drag-to-swap (~40% cell threshold) + tap fallback,
       `StepPlayer.cs` sequencing `Swap`/`Destroy`/`Fall`/`Spawn`/`Settled` via
       `async`/`await`. Port `SwapIntentTest`/`BufferedSwapGuardTest`.
-- [ ] **G3 — Scoring & timer** — `Scorer.cs`, HUD, Classic 75s timer, dead-
+- [x] **G3 — Scoring & timer** — `Scorer.cs`, HUD, Classic 75s timer, dead-
       board reshuffle, `GameOver.tscn` placeholder. Port `ScorerTest`.
+      (Scorer/ScorerTest and the reshuffle path landed early with G1/G2;
+      G3 adds the countdown, HUD, and GameOver overlay.)
 - [ ] **G4 — Specials & combos** — `SpecialRules.cs` (birth precedence,
       6 combos, hypercube trigger, cascade-swept detonation, H+H
       regeneration), special marks on gem sprites. Port

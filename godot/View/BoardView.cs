@@ -17,6 +17,8 @@ namespace MatchThree.View;
 public partial class BoardView : Node2D
 {
     private const float BoardFillFraction = 0.95f;
+    private const float HudStripPx = 72f;
+    private const float MarginPx = 12f;
     private static readonly Color BoardBackground = new(0x26 / 255f, 0x32 / 255f, 0x38 / 255f);
     private static readonly Color GridColor = new(1f, 1f, 1f, 0.08f);
 
@@ -61,9 +63,14 @@ public partial class BoardView : Node2D
     private void LayoutBoard()
     {
         var viewport = GetViewportRect().Size;
-        var side = Mathf.Min(viewport.X * BoardFillFraction, viewport.Y * 0.9f);
+        // Below the HUD strip; square board (Kotlin: fillMaxWidth(0.95), aspect 1).
+        var side = Mathf.Min(
+            viewport.X * BoardFillFraction,
+            viewport.Y - HudStripPx - 2f * MarginPx);
         _boardSize = new Vector2(side, side);
-        Position = new Vector2((viewport.X - side) / 2f, (viewport.Y - side) / 2f);
+        Position = new Vector2(
+            (viewport.X - side) / 2f,
+            HudStripPx + (viewport.Y - HudStripPx - side) / 2f);
         _cellSizePx = side / _config.Width;
     }
 

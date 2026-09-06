@@ -74,6 +74,14 @@ intent). They are conceptually view-layer input plumbing.
   lesson: two coroutines touching the same GemActor cancel each other's
   Tweens and wedge the phase). Buffered swaps use `BufferedSwapGuard`;
   stale-Hypercube intents are dropped, most-recent wins otherwise.
+  G3: StateFlow -&gt; Godot signals — ScoreChanged / TimerChanged /
+  RoundEnded(reason, score) / RoundStarted; a generation counter makes
+  in-flight callbacks from a previous round no-op. Classic 75s timer runs on
+  SceneTreeTimer; Restart() resets the round.
+- `Hud.cs` (CanvasLayer): score / timer / mode labels; subscribes to Game
+  signals.
+- `GameOverScreen.cs` (CanvasLayer, in Game.tscn): dims the board, shows
+  reason + score, Play again -&gt; Restart(). High-score UI lands in G5.
 - `BoardView.cs` (Node2D): draws board bg/grid/selection in `_Draw`, owns the
   StepPlayer, handles input — drag past 40% of a cell commits the directional
   swap; tap-tap select-adjacent fallback (MECHANICS.md). Both touch and mouse
@@ -123,5 +131,7 @@ Godot's C# `ToSignal(...)` yields a `SignalAwaiter` — awaitable but not a
   - `--selftest-reject`: illegal swap animates there-and-back; phase to Idle.
   - `--selftest-burst=N`: N rapid submits through input lock (buffer, no
     wedges; drained to a settled, invariant-clean board).
+  - `--selftest-timer`: 2s Classic timer -&gt; round ends ("Time's up!") with
+    phase GameOver, then Restart() resets to Idle with a fresh round.
 - Board simulation metrics (150 boards, 9x9/6): avg legal moves ≈ 18.8,
   random-swap match probability ≈ 0.13 — same ballpark as the Kotlin build.
