@@ -172,16 +172,16 @@ Draft contents once the port starts:
 
 ## 6. Milestones (mirrors `ROADMAP.md`, isolated to `godot/`)
 
-- [ ] **G0 — Scaffold** — `project.godot`, `.csproj`/`.sln`, folder layout,
+- [x] **G0 — Scaffold** — `project.godot`, `.csproj`/`.sln`, folder layout,
       copy assets, add NUnit test project, empty `Game.cs` autoload. Confirm
       `dotnet build` and the Godot editor both pick up the C# project.
-- [ ] **G1 — Engine core** — port `Board`, `Gem`, `Position`, `BoardConfig`,
+- [x] **G1 — Engine core** — port `Board`, `Gem`, `Position`, `BoardConfig`,
       `BoardGenerator`, `MatchDetector`, `Gravity`, `Refill`, `SeededRandom`
       as a pure `Engine/` class library. Port `BoardGeneratorTest`/
       `BoardSimulationTest`/`MatchDetectorTest`/`GravityTest`/`RefillTest`/
       `SeededRandomTest` to NUnit, runnable via `dotnet test` with no Godot
       runtime. Green before moving on.
-- [ ] **G2 — UI render & input** — `Scenes/Game.tscn`, `GemActor.tscn`,
+- [x] **G2 — UI render & input** — `Scenes/Game.tscn`, `GemActor.tscn`,
       `GemSprites.cs`, drag-to-swap (~40% cell threshold) + tap fallback,
       `StepPlayer.cs` sequencing `Swap`/`Destroy`/`Fall`/`Spawn`/`Settled` via
       `async`/`await`. Port `SwapIntentTest`/`BufferedSwapGuardTest`.

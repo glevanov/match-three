@@ -49,9 +49,11 @@ godot/
 │   ├── Model/   Board, Gem, GemType, Special, Position, BoardConfig
 │   └── Rules/   GameEngine, MatchDetector, Gravity, Refill, Scorer,
 │                SpecialRules, BoardGenerator, LegalMoveDetector,
-│                SeededRandom, IdSource, Step, Match, Resolution
-├── View/        Game.cs (autoload placeholder; real wiring in G2)
-├── Scenes/      Game.tscn (placeholder main scene for G0; real in G2)
+│                SeededRandom, IdSource, Step, Match, Resolution,
+│                SwapIntent, BufferedSwapGuard
+├── View/        Game.cs (autoload), BoardView.cs, StepPlayer.cs,
+│                GemActor.cs, GemSprites.cs, BoardOp.cs
+├── Scenes/      Game.tscn (main: BoardView node), GemActor.tscn
 ├── Assets/
 │   ├── Sprites/ red..white.png, hypercube.png, flame.png, sparkle.png
 │   │            (copied from app/src/main/assets; ORANGE renders white.png,
@@ -60,10 +62,38 @@ godot/
 └── Tests/       NUnit project, mirrors app/src/test, runs via dotnet test
 ```
 
-Asset import notes: sprites were re-imported by the 4.7.2 editor (`.import`
-files are committed). Default filter settings apply; if pixel-art scaling
-matters, match what GemSprites.kt does (aspect-fit into cell, nearest
-filtering if the source PNGs are pixel art) at G2 render time.
+Note: SwapIntent/BufferedSwapGuard live in `Engine/Rules/` (not `View/` as the
+plan's §1 tree sketched) because they are pure logic with zero Godot
+dependency — `dotnet test` must be able to cover them (plan §4's testability
+intent). They are conceptually view-layer input plumbing.
+
+## View layer (G2)
+
+- `Game.cs` autoload replaces GameViewModel: engine + board + input lock +
+  ordered op queue, drained by ONE consumer task (Kotlin commit c45deee
+  lesson: two coroutines touching the same GemActor cancel each other's
+  Tweens and wedge the phase). Buffered swaps use `BufferedSwapGuard`;
+  stale-Hypercube intents are dropped, most-recent wins otherwise.
+- `BoardView.cs` (Node2D): draws board bg/grid/selection in `_Draw`, owns the
+  StepPlayer, handles input — drag past 40% of a cell commits the directional
+  swap; tap-tap select-adjacent fallback (MECHANICS.md). Both touch and mouse
+  events are handled (mouse for desktop testing).
+- `StepPlayer.cs`: gem-id → GemActor map + logical id grid; sequences steps
+  with `async`/`await` on `ToSignal(tween, Finished)`; parallel effects via
+  `Task.WhenAll`. Timing constants ported from StepPlayer.kt:
+  swap 150ms, destroy 200ms, fall 90+70/row ms (simultaneous landing).
+- `GemActor.cs` on `Scenes/GemActor.tscn` (Sprite2D base + Flame/Star overlay
+  art + baked silhouette outline); stable gem ids, same as Kotlin.
+- `GemSprites.cs`: loads the 9 PNGs once; bakes the alpha-traced silhouette
+  outline (Kotlin traceAlpha + stroke) into textures at load time.
+- Easing: Kotlin's FastOutSlowIn maps to Godot's Cubic+Out (closest built-in
+  transition; no bezier curves in the Tween API).
+
+## Heads-up: `ToSignal` returns `SignalAwaiter`, not `Task`
+
+Godot's C# `ToSignal(...)` yields a `SignalAwaiter` — awaitable but not a
+`Task`, so it cannot be returned from a `Task`-typed method or used with
+`Task.WhenAll`. Wrap it: `public async Task X() { ... await ToSignal(...); }`.
 
 ## Engine porting notes (behavioral drift watchlist)
 
@@ -85,8 +115,13 @@ filtering if the source PNGs are pixel art) at G2 render time.
 
 ## Verification
 
-- `dotnet test godot/Tests` — engine rules, no Godot runtime (green: 70 tests).
+- `dotnet test godot/Tests` — engine rules, no Godot runtime (green: 81 tests).
 - Godot editor: `--import` + `--build-solutions` verified under 4.7.2 mono;
   autoload runs ("MatchThree autoload ready" at startup).
+- Headless self-tests (user args, exit code 0 = pass):
+  - `--selftest-swap`: play one legal swap end-to-end; settled 81/81, 0 matches.
+  - `--selftest-reject`: illegal swap animates there-and-back; phase to Idle.
+  - `--selftest-burst=N`: N rapid submits through input lock (buffer, no
+    wedges; drained to a settled, invariant-clean board).
 - Board simulation metrics (150 boards, 9x9/6): avg legal moves ≈ 18.8,
   random-swap match probability ≈ 0.13 — same ballpark as the Kotlin build.

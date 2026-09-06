@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dsdo6rqqv69db"]
+
+[ext_resource type="Script" path="res://View/GemActor.cs" id="1_actor"]
+
+[node name="GemActor" type="Node2D"]
+script = ExtResource("1_actor")
+
+[node name="Base" type="Sprite2D" parent="."]
+
+[node name="Overlay" type="Node2D" parent="."]
+
+[node name="Art" type="Sprite2D" parent="Overlay"]
+
+[node name="Silhouette" type="Sprite2D" parent="Overlay"]
