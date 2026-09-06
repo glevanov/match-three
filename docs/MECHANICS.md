@@ -52,7 +52,7 @@ Fire when a player swap swaps two specials. Emits `Step.ComboActivate(specialA, 
 
 - Invariant checks (no pre-existing match, ≥1 legal move) run **only after a cascade fully settles**, not per refill step inside a loop.
 - Generation: place left-to-right, top-to-bottom, excluding colors that would complete a run of 3; then legal-move detection; regenerate if degenerate.
-- Reshuffle: Fisher–Yates shuffle of the full gem multiset **in place, specials included**. Re-validate; retry up to 20×; on persistent failure, fall back to full regeneration.
+- Reshuffle: Fisher–Yates shuffle of the full gem multiset **in place, specials included**. Re-validate; retry up to 20×; on persistent failure, the round ends (decisions log: dead board + failed reshuffle = game over).
 
 ## Game over
 

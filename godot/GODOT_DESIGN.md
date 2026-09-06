@@ -133,6 +133,54 @@ Godot's C# `ToSignal(...)` yields a `SignalAwaiter` — awaitable but not a
 
 ## Verification
 
+### G6 parity checklist (MECHANICS.md rule -&gt; where it is verified)
+
+Every rule below is verified by the ported test suite (87 tests, plain
+`dotnet test`) and/or a headless self-test; anything needing a human hand is
+called out explicitly.
+
+| MECHANICS.md rule | Verification |
+|---|---|
+| 9x9/6 board, tunable | BoardGeneratorTest (size + invariants); simulation metrics |
+| Drag-to-swap, ~40% cell threshold; tap-tap fallback | BoardView.cs port; touch feel needs a device |
+| Input lock: buffer most-recent, no drops | --selftest-burst=10/20; drain-loop single consumer |
+| Hypercube entered/left pair = stale drop | BufferedSwapGuardTest (7 tests) |
+| Invalid swap there-and-back ~150ms | --selftest-reject (phase returns to Idle) |
+| Matches: max H/V runs of 3+ | MatchDetectorTest (7 tests) |
+| Cascade: match, clear, gravity, refill, re-check; depth 1+ | GameEngineTest (ordered steps, depth alternation) |
+| Flame 3x3 / Star row+col / Hypercube colorless | SpecialComboTest (pure + integration) |
+| Birth: per shape, one special, rest clear | SpecialComboTest per-shape-group tests |
+| Precedence 5 &gt; T/L &gt; 4 &gt; 3 | SpecialComboTest (4 precedence tests) |
+| Cascade-swept specials detonate | SpecialComboTest.flameSwept + engine round loop |
+| Hypercube trigger (plain/special partner) | SpecialComboTest + --selftest-hypercube |
+| Six combos + ComboActivate before Destroy | SpecialComboTest (all six, step order) |
+| H+H full clear + immediate regeneration | SpecialComboTest + --selftest-hypercube (810 pts, no specials) |
+| Scoring 10/gem, linear depth, unique cells | ScorerTest (7 tests) |
+| No special-creation bonus | Scorer has no such path (by construction) |
+| Invariants checked only after settle | Engine loop structure + settled-board assertions |
+| Generation: no pre-match, legal move, regenerate | BoardGeneratorTest (50 boards) |
+| Reshuffle Fisher-Yates, ids/types preserved, 20 retries | GameEngineTest.reshuffle (multiset preserved, null on dead) |
+| Classic 75s timer ends round | --selftest-timer (Time's up! -&gt; GameOver -&gt; Restart) |
+| Zen: ends on dead board + failed reshuffle | Engine test (reshuffle null) + Attach wiring; E2E needs a contrived dead board |
+| Non-goals (no hints/bonus/mid-session persistence) | Honors by construction; only highscores persist |
+
+Deliberate parity notes:
+- Match sequences differ from the Kotlin build (System.Random vs
+  kotlin.random.Random) — all parity tests are structural, none depend on
+  exact RNG values.
+- MECHANICS.md was edited (one line) to say a failed reshuffle ends the
+  round, matching the Kotlin implementation and the ROADMAP decisions log
+  ("dead board + failed reshuffle" game-over), which the port reproduces.
+- Manual checks still open: touch feel (drag threshold, rejection bounce),
+  HUD/gem visual parity on a device, Android export (G7 follow-up), frame
+  pacing on worst-case clears (Kotlin M2 measured p95=16.71ms; Godot's
+  profiler + Performance monitors replace FrameStats).
+
+### Self-test exit codes
+
+All self-tests run headless with `--` separated user args; exit code 0 = pass.
+Each prints `SELFTEST-OK-...` and throws on any invariant violation.
+
 - `dotnet test godot/Tests` — engine rules, no Godot runtime (green: 87 tests,
   incl. HighScoreStore with a temp-dir store).
 - Godot editor: `--import` + `--build-solutions` verified under 4.7.2 mono;
