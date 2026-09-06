@@ -3,6 +3,10 @@
 **/bin/
 **/obj/
 
+# Android export artifacts
+android/
+build/
+
 # IDE
 .idea/
 *.iml
