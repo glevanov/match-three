@@ -5,9 +5,9 @@ namespace MatchThree.Engine.Rules;
 /// Same seed reproduces the exact same game, which keeps tests and replays stable.
 /// </summary>
 /// <remarks>
-/// Wraps <see cref="System.Random"/> with an explicit seed, per GODOT_PORT_PLAN §4.
-/// Sequences are deterministic within this port (not bit-identical to Kotlin's
-/// kotlin.random.Random — no cross-language replay is required).
+/// Wraps <see cref="System.Random"/> with an explicit seed.
+/// Sequences are deterministic within this port (no cross-language replay is
+/// required).
 /// </remarks>
 public sealed class SeededRandom
 {

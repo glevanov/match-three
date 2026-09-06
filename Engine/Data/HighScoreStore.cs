@@ -9,9 +9,8 @@ public sealed record HighScores(int Classic = 0, int Zen = 0)
 }
 
 /// <summary>
-/// Persistent high scores as a JSON file (M5; Kotlin used DataStore
-/// Preferences). Only the max score per mode is saved (MECHANICS.md non-goal:
-/// no mid-session persistence).
+/// Persistent high scores as a JSON file. Only the max score per mode is
+/// saved (MECHANICS.md non-goal: no mid-session persistence).
 ///
 /// Pure C# on purpose (precedent: SwapIntent): the save directory is injected,
 /// so the logic runs under `dotnet test` — the Godot side constructs it with

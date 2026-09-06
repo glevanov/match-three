@@ -4,9 +4,8 @@ using MatchThree.Engine.Data;
 namespace MatchThree.View;
 
 /// <summary>
-/// Top HUD strip: Menu, score, Classic timer, mode label (Kotlin GameScreen
-/// row). Subscribes to Game.cs signals (the StateFlow -&gt; Godot signal mapping).
-/// Exit-to-menu goes through a confirmation dialog, like the Kotlin AlertDialog.
+/// Top HUD strip: Menu, score, Classic timer, mode label. Subscribes to Game.cs
+/// signals. Exit-to-menu goes through a confirmation dialog.
 /// </summary>
 public partial class Hud : CanvasLayer
 {

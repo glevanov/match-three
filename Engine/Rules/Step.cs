@@ -6,9 +6,8 @@ namespace MatchThree.Engine.Rules;
 /// Ordered events the engine emits while resolving a player swap. The view
 /// plays these back in order to drive animation (AGENTS.md: "Steps, not state").
 ///
-/// A sealed record hierarchy with switch pattern matching reproduces Kotlin's
-/// sealed interface almost keystroke-for-keystroke, including exhaustiveness
-/// analysis by the compiler.
+/// A sealed record hierarchy with switch pattern matching; the compiler
+/// enforces exhaustiveness across the sealed subtypes.
 /// </summary>
 public abstract record Step
 {

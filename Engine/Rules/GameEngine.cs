@@ -7,7 +7,7 @@ namespace MatchThree.Engine.Rules;
 /// Engine/). Consumes a board + swap, and emits an ordered list of
 /// <see cref="Step"/>s which the UI plays back for animation.
 ///
-/// M4: the resolution loop also handles special gems — births (one gem per
+/// The resolution loop also handles special gems — births (one gem per
 /// shape group transforms, precedence 5 &gt; T/L &gt; 4 &gt; 3), cascade-swept
 /// detonation, player swap combos, and Hypercube+Hypercube board regeneration.
 /// </summary>
@@ -28,7 +28,7 @@ public sealed class GameEngine
         this.rng = rng;
     }
 
-    /// <summary>Convenience overload mirroring the Kotlin default-args constructor.</summary>
+    /// <summary>Convenience overload using the default <see cref="BoardConfig"/>.</summary>
     public GameEngine(SeededRandom rng) : this(new BoardConfig(), rng)
     {
     }

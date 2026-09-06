@@ -21,16 +21,16 @@ namespace MatchThree.View;
 /// </summary>
 public sealed class StepPlayer
 {
-    /// <summary>Kotlin SWAP_MILLIS.</summary>
+    /// <summary>Swap duration (ms).</summary>
     public const float SwapMillis = 150f;
 
-    /// <summary>Kotlin DESTROY_MILLIS.</summary>
+    /// <summary>Destroy/shrink duration (ms).</summary>
     public const float DestroyMillis = 200f;
 
-    /// <summary>Kotlin FALL_BASE_MILLIS.</summary>
+    /// <summary>Base fall duration (ms).</summary>
     public const float FallBaseMillis = 90f;
 
-    /// <summary>Kotlin FALL_PER_ROW_MILLIS.</summary>
+    /// <summary>Additional duration per row fallen (ms).</summary>
     public const float FallPerRowMillis = 70f;
 
     private readonly Node _parent;

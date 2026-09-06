@@ -4,10 +4,10 @@ using MatchThree.Engine.Model;
 namespace MatchThree.View;
 
 /// <summary>
-/// Loads the PNG art bundled in godot/Assets/Sprites and exposes it the way
-/// Kotlin's GemSprites did: one texture per GemType, a standalone Hypercube
-/// sprite (colorless per MECHANICS.md), and Flame/Star overlay art whose alpha
-/// silhouettes are traced once into outline textures.
+/// Loads the PNG art bundled in Assets/Sprites and exposes it: one texture per
+/// GemType, a standalone Hypercube sprite (colorless per MECHANICS.md), and
+/// Flame/Star overlay art whose alpha silhouettes are traced once into outline
+/// textures.
 ///
 /// - Orange renders with white.png — the orange art reads almost the same as
 ///   yellow on the board; the gem type stays Orange logically.
@@ -58,8 +58,8 @@ public static class GemSprites
         };
         _outline = new Dictionary<Special, Texture2D>
         {
-            // Kotlin traces the alpha silhouette and strokes it black (flame) /
-            // white at 0.7 (star); we bake that stroke into textures once.
+            // Trace the alpha silhouette and stroke it black (flame) / white at
+            // 0.7 (star); bake that stroke into textures once.
             [Special.Flame] = BakeSilhouette(flame, Colors.Black, 1f),
             [Special.Star] = BakeSilhouette(sparkle, Colors.White, StarOutlineAlpha),
         };
@@ -104,7 +104,7 @@ public static class GemSprites
     /// <summary>
     /// Traces the outer boundary where <paramref name="texture"/>'s alpha channel
     /// transitions from transparent to opaque, dilates it one pixel (a ~2-3px
-    /// stroke, matching the Kotlin 2px-stroke outline) and bakes it into a
+    /// stroke) and bakes it into a
     /// texture of <paramref name="color"/> at <paramref name="alpha"/>.
     /// </summary>
     private static Texture2D BakeSilhouette(Texture2D texture, Color color, float alpha)

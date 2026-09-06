@@ -17,8 +17,8 @@ public sealed class BoardGenerator
     private readonly SeededRandom rng;
     private readonly IdSource idSource;
 
-    /// <param name="gemTypeCount">Accepted for signature parity with the Kotlin original; the Kotlin
-    /// generator also ignores it (colors draw from all GemType entries).</param>
+    /// <param name="gemTypeCount">Accepted for signature parity; ignored (colors
+    /// draw from all GemType entries).</param>
     public BoardGenerator(int width, int height, int gemTypeCount, SeededRandom rng, IdSource idSource)
     {
         this.width = width;

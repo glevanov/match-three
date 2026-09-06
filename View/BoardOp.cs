@@ -4,8 +4,7 @@ using MatchThree.Engine.Rules;
 namespace MatchThree.View;
 
 /// <summary>
-/// One unit of ordered UI work for the Game.cs single consumer, mirroring the
-/// Kotlin BoardOp sealed interface.
+/// One unit of ordered UI work for the Game.cs single consumer.
 /// </summary>
 public abstract record BoardOp
 {
@@ -19,7 +18,7 @@ public abstract record BoardOp
     public sealed record Resync(Board Board) : BoardOp;
 }
 
-/// <summary>Input/lock state + what the UI should play next (Kotlin GamePhase).</summary>
+/// <summary>Input/lock state + what the UI should play next.</summary>
 public enum GamePhase
 {
     Idle,

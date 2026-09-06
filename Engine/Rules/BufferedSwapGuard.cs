@@ -18,8 +18,8 @@ namespace MatchThree.Engine.Rules;
 ///    decision-log promise ("buffer most-recent drag, not drop") is preserved
 ///    for plain gems.
 ///
-/// Pure C# on purpose (precedent: SwapIntent in Kotlin): the game state machine
-/// stays thin wiring and this rule runs under `dotnet test`.
+/// Pure C# on purpose: the game state machine stays thin wiring and this rule
+/// runs under `dotnet test`.
 /// </summary>
 public static class BufferedSwapGuard
 {

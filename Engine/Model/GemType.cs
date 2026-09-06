@@ -13,9 +13,9 @@ public enum GemType
     Orange,
 }
 
-/// <summary>Companion helpers, mirroring Kotlin's <c>GemType.Companion</c>.</summary>
+/// <summary>Static helpers for <see cref="GemType"/>.</summary>
 public static class GemTypes
 {
-    /// <summary>Index-based lookup matching Kotlin's <c>entries[index]</c> (declaration order).</summary>
+    /// <summary>Index-based lookup in declaration order.</summary>
     public static GemType FromIndex(int index) => (GemType)index;
 }

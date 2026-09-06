@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- NUnit test project mirroring app/src/test; runs with plain `dotnet
-         test`, no Godot runtime needed (Engine has zero Godot dependency). -->
+    <!-- NUnit test project; runs with plain `dotnet test`, no Godot runtime
+         needed (Engine has zero Godot dependency). -->
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

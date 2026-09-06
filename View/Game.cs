@@ -6,16 +6,16 @@ using MatchThree.Engine.Rules;
 namespace MatchThree.View;
 
 /// <summary>
-/// Autoload singleton that replaces the Kotlin GameViewModel (StateFlow -&gt;
-/// Godot signals). Owns the run loop: submit -&gt; engine resolves -&gt; steps
-/// handed to the BoardView to play back.
+/// Autoload singleton that owns the run loop: submit -&gt; engine resolves -&gt;
+/// steps handed to the BoardView to play back. State flows to the UI through
+/// Godot signals (ScoreChanged/TimerChanged/RoundEnded/RoundStarted).
 ///
 /// The UI receives work as an ORDERED op queue that exactly one consumer drains
-/// sequentially (Kotlin commit c45deee: "serialize all board animations through
-/// one consumer coroutine"). StepPlayer animation state is only ever mutated
-/// from that one consumer task — two coroutines touching the same GemActor
-/// cancel each other's Tweens, which used to abort playback before the settle
-/// callback and wedge the phase for good.
+/// sequentially ("serialize all board animations through one consumer").
+/// StepPlayer animation state is only ever mutated from that one consumer task
+/// — two concurrent writers on the same GemActor cancel each other's Tweens,
+/// which used to abort playback before the settle callback and wedge the phase
+/// for good.
 ///
 /// Input lock (MECHANICS.md/decisions log): while steps are resolving OR a
 /// rejection animation is playing, new swap intents are buffered (most recent
@@ -292,7 +292,7 @@ public partial class Game : Node
         EmitSignal(SignalName.RoundEnded, reason, Score);
     }
 
-    /// <summary>Classic mode: 75s countdown placeholder (timer spec: M3 detail).</summary>
+    /// <summary>Classic mode: 75s countdown placeholder (timer spec, MECHANICS.md).</summary>
     private void StartTimerIfClassic(int seconds)
     {
         if (Mode != GameMode.Classic)
@@ -327,8 +327,7 @@ public partial class Game : Node
     /// <summary>
     /// The single consumer of the op queue — the ONLY writer of StepPlayer
     /// animation state. An op completes only when its animation fully played,
-    /// and the actor pool reconciles with the settled board between ops
-    /// (mirrors the Kotlin GameScreen drain effect).
+    /// and the actor pool reconciles with the settled board between ops.
     /// </summary>
     private async Task DrainLoopAsync()
     {

@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace MatchThree.Engine.Tests;
 
 /// <summary>
-/// M4 tests: special-gem birth precedence, all six combos, cascade-swept
+/// Special-gem tests: birth precedence, all six combos, cascade-swept
 /// detonation, Hypercube+Hypercube regeneration, and unique-cell scoring with
 /// combos. Pure rule tests call <see cref="SpecialRules"/> directly; integration
 /// tests run full <see cref="GameEngine.ResolveSwap"/> resolutions.

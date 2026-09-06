@@ -30,7 +30,7 @@ public static class MatchDetector
                     continue;
                 }
 
-                // M4: Hypercubes are colorless and can never be part of a run.
+                // Hypercubes are colorless and can never be part of a run.
                 if (ContainsHypercube(first))
                 {
                     start++;

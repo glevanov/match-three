@@ -3,9 +3,9 @@ using Godot;
 namespace MatchThree.View;
 
 /// <summary>
-/// GameOver overlay (G5): final score, mode high score (with a "New high
-/// score!" note when the round beat it), Play again, and a Back-to-menu button
-/// (Kotlin GameOverScreen). Hidden on RoundStarted.
+/// GameOver overlay: final score, mode high score (with a "New high score!"
+/// note when the round beat it), Play again, and a Back-to-menu button. Hidden
+/// on RoundStarted.
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
@@ -30,7 +30,7 @@ public partial class GameOverScreen : CanvasLayer
         {
             var game = Game.Instance;
             // Persist a new high score exactly once when a round ends: saving
-            // here (not in Game.cs) mirrors the Kotlin LaunchedEffect placement.
+            // here (not in Game.cs) keeps it tied to the round-end UI.
             var savedNew = game.HighScores.SaveIfBeats(game.Mode, score);
             _reasonLabel.Text = reason;
             _scoreLabel.Text = $"Score: {score}";

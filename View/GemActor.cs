@@ -5,8 +5,7 @@ namespace MatchThree.View;
 
 /// <summary>
 /// One instanced scene per gem (GemActor.tscn), keyed by the gem's stable
-/// <see cref="GemId"/> for continuity across falls/spawns — same as the Kotlin
-/// GemActor's stable-id approach.
+/// <see cref="GemId"/> for continuity across falls/spawns.
 ///
 /// Node layout:
 ///   GemActor (Node2D, this script)
@@ -17,8 +16,7 @@ namespace MatchThree.View;
 ///
 /// Animations are Tween-driven; the async methods complete when the tween's
 /// Finished signal fires, so StepPlayer can sequence steps with async/await.
-/// Easing: Kotlin's FastOutSlowIn maps to Cubic+Out (closest built-in; noted
-/// in GODOT_DESIGN.md).
+/// Easing: Godot's Cubic+Out (fast-out-slow-in style curve).
 /// </summary>
 public partial class GemActor : Node2D
 {

@@ -3,7 +3,7 @@ using MatchThree.Engine.Model;
 namespace MatchThree.Engine.Rules;
 
 /// <summary>
-/// Pure M4 special-gem rules (MECHANICS.md). All functions are deterministic and
+/// Special-gem rules (MECHANICS.md). All functions are deterministic and
 /// unit-testable — the engine calls these, the tests call these directly.
 ///
 /// Birth is per shape (MECHANICS.md): runs sharing cells form one shape, and
@@ -88,8 +88,7 @@ public static class SpecialRules
             }
         }
 
-        // Deterministic group order: first run's index in `matches` (mirrors
-        // Kotlin's LinkedHashMap semantics).
+        // Deterministic group order: first run's index in `matches`.
         var groups = new List<List<Match>>();
         var groupByRoot = new Dictionary<int, int>();
         for (var index = 0; index < matches.Count; index++)
@@ -113,9 +112,10 @@ public static class SpecialRules
         var five = runs.FirstOrDefault(m => m.Positions.Count >= 5);
         if (five is not null)
         {
-            // Kotlin: firstOrNull { gemAt(it).special == null } ?: positions[2].
-            // C# FirstOrDefault can't express "not found" for a value-type
-            // Position (default == (0,0) is a real cell), so search explicitly.
+            // Pick the first group cell with no special, falling back to the
+            // third cell (index 2). FirstOrDefault can't express "not found"
+            // for a value-type Position (default == (0,0) is a real cell), so
+            // search explicitly.
             var cell = FindFirstPlainCell(five.Positions, board) ?? five.Positions[2];
             var gem = board.GemAt(cell)
                 ?? throw new InvalidOperationException($"matched run cell {cell} is empty");
@@ -170,8 +170,8 @@ public static class SpecialRules
         foreach (var pos in matched)
         {
             var gem = board.GemAt(pos);
-            // Kotlin smart-casts gem.special (Special?) to non-null here; C#
-            // needs an explicit property pattern to unwrap the nullable.
+            // gem.special is nullable (Special?); use an explicit property
+            // pattern to unwrap it.
             if (gem is { Special: { } special } && special != Special.Hypercube)
             {
                 extra.UnionWith(DetonationCells(board, pos, special));

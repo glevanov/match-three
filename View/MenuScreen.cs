@@ -4,7 +4,7 @@ using MatchThree.Engine.Data;
 namespace MatchThree.View;
 
 /// <summary>
-/// Main menu (Kotlin MenuScreen): pick Classic (75 s timer) or Zen (endless)
+/// Main menu: pick Classic (75 s timer) or Zen (endless)
 /// with the persisted high score per mode. Selecting a mode starts a new round
 /// and switches to the game scene.
 /// </summary>

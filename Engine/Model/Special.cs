@@ -1,7 +1,7 @@
 namespace MatchThree.Engine.Model;
 
 /// <summary>
-/// Special gem types (MECHANICS.md, M4).
+/// Special gem types (MECHANICS.md).
 /// </summary>
 public enum Special
 {

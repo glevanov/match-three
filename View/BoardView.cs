@@ -10,9 +10,8 @@ namespace MatchThree.View;
 /// drag past 40% of a cell commits a directional swap; tap-tap select-adjacent
 /// is the fallback (MECHANICS.md), both handing a SwapIntent to Game.cs.
 ///
-/// Port of Kotlin's BoardCanvas (single draw pass -> per-gem nodes; Godot's
-/// node overhead is far lower than Compose's per-composable cost, and the
-/// board math stays in Engine/, not here).
+/// Renders the board as per-gem nodes (one GemActor per cell); board math
+/// stays in Engine/, not here.
 /// </summary>
 public partial class BoardView : Node2D
 {
@@ -27,7 +26,7 @@ public partial class BoardView : Node2D
     private float _cellSizePx;
     private Vector2 _boardSize;
 
-    // Tap-tap fallback selection (Kotlin BoardCanvas `selected`).
+    // Tap-tap fallback selection.
     private Position? _selected;
 
     // Drag state.
@@ -63,7 +62,7 @@ public partial class BoardView : Node2D
     private void LayoutBoard()
     {
         var viewport = GetViewportRect().Size;
-        // Below the HUD strip; square board (Kotlin: fillMaxWidth(0.95), aspect 1).
+        // Below the HUD strip; square board, ~95% of viewport width.
         var side = Mathf.Min(
             viewport.X * BoardFillFraction,
             viewport.Y - HudStripPx - 2f * MarginPx);
@@ -76,7 +75,7 @@ public partial class BoardView : Node2D
 
     public override void _Draw()
     {
-        // Board background + faint grid (Kotlin BoardCanvas constants).
+        // Board background + faint grid.
         DrawRect(new Rect2(Vector2.Zero, _boardSize), BoardBackground);
         for (var row = 0; row <= _config.Height; row++)
         {
@@ -162,8 +161,8 @@ public partial class BoardView : Node2D
         _dragAccum = Vector2.Zero;
         if (start is null) return;
 
-        // Tap fallback (Kotlin detectTapGestures): select / deselect / swap-adjacent.
-        // A release outside the board deselects, same as the Kotlin tap handler.
+        // Tap fallback: select / deselect / swap-adjacent. A release outside
+        // the board deselects.
         if (releaseCell is null)
         {
             SetSelected(null);
