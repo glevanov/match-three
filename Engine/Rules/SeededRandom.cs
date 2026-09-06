@@ -15,7 +15,10 @@ public sealed class SeededRandom
 
     public SeededRandom(long seed)
     {
-        random = new Random((int)seed);
+        // Fold the full 64-bit seed into 32 bits instead of truncating the
+        // high bits away, so seeds don't repeat on a ~7.2-minute cycle when
+        // driven by DateTime.Ticks.
+        random = new Random((int)(seed ^ (seed >> 32)));
     }
 
     /// <summary>Random integer in <c>[0, bound)</c>.</summary>

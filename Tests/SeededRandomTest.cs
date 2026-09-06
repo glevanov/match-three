@@ -33,6 +33,22 @@ public class SeededRandomTest
         }
     }
 
+    [Test]
+    public void DifferentSeedsWithSameLower32BitsProduceDifferentSequences()
+    {
+        // Two ticks values 2^32 apart previously collapsed to the same int seed.
+        long seedA = 1_000_000L;
+        long seedB = seedA + (1L << 32);
+
+        var rngA = new SeededRandom(seedA);
+        var rngB = new SeededRandom(seedB);
+
+        var sequenceA = Enumerable.Range(0, 20).Select(_ => rngA.NextInt(1000)).ToList();
+        var sequenceB = Enumerable.Range(0, 20).Select(_ => rngB.NextInt(1000)).ToList();
+
+        Assert.That(sequenceA, Is.Not.EqualTo(sequenceB));
+    }
+
     private static List<int> Seqs(SeededRandom r, int count)
     {
         var result = new List<int>(count);
