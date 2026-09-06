@@ -9,8 +9,8 @@ namespace MatchThree.Engine.Model;
 /// Immutability contract (GODOT_PORT_PLAN §7): <c>Gem</c> is a value type
 /// (readonly record struct), so cloning the <see cref="Gem?[,]"/> grid is
 /// automatically a deep copy — <c>WithSwapped</c>/<c>WithGem</c> always
-/// allocate a fresh grid and never mutate in place, exactly like the Kotlin
-/// Board. The grid field is internal: only engine code (same assembly) may
+/// allocate a fresh grid and never mutate in place. The grid field is
+/// internal: only engine code (same assembly) may
 /// read it for gravity/refill snapshots; external callers go through the
 /// public API.
 /// </remarks>

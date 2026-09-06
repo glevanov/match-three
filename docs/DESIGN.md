@@ -1,11 +1,11 @@
 # Match Three — Design
 
 Bejeweled-style match-three game for Android (local APK, no store) written in
-**Godot 4.7.2 (.NET/Mono) + C#**. This repo is the completed Godot port
-(formerly a Kotlin/Compose app — see `docs/GODOT_PORT_PLAN.md`, all milestones
-done; the Kotlin sources were removed at cutover and survive only in git
-history). Game rules live in [MECHANICS.md](MECHANICS.md); progress and the
-decision log live in [ROADMAP.md](ROADMAP.md).
+**Godot 4.7.2 (.NET/Mono) + C#**. This repo is the completed Godot port of the
+original app (see `docs/GODOT_PORT_PLAN.md`, all milestones done; the original
+sources were removed at cutover and survive only in git history). Game rules
+live in [MECHANICS.md](MECHANICS.md); progress and the decision log live in
+[ROADMAP.md](ROADMAP.md).
 
 ## Tech stack
 
@@ -17,8 +17,8 @@ decision log live in [ROADMAP.md](ROADMAP.md).
   the game assembly via `<Compile Remove>` in `MatchThree.csproj` and
   referenced as a project.
 - **NUnit** for engine tests (`Tests/`), run with `dotnet test`.
-- Records + sealed record hierarchies + switch pattern matching reproduce the
-  old Kotlin idioms (`data class`, `sealed interface`, exhaustive `when`).
+- Records + sealed record hierarchies + switch pattern matching for value
+  equality and exhaustive `switch` analysis.
 - Art: the 9 PNGs in `Assets/Sprites/` (six colors — Orange renders
   `white.png` — plus hypercube/flame/sparkle) and `Assets/Icon/icon.png`
   (re-exported from the original `assets/icon.jpg`).
@@ -37,9 +37,8 @@ BoardView / GemActor / StepPlayer  resolve → gravity → refill
 
 The engine resolves input into an ordered `List<Step>`; the view plays steps
 back as animation. Gems carry stable `Id`s (value-type records) so actors
-track them through falls and spawns. Kotlin's `StateFlow` became Godot
-signals; coroutine step playback became `async`/`await` on
-`ToSignal(tween, Finished)`.
+track them through falls and spawns. State flows to the UI via Godot signals;
+step playback uses `async`/`await` on `ToSignal(tween, Finished)`.
 
 ## Package layout
 
@@ -68,13 +67,13 @@ match-three/
 
 ## View layer
 
-- `Game.cs` autoload replaces the old ViewModel: engine + board + input lock +
-  ordered op queue, drained by ONE consumer task (two writers on one GemActor
-  cancel each other's Tweens and wedge the phase — the Kotlin c45deee lesson).
-  Buffered swaps use `BufferedSwapGuard`; stale-Hypercube intents are dropped,
-  most-recent wins otherwise. Signals: ScoreChanged / TimerChanged /
-  RoundEnded(reason, score) / RoundStarted; a generation counter makes
-  in-flight callbacks from a previous round no-op.
+- `Game.cs` autoload: engine + board + input lock + ordered op queue, drained
+  by ONE consumer task (two concurrent writers on one GemActor cancel each
+  other's Tweens and wedge the phase, so animations are serialized through one
+  consumer). Buffered swaps use `BufferedSwapGuard`; stale-Hypercube intents
+  are dropped, most-recent wins otherwise. Signals: ScoreChanged /
+  TimerChanged / RoundEnded(reason, score) / RoundStarted; a generation counter
+  makes in-flight callbacks from a previous round no-op.
 - `BoardView.cs` (Node2D): board bg/grid/selection in `_Draw`, owns the
   StepPlayer, handles input — drag past 40% of a cell commits the directional
   swap; tap-tap select-adjacent fallback (MECHANICS.md). Touch and mouse.
@@ -86,21 +85,20 @@ match-three/
 - `Hud.cs` / `MenuScreen.cs` / `GameOverScreen.cs`: HUD strip, mode menu with
   per-mode high scores, game-over overlay (Best + New-high-score + Play again
   / Menu). Exit-to-menu goes through a confirm dialog.
-- Easing note: Kotlin's FastOutSlowIn maps to Godot's Cubic+Out.
+- Easing note: Godot's Cubic+Out (fast-out-slow-in style).
 
 ## Engine porting notes (behavioral drift watchlist)
 
 - `Board` copies: `Gem` is a `readonly record struct`, so `Gem?[,]` clones are
   automatically deep — `WithSwapped`/`WithGem` allocate a fresh grid, never
   mutate.
-- Kotlin smart casts do not port: nullable `Special?`/`Gem?` need explicit
-  patterns (`is { Special: { } s }`, `.Value`).
+- Nullable `Special?`/`Gem?` need explicit property patterns
+  (`is { Special: { } s }`, `.Value`).
 - `FirstOrDefault` can't express "not found" for a value-type Position —
   `PositionOf` and birth-cell selection search explicitly.
-- Kotlin trailing commas in argument lists are illegal in C#.
+- Trailing commas in argument lists are illegal in C#.
 - `SeededRandom` wraps `System.Random` (int seed). Deterministic within this
-  port, not bit-identical to Kotlin's `kotlin.random.Random` — exact gem
-  sequences differ; all parity tests are structural, not RNG-value dependent.
+  port; all parity tests are structural, not RNG-value dependent.
 - `ToSignal` returns `SignalAwaiter`, not `Task` — wrap: `async Task` method
   that awaits it (needed for `Task.WhenAll`).
 
@@ -147,13 +145,10 @@ called out explicitly.
 | Non-goals (no hints/bonus/mid-session persistence) | Honors by construction; only highscores persist |
 
 Deliberate parity notes:
-- Match sequences differ from the Kotlin build (System.Random vs
-  kotlin.random.Random) — all parity tests are structural, none depend on
-  exact RNG values.
+- All parity tests are structural; none depend on exact RNG values.
 - MECHANICS.md was edited (one line) to say a failed reshuffle ends the
-  round, matching the Kotlin implementation and the ROADMAP decisions log
-  ("dead board + failed reshuffle" game-over), which the port reproduces.
+  round, matching the ROADMAP decisions log ("dead board + failed reshuffle"
+  game-over).
 - Manual checks still open: touch feel (drag threshold, rejection bounce),
   HUD/gem visual parity on a device, Android export (G7 follow-up), frame
-  pacing on worst-case clears (Kotlin M2 measured p95=16.71ms; Godot's
-  profiler + Performance monitors replace FrameStats).
+  pacing on worst-case clears (Godot's profiler + Performance monitors).

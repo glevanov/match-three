@@ -5,10 +5,8 @@
 Godot 4.7.2 (.NET/C#) match-three game (Bejeweled-style), C# + GodotSharp.
 Local APK builds, no store. Repo: github.com/glevanov/match-three.
 
-This repo IS the Godot port — the Kotlin/Compose implementation was removed at
-cutover (docs/GODOT_PORT_PLAN.md, all milestones complete) and survives only
-in git history. `assets/` holds the original source art; `Assets/` holds what
-the game actually loads.
+The original app sources survive only in git history. `assets/` holds the
+original source art; `Assets/` holds what the game actually loads.
 
 ## Reading order before touching code
 

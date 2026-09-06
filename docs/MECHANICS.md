@@ -4,7 +4,7 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 
 ## Board
 
-- **9×9, 6 gem types** — locked as initial constant, tunable later. Validated via simulated JVM tests (random-swap match probability, average legal-move count). Player-feel tuning deferred to post-Milestone 2.
+- **9×9, 6 gem types** — locked as initial constant, tunable later. Validated via simulated engine tests (random-swap match probability, average legal-move count). Player-feel tuning deferred to a later tuning pass.
 - Swaps: orthogonal adjacency only, via **drag-to-swap** (threshold ~40% of cell size measured at runtime). Tap-tap fallback supported.
 - **Input lock:** the engine ignores new swaps while resolving steps. Drag gestures during lock are **buffered** (most recent only) and executed after resolution — no silent drops. Exception: if a **Hypercube entered or left** the buffered swap's two cells during the resolution (by gem id), the intent is **stale and dropped** — a Hypercube is only ever consumed by a gesture made while that Hypercube already sat in the swapped pair.
 - Invalid swaps animate there-and-back (~150ms).
@@ -56,13 +56,13 @@ Fire when a player swap swaps two specials. Emits `Step.ComboActivate(specialA, 
 
 ## Game over
 
-- **Classic mode:** ends on timer expiry. Timer spec (defined in M3): **75 s per round**, a tunable constant (`GameViewModel.CLASSIC_TIMER_SECONDS`); no time bonuses in v1 (candidate tuning item for later).
+- **Classic mode:** ends on timer expiry. Timer spec: **75 s per round**, a tunable constant (`Game.ClassicTimerSeconds` in `View/Game.cs`); no time bonuses in v1 (candidate tuning item for later).
 - **Zen mode:** ends only when the board is dead AND reshuffle has failed after 20 retries.
 - Both modes: a dead board (no legal moves) triggers a reshuffle; if the reshuffle cannot find a playable layout after 20 attempts, the round ends.
 
 ## Explicit non-goals for v1
 
-- No mid-session persistence (only high scores via DataStore).
+- No mid-session persistence (only high scores via `HighScoreStore`, a JSON file).
 - No anti-frustration mechanics (no hints, no guaranteed specials).
 - No special-creation bonus scoring.
 - No Android lifecycle handling mid-animation (rotation/process-death loses round).
