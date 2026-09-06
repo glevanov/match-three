@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Match Three — Godot 4.7.2 (.NET/C#) port. See GODOT_DESIGN.md.
+
+config_version=5
+
+[application]
+
+config/name="Match Three"
+config/description="Bejeweled-style match-three game (Godot C# port)."
+config/features=PackedStringArray("4.7", "C#")
+config/icon="res://Assets/Icon/icon.png"
+run/main_scene="res://Scenes/Game.tscn"
+
+[autoload]
+
+Game="*res://View/Game.cs"
+
+[display]
+
+window/size/viewport_width=540
+window/size/viewport_height=960
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[dotnet]
+
+project/assembly_name="MatchThree"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

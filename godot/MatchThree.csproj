@@ -1,0 +1,25 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <!-- Godot 4.7.2 .NET build targets net8.0; pinned in GODOT_DESIGN.md. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MatchThree</RootNamespace>
+    <AssemblyName>MatchThree</AssemblyName>
+  </PropertyGroup>
+
+  <!--
+    Engine/ and Tests/ are standalone .NET projects (pure C#, no Godot
+    dependency). Exclude them from this Godot assembly and reference the
+    engine explicitly so the game code sees the same types the tests do.
+  -->
+  <ItemGroup>
+    <Compile Remove="Engine/**/*.cs" />
+    <Compile Remove="Tests/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Engine/Engine.csproj" />
+  </ItemGroup>
+</Project>
