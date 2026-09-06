@@ -24,7 +24,7 @@ namespace MatchThree.View;
 /// resolution (<see cref="BufferedSwapGuard"/>): a Hypercube must only be
 /// consumed by a gesture that targeted it.
 ///
-/// G3: score accumulates as Score steps play (ScoreChanged signal), Classic
+/// Score accumulates as Score steps play (ScoreChanged signal), Classic
 /// mode runs the 75s countdown (TimerChanged), game over is signalled with
 /// round reason + score (RoundEnded) and Restart() resets the round.
 /// </summary>
@@ -74,7 +74,7 @@ public partial class Game : Node
     /// <summary>Set when the round ended ("Time's up!", "No moves left"); null while playing.</summary>
     public string? GameOverReason { get; private set; }
 
-    /// <summary>The mode this round runs in; chosen on the menu (G5).</summary>
+    /// <summary>The mode this round runs in; chosen on the menu.</summary>
     public GameMode Mode { get; private set; } = GameMode.Classic;
 
     /// <summary>Persistent per-mode high scores (user://highscores.json).</summary>
@@ -203,7 +203,7 @@ public partial class Game : Node
     }
 
     /// <summary>
-    /// Menu entry point (G5): picks the mode, starts a fresh round, and swaps
+    /// Menu entry point: picks the mode, starts a fresh round, and swaps
     /// to the game scene.
     /// </summary>
     public void StartRound(GameMode mode)
@@ -252,7 +252,7 @@ public partial class Game : Node
         _phase = GamePhase.Idle;
 
         // Board invariants (MECHANICS.md): a dead board is reshuffled; if even
-        // the reshuffle fails there is no way to keep playing (G3 surfaces it).
+        // the reshuffle fails there is no way to keep playing.
         if (!LegalMoveDetector.HasLegalMove(_board))
         {
             var reshuffled = _engine.Reshuffle(_board);

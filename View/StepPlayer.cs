@@ -10,8 +10,7 @@ namespace MatchThree.View;
 ///
 /// The player owns the only mutable render state: a gem-id -&gt; actor map plus a
 /// logical id grid (which gem sits in which cell). BoardView renders the nodes;
-/// Game.cs resolves steps. This is the G2 incarnation of "UI plays back Steps"
-/// (AGENTS.md).
+/// Game.cs resolves steps and hands them to the UI to play back (AGENTS.md).
 ///
 /// Timing constants (from MECHANICS.md where they exist):
 ///  - swap: ~150ms

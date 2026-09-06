@@ -6,8 +6,7 @@ namespace MatchThree.Engine.Rules;
 /// </summary>
 /// <remarks>
 /// Wraps <see cref="System.Random"/> with an explicit seed.
-/// Sequences are deterministic within this port (no cross-language replay is
-/// required).
+/// Sequences are deterministic for a given seed.
 /// </remarks>
 public sealed class SeededRandom
 {

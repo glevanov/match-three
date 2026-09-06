@@ -1,9 +1,8 @@
 # Match Three — Design
 
 Bejeweled-style match-three game for Android (local APK, no store) written in
-**Godot 4.7.2 (.NET/Mono) + C#**. This repo is the completed Godot port of
-the original app; the port milestones are all done and the original sources
-were removed at cutover (surviving only in git history). Game rules live in
+**Godot 4.7.2 (.NET/Mono) + C#**. The original app's sources were removed at
+cutover and survive only in git history. Game rules live in
 [MECHANICS.md](MECHANICS.md); settled decisions live in
 [DECISIONS.md](DECISIONS.md).
 
@@ -90,7 +89,7 @@ match-three/
   / Menu). Exit-to-menu goes through a confirm dialog.
 - Easing note: Godot's Cubic+Out (fast-out-slow-in style).
 
-## Engine porting notes (behavioral drift watchlist)
+## Engine notes (behavioral drift watchlist)
 
 - `Board` copies: `Gem` is a `readonly record struct`, so `Gem?[,]` clones are
   automatically deep — `WithSwapped`/`WithGem` allocate a fresh grid, never
@@ -114,16 +113,16 @@ match-three/
 - Board simulation metrics (150 boards, 9x9/6): avg legal moves ≈ 18.8,
   random-swap match probability ≈ 0.13.
 
-### G6 parity checklist (MECHANICS.md rule -&gt; where it is verified)
+### Rule verification checklist (MECHANICS.md rule -&gt; where it is verified)
 
-Every rule below is verified by the ported test suite (plain `dotnet test`)
+Every rule below is verified by the test suite (plain `dotnet test`)
 and/or a headless self-test; anything needing a human hand is called out
 explicitly.
 
 | MECHANICS.md rule | Verification |
 |---|---|
 | 9x9/6 board, tunable | BoardGeneratorTest (size + invariants); simulation metrics |
-| Drag-to-swap, ~40% cell threshold; tap-tap fallback | BoardView.cs port; touch feel needs a device |
+| Drag-to-swap, ~40% cell threshold; tap-tap fallback | BoardView.cs; touch feel needs a device |
 | Input lock: buffer most-recent, no drops | --selftest-burst=10/20; drain-loop single consumer |
 | Hypercube entered/left pair = stale drop | BufferedSwapGuardTest |
 | Invalid swap there-and-back ~150ms | --selftest-reject (phase returns to Idle) |
@@ -145,11 +144,11 @@ explicitly.
 | Zen: ends on dead board + failed reshuffle | Engine test (reshuffle null) + Attach wiring; E2E needs a contrived dead board |
 | Non-goals (no hints/bonus/mid-session persistence) | Honors by construction; only highscores persist |
 
-Deliberate parity notes:
-- All parity tests are structural; none depend on exact RNG values.
+Verification notes:
+- All rule tests are structural; none depend on exact RNG values.
 - MECHANICS.md was edited (one line) to say a failed reshuffle ends the
   round, matching the decision log ("dead board + failed reshuffle"
   game-over).
 - Manual checks still open: touch feel (drag threshold, rejection bounce),
-  HUD/gem visual parity on a device, frame pacing on worst-case clears
+  HUD/gem visuals on a device, frame pacing on worst-case clears
   (Godot's profiler + Performance monitors).
