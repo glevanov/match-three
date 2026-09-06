@@ -6,9 +6,10 @@ Android match-three game (Bejeweled-style). Kotlin + Jetpack Compose, no game en
 
 ## Reading order before touching code
 
-1. `DESIGN.md` — architecture and package layout
-2. `MECHANICS.md` — exact game rules (do not improvise)
-3. `ROADMAP.md` — milestone you're in
+1. [DESIGN.md](./docs/DESIGN.md) — architecture and package layout
+2. [MECHANICS.md](./docs/MECHANICS.md) — exact game rules (do not improvise)
+3. [ROADMAP.md](./docs/ROADMAP.md) — milestone you're in
+4. [GODOT_PORT_PLAN.md](./docs/GODOT_PORT_PLAN.md) — current rewrite plan
 
 ## Non-negotiable conventions
 
