@@ -6,7 +6,7 @@ namespace MatchThree.Engine.Model;
 /// the grid itself is never mutated after construction.
 /// </summary>
 /// <remarks>
-/// Immutability contract (GODOT_PORT_PLAN §7): <c>Gem</c> is a value type
+/// Immutability contract: <c>Gem</c> is a value type
 /// (readonly record struct), so cloning the <see cref="Gem?[,]"/> grid is
 /// automatically a deep copy — <c>WithSwapped</c>/<c>WithGem</c> always
 /// allocate a fresh grid and never mutate in place. The grid field is

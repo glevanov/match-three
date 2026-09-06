@@ -10,10 +10,9 @@ original source art; `Assets/` holds what the game actually loads.
 
 ## Reading order before touching code
 
-1. [DESIGN.md](./DESIGN.md) — architecture and package layout
+1. [DESIGN.md](./docs/DESIGN.md) — architecture and package layout
 2. [MECHANICS.md](./docs/MECHANICS.md) — exact game rules (do not improvise)
-3. [ROADMAP.md](./docs/ROADMAP.md) — milestone you're in
-4. [GODOT_PORT_PLAN.md](./docs/GODOT_PORT_PLAN.md) — migration record and risk notes
+3. [DECISIONS.md](./docs/DECISIONS.md) — decision log (consult before changing rules)
 
 ## Non-negotiable conventions
 
@@ -35,6 +34,6 @@ original source art; `Assets/` holds what the game actually loads.
 
 ## When in doubt, check the decision log
 
-ROADMAP.md has a "Decisions log" — consult it before proposing a change to
-board size, input model, scoring, or game-over rules. If you change a
-decision, update ROADMAP.md and MECHANICS.md in the same commit.
+DECISIONS.md records settled decisions — consult it before proposing a
+change to board size, input model, scoring, or game-over rules. If you
+change a decision, update DECISIONS.md and MECHANICS.md in the same commit.

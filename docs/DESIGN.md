@@ -1,11 +1,11 @@
 # Match Three — Design
 
 Bejeweled-style match-three game for Android (local APK, no store) written in
-**Godot 4.7.2 (.NET/Mono) + C#**. This repo is the completed Godot port of the
-original app (see `docs/GODOT_PORT_PLAN.md`, all milestones done; the original
-sources were removed at cutover and survive only in git history). Game rules
-live in [MECHANICS.md](MECHANICS.md); progress and the decision log live in
-[ROADMAP.md](ROADMAP.md).
+**Godot 4.7.2 (.NET/Mono) + C#**. This repo is the completed Godot port of
+the original app; the port milestones are all done and the original sources
+were removed at cutover (surviving only in git history). Game rules live in
+[MECHANICS.md](MECHANICS.md); settled decisions live in
+[DECISIONS.md](DECISIONS.md).
 
 ## Tech stack
 
@@ -49,11 +49,13 @@ match-three/
 ├── Engine/                      ← pure C# rules, no Godot dependency
 │   ├── Model/   Board, Gem, GemType, Special, Position, BoardConfig
 │   ├── Data/    GameMode, HighScoreStore (user://highscores.json)
-│   └── Rules/   GameEngine, MatchDetector, Gravity, Refill, Scorer,
-│                SpecialRules, BoardGenerator, LegalMoveDetector,
-│                SeededRandom, IdSource, Step, Match, Resolution,
-│                SwapIntent, BufferedSwapGuard
-├── View/        Game.cs (autoload), BoardView.cs, StepPlayer.cs,
+│   └── Rules/   GameEngine (its `Resolution` record is declared at the
+│                bottom of GameEngine.cs), MatchDetector, Gravity, Refill,
+│                Scorer, SpecialRules, BoardGenerator, LegalMoveDetector,
+│                SeededRandom, IdSource, Step, Match, SwapIntent,
+│                BufferedSwapGuard
+├── View/        Game.cs (autoload) + Game.SelfTests.cs (headless
+│                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
 │                GameOverScreen.cs, MenuScreen.cs
 ├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn
@@ -62,7 +64,8 @@ match-three/
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)
 ├── Tests/       NUnit project, runs via dotnet test (no Godot runtime)
 ├── assets/      original source art (icon.jpg, cat_with_gem.jpeg, PNGs)
-└── docs/        GODOT_PORT_PLAN.md (migration record, all milestones done)
+└── docs/        MECHANICS.md (rules), DECISIONS.md (decision log),
+                 NOTES.md (known issues)
 ```
 
 ## View layer
@@ -97,14 +100,12 @@ match-three/
 - `FirstOrDefault` can't express "not found" for a value-type Position —
   `PositionOf` and birth-cell selection search explicitly.
 - Trailing commas in argument lists are illegal in C#.
-- `SeededRandom` wraps `System.Random` (int seed). Deterministic within this
-  port; all parity tests are structural, not RNG-value dependent.
 - `ToSignal` returns `SignalAwaiter`, not `Task` — wrap: `async Task` method
   that awaits it (needed for `Task.WhenAll`).
 
 ## Verification
 
-- `dotnet test Tests/` — engine rules, no Godot runtime (87 tests).
+- `dotnet test Tests/` — engine rules, no Godot runtime.
 - Godot editor: `--import` + `--build-solutions` verified under 4.7.2 mono.
 - Headless self-tests (user args after `--`, exit 0 = pass):
   `--selftest-swap`, `--selftest-reject`, `--selftest-burst=N`,
@@ -115,27 +116,27 @@ match-three/
 
 ### G6 parity checklist (MECHANICS.md rule -&gt; where it is verified)
 
-Every rule below is verified by the ported test suite (87 tests, plain
-`dotnet test`) and/or a headless self-test; anything needing a human hand is
-called out explicitly.
+Every rule below is verified by the ported test suite (plain `dotnet test`)
+and/or a headless self-test; anything needing a human hand is called out
+explicitly.
 
 | MECHANICS.md rule | Verification |
 |---|---|
 | 9x9/6 board, tunable | BoardGeneratorTest (size + invariants); simulation metrics |
 | Drag-to-swap, ~40% cell threshold; tap-tap fallback | BoardView.cs port; touch feel needs a device |
 | Input lock: buffer most-recent, no drops | --selftest-burst=10/20; drain-loop single consumer |
-| Hypercube entered/left pair = stale drop | BufferedSwapGuardTest (7 tests) |
+| Hypercube entered/left pair = stale drop | BufferedSwapGuardTest |
 | Invalid swap there-and-back ~150ms | --selftest-reject (phase returns to Idle) |
-| Matches: max H/V runs of 3+ | MatchDetectorTest (7 tests) |
+| Matches: max H/V runs of 3+ | MatchDetectorTest |
 | Cascade: match, clear, gravity, refill, re-check; depth 1+ | GameEngineTest (ordered steps, depth alternation) |
 | Flame 3x3 / Star row+col / Hypercube colorless | SpecialComboTest (pure + integration) |
 | Birth: per shape, one special, rest clear | SpecialComboTest per-shape-group tests |
-| Precedence 5 &gt; T/L &gt; 4 &gt; 3 | SpecialComboTest (4 precedence tests) |
+| Precedence 5 &gt; T/L &gt; 4 &gt; 3 | SpecialComboTest precedence cases |
 | Cascade-swept specials detonate | SpecialComboTest.flameSwept + engine round loop |
 | Hypercube trigger (plain/special partner) | SpecialComboTest + --selftest-hypercube |
 | Six combos + ComboActivate before Destroy | SpecialComboTest (all six, step order) |
 | H+H full clear + immediate regeneration | SpecialComboTest + --selftest-hypercube (810 pts, no specials) |
-| Scoring 10/gem, linear depth, unique cells | ScorerTest (7 tests) |
+| Scoring 10/gem, linear depth, unique cells | ScorerTest |
 | No special-creation bonus | Scorer has no such path (by construction) |
 | Invariants checked only after settle | Engine loop structure + settled-board assertions |
 | Generation: no pre-match, legal move, regenerate | BoardGeneratorTest (50 boards) |
@@ -147,8 +148,8 @@ called out explicitly.
 Deliberate parity notes:
 - All parity tests are structural; none depend on exact RNG values.
 - MECHANICS.md was edited (one line) to say a failed reshuffle ends the
-  round, matching the ROADMAP decisions log ("dead board + failed reshuffle"
+  round, matching the decision log ("dead board + failed reshuffle"
   game-over).
 - Manual checks still open: touch feel (drag threshold, rejection bounce),
-  HUD/gem visual parity on a device, Android export (G7 follow-up), frame
-  pacing on worst-case clears (Godot's profiler + Performance monitors).
+  HUD/gem visual parity on a device, frame pacing on worst-case clears
+  (Godot's profiler + Performance monitors).

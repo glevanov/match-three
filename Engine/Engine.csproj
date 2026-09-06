@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Pure C# game logic: NO Godot dependency (see GODOT_DESIGN.md). -->
+    <!-- Pure C# game logic: NO Godot dependency (see docs/DESIGN.md). -->
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

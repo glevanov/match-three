@@ -7,7 +7,7 @@ namespace MatchThree.View;
 
 public partial class Game
 {
-    // headless self-tests — see AGENTS.md / GODOT_PORT_PLAN.md for context.
+    // headless self-tests — see AGENTS.md for context.
     // Moved out of Game.cs to keep the gameplay state machine readable.
     // --- headless self-tests ------------------------------------------------
 
