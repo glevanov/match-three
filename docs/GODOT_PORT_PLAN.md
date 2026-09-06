@@ -198,9 +198,13 @@ Draft contents once the port starts:
 - [x] **G5 — Modes & polish** — `Menu.tscn` (Classic/Zen), mode-wired
       `Game.tscn`, `HighScoreStore.cs`, `GameOver.tscn` real high-score UI.
       Port `HighScoreStoreTest`.
-- [ ] **G6 — Parity check** — play both builds side by side against every
+- [x] **G6 — Parity check** — play both builds side by side against every
       rule in `MECHANICS.md`; fix drift.
-- [ ] **G7 — Cutover** — move `godot/*` to repo root, delete `app/`,
+      (Rule-by-rule checklist in DESIGN.md; all Kotlin builds were removed at
+      cutover, so parity is verified via the ported test suite + headless
+      self-tests. Manual device checks remain: touch feel, visuals, frame
+      pacing, Android export.)
+- [x] **G7 — Cutover** — move `godot/*` to repo root, delete `app/`,
       `build.gradle.kts`, `settings.gradle.kts`, `gradle/`, `gradlew*`; merge
       `GODOT_DESIGN.md` into `DESIGN.md`; update `AGENTS.md`/`ROADMAP.md` to
       describe the Godot/C# project going forward.

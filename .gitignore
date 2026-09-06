@@ -1,10 +1,7 @@
-# Android
-*.apk
-*.ap_
-*.aab
-build/
-.gradle/
-local.properties
+# Godot C# project
+.godot/
+**/bin/
+**/obj/
 
 # IDE
 .idea/
@@ -13,11 +10,3 @@ local.properties
 # OS
 .DS_Store
 Thumbs.db
-
-# Kotlin/Java
-*.class
-
-# Godot C# port (godot/)
-godot/.godot/
-godot/**/bin/
-godot/**/obj/
