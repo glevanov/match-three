@@ -27,10 +27,3 @@ public enum GamePhase
     Rejecting,
     GameOver,
 }
-
-/// <summary>Game mode chosen on the menu screen (M5; Classic timer is G3).</summary>
-public enum GameMode
-{
-    Classic,
-    Zen,
-}

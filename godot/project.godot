@@ -12,7 +12,7 @@ config/name="Match Three"
 config/description="Bejeweled-style match-three game (Godot C# port)."
 config/features=PackedStringArray("4.7", "C#")
 config/icon="res://Assets/Icon/icon.png"
-run/main_scene="res://Scenes/Game.tscn"
+run/main_scene="res://Scenes/Menu.tscn"
 
 [autoload]
 

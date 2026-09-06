@@ -82,6 +82,16 @@ intent). They are conceptually view-layer input plumbing.
   signals.
 - `GameOverScreen.cs` (CanvasLayer, in Game.tscn): dims the board, shows
   reason + score, Play again -&gt; Restart(). High-score UI lands in G5.
+- G5: `MenuScreen.cs` / `Scenes/Menu.tscn` (main scene) — Classic/Zen with
+  per-mode high scores; mode is passed via `Game.StartRound(mode)`, which
+  restarts the round and switches scenes. `GameOverScreen` gains Best +
+  New-high-score + Menu button. `HighScoreStore` (Engine/Data) persists
+  user://highscores.json (System.Text.Json) with an injected directory so
+  it runs under dotnet test. HUD gains the exit-to-menu confirm dialog
+  (AcceptDialog).
+- G4 is fully covered by G1/G2 code (SpecialRules + SpecialComboTest shipped
+  in G1, special marks in G2); `--selftest-special`/`--selftest-hypercube`
+  verify Flame+Flame (250 pts) and H+H (810 pts + regeneration) end-to-end.
 - `BoardView.cs` (Node2D): draws board bg/grid/selection in `_Draw`, owns the
   StepPlayer, handles input — drag past 40% of a cell commits the directional
   swap; tap-tap select-adjacent fallback (MECHANICS.md). Both touch and mouse
@@ -123,7 +133,8 @@ Godot's C# `ToSignal(...)` yields a `SignalAwaiter` — awaitable but not a
 
 ## Verification
 
-- `dotnet test godot/Tests` — engine rules, no Godot runtime (green: 81 tests).
+- `dotnet test godot/Tests` — engine rules, no Godot runtime (green: 87 tests,
+  incl. HighScoreStore with a temp-dir store).
 - Godot editor: `--import` + `--build-solutions` verified under 4.7.2 mono;
   autoload runs ("MatchThree autoload ready" at startup).
 - Headless self-tests (user args, exit code 0 = pass):
@@ -133,5 +144,11 @@ Godot's C# `ToSignal(...)` yields a `SignalAwaiter` — awaitable but not a
     wedges; drained to a settled, invariant-clean board).
   - `--selftest-timer`: 2s Classic timer -&gt; round ends ("Time's up!") with
     phase GameOver, then Restart() resets to Idle with a fresh round.
+  - `--selftest-special`: two adjacent Flames -&gt; Flame+Flame combo
+    (25 cells x 10 = 250 first round), settles invariant-clean.
+  - `--selftest-hypercube`: two adjacent Hypercubes -&gt; 81-cell clear
+    (810 pts) + immediate regeneration, no specials left.
+  - `--selftest-menu`: Zen round started via StartRound; mode wired, no
+    timer, board settled.
 - Board simulation metrics (150 boards, 9x9/6): avg legal moves ≈ 18.8,
   random-swap match probability ≈ 0.13 — same ballpark as the Kotlin build.

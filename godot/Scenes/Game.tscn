@@ -21,6 +21,11 @@ offset_bottom = 56.0
 theme_override_constants/separation = 28
 alignment = 1
 
+[node name="MenuButton" type="Button" parent="HUD/HudBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Menu"
+
 [node name="ScoreLabel" type="Label" parent="HUD/HudBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
@@ -36,6 +41,9 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(1, 1, 1, 0.6)
 text = "Classic"
+
+[node name="ExitDialog" type="AcceptDialog" parent="HUD"]
+title = "Exit game?"
 
 [node name="GameOver" type="CanvasLayer" parent="."]
 visible = false
@@ -56,7 +64,7 @@ anchor_bottom = 1.0
 
 [node name="VBox" type="VBoxContainer" parent="GameOver/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="GameOver/Panel/VBox"]
 layout_mode = 2
@@ -76,8 +84,35 @@ theme_override_font_sizes/font_size = 30
 text = "Score: 0"
 horizontal_alignment = 1
 
+[node name="NewHighLabel" type="Label" parent="GameOver/Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+text = "New high score!"
+horizontal_alignment = 1
+
+[node name="HighScoreLabel" type="Label" parent="GameOver/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+text = "Best: 0"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="GameOver/Panel/VBox"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
 [node name="PlayAgainButton" type="Button" parent="GameOver/Panel/VBox"]
 custom_minimum_size = Vector2(220, 60)
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Play again"
+
+[node name="MenuButton" type="Button" parent="GameOver/Panel/VBox"]
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+text = "Menu"

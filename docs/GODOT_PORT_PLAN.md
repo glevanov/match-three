@@ -189,11 +189,13 @@ Draft contents once the port starts:
       board reshuffle, `GameOver.tscn` placeholder. Port `ScorerTest`.
       (Scorer/ScorerTest and the reshuffle path landed early with G1/G2;
       G3 adds the countdown, HUD, and GameOver overlay.)
-- [ ] **G4 — Specials & combos** — `SpecialRules.cs` (birth precedence,
+- [x] **G4 — Specials & combos** — `SpecialRules.cs` (birth precedence,
       6 combos, hypercube trigger, cascade-swept detonation, H+H
       regeneration), special marks on gem sprites. Port
       `SpecialComboTest`/`SwapValidationTest`.
-- [ ] **G5 — Modes & polish** — `Menu.tscn` (Classic/Zen), mode-wired
+      (Landed with G1/G2 wholesale: engine port + tests + sprite overlays;
+      G4 adds end-to-end `--selftest-special`/`--selftest-hypercube`.)
+- [x] **G5 — Modes & polish** — `Menu.tscn` (Classic/Zen), mode-wired
       `Game.tscn`, `HighScoreStore.cs`, `GameOver.tscn` real high-score UI.
       Port `HighScoreStoreTest`.
 - [ ] **G6 — Parity check** — play both builds side by side against every

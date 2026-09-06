@@ -1,4 +1,5 @@
 using Godot;
+using MatchThree.Engine.Data;
 using MatchThree.Engine.Model;
 using MatchThree.Engine.Rules;
 
@@ -59,6 +60,7 @@ public partial class Game : Node
     private readonly Queue<BoardOp> _opQueue = new();
     private TaskCompletionSource _queueSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Task? _timerTask;
+    private HighScoreStore _highScores = null!;
 
     /// <summary>Bumped on restart; in-flight ops/callbacks from older rounds no-op.</summary>
     private int _generation;
@@ -72,8 +74,11 @@ public partial class Game : Node
     /// <summary>Set when the round ended ("Time's up!", "No moves left"); null while playing.</summary>
     public string? GameOverReason { get; private set; }
 
-    /// <summary>The mode this round runs in (menu wiring lands in G5).</summary>
-    public GameMode Mode { get; }
+    /// <summary>The mode this round runs in; chosen on the menu (G5).</summary>
+    public GameMode Mode { get; private set; } = GameMode.Classic;
+
+    /// <summary>Persistent per-mode high scores (user://highscores.json).</summary>
+    public HighScoreStore HighScores => _highScores;
 
     /// <summary>A swap buffered during input lock, with the pair's gems as the drag saw them.</summary>
     private sealed record BufferedSwap(SwapIntent Intent, Gem? A, Gem? B);
@@ -101,11 +106,22 @@ public partial class Game : Node
         _engine = new GameEngine(_config, new SeededRandom(DateTime.Now.Ticks));
         _board = _engine.NewGame();
         _phase = GamePhase.Idle;
+        _highScores = new HighScoreStore(ProjectSettings.GlobalizePath("user://"));
 
         var args = OS.GetCmdlineUserArgs();
+        if (args.Any(a => a.StartsWith("--selftest")))
+        {
+            // Main scene is the menu; self-tests drive the game scene directly.
+            // Deferred: changing scenes inside an autoload _Ready hits the tree
+            // mid-instantiation ("Parent node is busy adding/removing children").
+            GetTree().CallDeferred("change_scene_to_file", "res://Scenes/Game.tscn");
+        }
         var timerSeconds = args.Contains("--selftest-timer") ? 2 : ClassicTimerSeconds;
         StartTimerIfClassic(timerSeconds);
     }
+
+    /// <summary>Selftest launchers run once per process, not per scene bind.</summary>
+    private bool _selftestsStarted;
 
     /// <summary>
     /// Called by BoardView._Ready; starts the single consumer loop.
@@ -115,10 +131,16 @@ public partial class Game : Node
         _boardView = view;
         _ = DrainLoopAsync();
 
+        if (_selftestsStarted) return;
+        _selftestsStarted = true;
+
         var args = OS.GetCmdlineUserArgs();
         if (args.Contains("--selftest-swap")) _ = SelfTestSwapAsync();
         if (args.Contains("--selftest-reject")) _ = SelfTestRejectAsync();
         if (args.Contains("--selftest-timer")) _ = SelfTestTimerAsync();
+        if (args.Contains("--selftest-special")) _ = SelfTestSpecialAsync();
+        if (args.Contains("--selftest-hypercube")) _ = SelfTestHypercubeAsync();
+        if (args.Contains("--selftest-menu")) _ = SelfTestMenuAsync();
         var burstArg = args.FirstOrDefault(a => a.StartsWith("--selftest-burst="));
         if (burstArg is not null && int.TryParse(burstArg.Split('=')[1], out var burst) && burst > 0)
         {
@@ -178,6 +200,29 @@ public partial class Game : Node
         EmitSignal(SignalName.ScoreChanged, 0);
         EmitSignal(SignalName.RoundStarted);
         StartTimerIfClassic(ClassicTimerSeconds);
+    }
+
+    /// <summary>
+    /// Menu entry point (G5): picks the mode, starts a fresh round, and swaps
+    /// to the game scene.
+    /// </summary>
+    public void StartRound(GameMode mode)
+    {
+        Mode = mode;
+        Restart();
+        GetTree().ChangeSceneToFile("res://Scenes/Game.tscn");
+    }
+
+    /// <summary>Selftest hook: replaces the board and score without restarting the round.</summary>
+    public void LoadBoardForSelfTest(Board board)
+    {
+        _generation++;
+        _opQueue.Clear();
+        _bufferedSwap = null;
+        _board = board;
+        Score = 0;
+        _phase = GamePhase.Idle;
+        EmitSignal(SignalName.ScoreChanged, 0);
     }
 
     private void StartResolution(SwapIntent intent)
@@ -458,6 +503,96 @@ public partial class Game : Node
         catch (Exception e)
         {
             Fail($"SELFTEST-timer: {e}");
+        }
+    }
+
+    /// <summary>
+    /// `--selftest-special`: loads a board with two adjacent Flame gems, swaps
+    /// them (Flame+Flame combo: 25 unique cells at depth 1 = 250 points), and
+    /// verifies the combo plays through the full pipeline to a settled board.
+    /// </summary>
+    private async Task SelfTestSpecialAsync()
+    {
+        try
+        {
+            await WaitUntilReadyAsync();
+
+            var id = 0;
+            var board = Board.Create(9, 9, pos =>
+                (pos.Row == 4 && pos.Col == 4) || (pos.Row == 4 && pos.Col == 5)
+                    ? new Gem(id++, GemType.Red, Special.Flame)
+                    : null);
+            LoadBoardForSelfTest(board);
+            await NextFrameAsync();
+
+            SubmitSwap(SwapIntent.Of(new Position(4, 4), new Position(4, 5)));
+            await WaitForIdleAsync();
+            await NextFrameAsync();
+
+            if (Score < 250) throw new InvalidOperationException($"flame combo scored {Score}, expected >= 250");
+            VerifySettled("SELFTEST-OK-special", $"flame+flame combo played; first round 25*10=250 (total {Score})");
+        }
+        catch (Exception e)
+        {
+            Fail($"SELFTEST-special: {e}");
+        }
+    }
+
+    /// <summary>
+    /// `--selftest-hypercube`: swaps two adjacent Hypercubes — full-board clear
+    /// (81 cells = 810 points), immediate regeneration, invariant-clean board
+    /// with no specials.
+    /// </summary>
+    private async Task SelfTestHypercubeAsync()
+    {
+        try
+        {
+            await WaitUntilReadyAsync();
+
+            var board = Board.Create(9, 9, pos =>
+                (pos.Row == 4 && pos.Col == 4) || (pos.Row == 4 && pos.Col == 5)
+                    ? new Gem(100 + pos.Row * 9 + pos.Col, GemType.Blue, Special.Hypercube)
+                    : null);
+            LoadBoardForSelfTest(board);
+            await NextFrameAsync();
+
+            SubmitSwap(SwapIntent.Of(new Position(4, 4), new Position(4, 5)));
+            await WaitForIdleAsync();
+            await NextFrameAsync();
+
+            if (Score != 810) throw new InvalidOperationException($"H+H scored {Score}, expected 810");
+            var specials = _board.Positions().Count(p => _board.GemAt(p)?.Special is not null);
+            if (specials != 0) throw new InvalidOperationException($"regenerated board has {specials} specials");
+            VerifySettled("SELFTEST-OK-hypercube", "H+H full clear + regeneration; 81*10=810 points");
+        }
+        catch (Exception e)
+        {
+            Fail($"SELFTEST-hypercube: {e}");
+        }
+    }
+
+    /// <summary>
+    /// `--selftest-menu`: starts from the menu scene, picks Zen mode, verifies
+    /// the scene switch lands in the game with Mode=Zen, no timer, and the
+    /// board settled — exit 0.
+    /// </summary>
+    private async Task SelfTestMenuAsync()
+    {
+        try
+        {
+            // We are already in the game scene (Game._Ready switched from menu).
+            // Simulate a menu-driven round start in the other direction: back to
+            // the menu, then start a Zen round.
+            StartRound(GameMode.Zen);
+            await WaitUntilReadyAsync();
+
+            if (Mode != GameMode.Zen) throw new InvalidOperationException($"mode is {Mode}, expected Zen");
+            if (SecondsLeft != -1) throw new InvalidOperationException($"Zen timer is {SecondsLeft}, expected -1");
+            VerifySettled("SELFTEST-OK-menu", "Zen round started from the menu; no timer; board settled");
+        }
+        catch (Exception e)
+        {
+            Fail($"SELFTEST-menu: {e}");
         }
     }
 
