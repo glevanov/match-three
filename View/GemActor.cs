@@ -10,6 +10,7 @@ namespace MatchThree.View;
 /// Node layout:
 ///   GemActor (Node2D, this script)
 ///   ├── Base (Sprite2D)          color sprite, or the Hypercube art
+///   ├── FireRing (ColorRect)     procedural shader ring, Flame gems only
 ///   └── Overlay (Node2D)
 ///       ├── Art (Sprite2D)       Flame/Star art, centered on the gem
 ///       └── Silhouette (Sprite2D) baked alpha-silhouette outline
@@ -23,6 +24,8 @@ public partial class GemActor : Node2D
     private Sprite2D _base = null!;
     private Sprite2D _art = null!;
     private Sprite2D _silhouette = null!;
+    private ColorRect _fireRing = null!;
+    private ShaderMaterial _fireRingMaterial = null!;
     private float _cellSizePx;
 
     /// <summary>Stable gem id; never changes for the lifetime of the actor.</summary>
@@ -40,6 +43,13 @@ public partial class GemActor : Node2D
         var overlay = GetNode<Node2D>("Overlay");
         _art = overlay.GetNode<Sprite2D>("Art");
         _silhouette = overlay.GetNode<Sprite2D>("Silhouette");
+
+        // Per-instance material: every GemActor instantiates the same .tscn, so
+        // the shared ShaderMaterial must be duplicated or setting time_offset on
+        // one gem would desync (and then lock-step) all Flame gems at once.
+        _fireRing = GetNode<ColorRect>("FireRing");
+        _fireRing.Material = (ShaderMaterial)((ShaderMaterial)_fireRing.Material).Duplicate();
+        _fireRingMaterial = (ShaderMaterial)_fireRing.Material;
     }
 
     /// <summary>Configures identity + appearance. Called exactly once at spawn/creation.</summary>
@@ -93,6 +103,25 @@ public partial class GemActor : Node2D
         var baseTexture = GemSprites.BaseFor(Type, SpecialKind);
         _base.Texture = baseTexture;
         _base.Scale = Vector2.One * (span / Mathf.Max(baseTexture.GetWidth(), baseTexture.GetHeight()));
+
+        // Fire ring: animated shader annulus hugging the gem edge (Flame only).
+        // Evaluated before the overlay early-return so every appearance state
+        // ends with the ring either on or off. Rect is 2.2x the gem span;
+        // inner_radius is the gem-edge distance normalized to the rect's
+        // half-extent (span/2 / (1.1*span) = 1/2.2).
+        if (SpecialKind == Special.Flame)
+        {
+            var nodeHalfSize = span * 1.1f;
+            _fireRing.Size = Vector2.One * nodeHalfSize * 2f;
+            _fireRing.Position = -Vector2.One * nodeHalfSize;
+            _fireRingMaterial.SetShaderParameter("inner_radius", 0.5f * (span / (nodeHalfSize * 2f)) * 2f);
+            _fireRingMaterial.SetShaderParameter("time_offset", (GemId * 37 % 1000) / 1000f * Mathf.Tau);
+            _fireRing.Visible = true;
+        }
+        else
+        {
+            _fireRing.Visible = false;
+        }
 
         // Overlay: Flame (solid, 0.45 inset) and Star (55% opacity, full gem).
         var overlayTexture = GemSprites.ArtFor(SpecialKind);

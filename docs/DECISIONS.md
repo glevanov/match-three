@@ -15,3 +15,4 @@ game rules derived from these live in [MECHANICS.md](MECHANICS.md).
 | Game over | Timer (Classic) or dead board + failed reshuffle (Zen) |
 | Classic timer | 75 s placeholder per round, no bonuses yet |
 | RNG | SeededRandom (System.Random); deterministic per session/seed |
+| Flame fire ring (visual) | Augment: procedural `gem_fire.gdshader` annulus around the gem edge, over the existing centered Flame icon; ring is the additive cue, icon stays for readability |

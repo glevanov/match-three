@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://dsdo6rqqv69db"]
+[gd_scene load_steps=4 format=3 uid="uid://dsdo6rqqv69db"]
 
 [ext_resource type="Script" path="res://View/GemActor.cs" id="1_actor"]
+[ext_resource type="Shader" path="res://Assets/Shaders/gem_fire.gdshader" id="2_fire"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fire"]
+shader = ExtResource("2_fire")
 
 [node name="GemActor" type="Node2D"]
 script = ExtResource("1_actor")
@@ -12,3 +16,8 @@ script = ExtResource("1_actor")
 [node name="Art" type="Sprite2D" parent="Overlay"]
 
 [node name="Silhouette" type="Sprite2D" parent="Overlay"]
+
+[node name="FireRing" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_fire")
+visible = false
+mouse_filter = 2
