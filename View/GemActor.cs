@@ -103,20 +103,25 @@ public partial class GemActor : Node2D
         // Base: Hypercube has its own sprite; everything else uses the color art.
         var baseTexture = GemSprites.BaseFor(Type, SpecialKind);
         _base.Texture = baseTexture;
-        _base.Scale = Vector2.One * (span / Mathf.Max(baseTexture.GetWidth(), baseTexture.GetHeight()));
+        // Shared scale: Base and the fire-aura rect must use the SAME scale so
+        // FireRing occupies exactly Base's drawn footprint (texture dims x
+        // scale, preserving each gem's real aspect ratio) and the shader's UVs
+        // line up 1:1 with baseTexture's pixels for the alpha mask below.
+        var scale = span / Mathf.Max(baseTexture.GetWidth(), baseTexture.GetHeight());
+        _base.Scale = Vector2.One * scale;
 
-        // Fire aura: animated shader covering the gem's own body (Flame only).
+        // Fire aura: shader covering the gem's own body (Flame only).
         // Evaluated before the overlay early-return so every appearance state
-        // ends with the aura either on or off. The rect exactly matches the
-        // gem's bounding box (span x span), which is what lines the shader's
-        // dist > 1.0 discard up with the visible gem edge — bleeding into
-        // neighboring cells is structurally impossible (docs/DECISIONS.md
-        // "Flame aura (visual)").
+        // ends with the aura either on or off. The shader masks with
+        // baseTexture's alpha (docs/DECISIONS.md "Flame aura (visual)"), so the
+        // aura traces each GemType's actual silhouette — bleeding into
+        // neighboring cells is structurally impossible.
         if (SpecialKind == Special.Flame)
         {
-            var half = span / 2f;
-            _fireRing.Size = Vector2.One * span;
-            _fireRing.Position = -Vector2.One * half;
+            var fireSize = new Vector2(baseTexture.GetWidth(), baseTexture.GetHeight()) * scale;
+            _fireRing.Size = fireSize;
+            _fireRing.Position = -fireSize / 2f;
+            _fireRingMaterial.SetShaderParameter("mask_texture", baseTexture);
             _fireRingMaterial.SetShaderParameter("time_offset", (GemId * 37 % 1000) / 1000f * Mathf.Tau);
             _fireRing.Visible = true;
         }
