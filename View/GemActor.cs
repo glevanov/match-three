@@ -10,9 +10,10 @@ namespace MatchThree.View;
 /// Node layout:
 ///   GemActor (Node2D, this script)
 ///   ├── Base (Sprite2D)          color sprite, or the Hypercube art
-///   ├── FireRing (ColorRect)     procedural shader ring, Flame gems only
+///   ├── FireRing (ColorRect)     procedural shader aura over the gem body,
+///   │                            Flame gems only (same span as the gem)
 ///   └── Overlay (Node2D)
-///       ├── Art (Sprite2D)       Flame/Star art, centered on the gem
+///       ├── Art (Sprite2D)       Star sparkle art (Flame dropped its icon)
 ///       └── Silhouette (Sprite2D) baked alpha-silhouette outline
 ///
 /// Animations are Tween-driven; the async methods complete when the tween's
@@ -104,17 +105,18 @@ public partial class GemActor : Node2D
         _base.Texture = baseTexture;
         _base.Scale = Vector2.One * (span / Mathf.Max(baseTexture.GetWidth(), baseTexture.GetHeight()));
 
-        // Fire ring: animated shader annulus hugging the gem edge (Flame only).
+        // Fire aura: animated shader covering the gem's own body (Flame only).
         // Evaluated before the overlay early-return so every appearance state
-        // ends with the ring either on or off. Rect is 2.2x the gem span;
-        // inner_radius is the gem-edge distance normalized to the rect's
-        // half-extent (span/2 / (1.1*span) = 1/2.2).
+        // ends with the aura either on or off. The rect exactly matches the
+        // gem's bounding box (span x span), which is what lines the shader's
+        // dist > 1.0 discard up with the visible gem edge — bleeding into
+        // neighboring cells is structurally impossible (docs/DECISIONS.md
+        // "Flame aura (visual)").
         if (SpecialKind == Special.Flame)
         {
-            var nodeHalfSize = span * 1.1f;
-            _fireRing.Size = Vector2.One * nodeHalfSize * 2f;
-            _fireRing.Position = -Vector2.One * nodeHalfSize;
-            _fireRingMaterial.SetShaderParameter("inner_radius", 0.5f * (span / (nodeHalfSize * 2f)) * 2f);
+            var half = span / 2f;
+            _fireRing.Size = Vector2.One * span;
+            _fireRing.Position = -Vector2.One * half;
             _fireRingMaterial.SetShaderParameter("time_offset", (GemId * 37 % 1000) / 1000f * Mathf.Tau);
             _fireRing.Visible = true;
         }
@@ -123,8 +125,10 @@ public partial class GemActor : Node2D
             _fireRing.Visible = false;
         }
 
-        // Overlay: Flame (solid, 0.45 inset) and Star (55% opacity, full gem).
-        var overlayTexture = GemSprites.ArtFor(SpecialKind);
+        // Overlay: the aura alone is now the "on fire" cue, so Flame dropped
+        // its center icon (docs/DECISIONS.md "Flame aura (visual)"); only Star
+        // keeps a separate see-through overlay (55% opacity, full gem).
+        var overlayTexture = SpecialKind == Special.Star ? GemSprites.ArtFor(Special.Star) : null;
         _art.Visible = overlayTexture is not null;
         _silhouette.Visible = overlayTexture is not null;
         if (overlayTexture is null) return;
