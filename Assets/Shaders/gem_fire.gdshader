@@ -1,11 +1,12 @@
 shader_type canvas_item;
 render_mode unshaded, blend_add;
 // Procedural fire aura for Flame-special gems (docs: DECISIONS.md "Flame aura
-// (visual)"). v6: additive blend + higher intensity — on-device measurement of
-// v5 showed the aura rendered but was nearly invisible (mean RGB delta 3-27/
-// 255 vs the plain gem; ~8% effective mid-body alpha), worst on light gems.
-// Additive glow brightens the gem instead of tinting it, so it reads on every
-// color and never obscures the gem beneath (non-obstructive by construction).
+// (visual)"). v7: the aura is tinted per gem type — GemActor passes the gem's
+// own colors (GemSprites.AuraColors: core = art mean lightened 55% toward
+// white, rim = art mean lightened 15%) as core_color/rim_color, so a blue gem
+// glows light blue. blend_add: the glow brightens the gem instead of tinting
+// it, so it reads on every color and never obscures the gem beneath
+// (non-obstructive by construction).
 //
 // The mask is the gem's own base-texture alpha: every GemType has a different
 // silhouette (round, teardrop, diamond, squircle, ...), and the alpha mask
@@ -24,8 +25,10 @@ render_mode unshaded, blend_add;
 // to zero as the parent fades.
 
 uniform float time_offset = 0.0;
-uniform vec4 core_color : source_color = vec4(1.0, 0.75, 0.25, 1.0); // warm inner glow
-uniform vec4 rim_color  : source_color = vec4(1.0, 0.45, 0.05, 1.0); // hot rim
+// core/rim are set per gem by GemActor (GemSprites.AuraColors). The defaults
+// below are only a neutral fallback for materials created outside that path.
+uniform vec4 core_color : source_color = vec4(0.9, 0.9, 0.95, 1.0);
+uniform vec4 rim_color  : source_color = vec4(0.7, 0.7, 0.8, 1.0);
 uniform float intensity = 0.85; // additive gain — raised from 0.35 after on-device
                                 // measurement showed the aura was nearly invisible
 // The gem's own base texture — its alpha IS the shape. repeat_disable keeps

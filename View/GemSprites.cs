@@ -32,6 +32,7 @@ public static class GemSprites
     private static Texture2D? _hypercube;
     private static Dictionary<Special, Texture2D>? _art;
     private static Dictionary<Special, Texture2D>? _outline;
+    private static Dictionary<GemType, (Color Core, Color Rim)>? _aura;
 
     /// <summary>Loads all sprites once (cheap, synchronous; called by BoardView._Ready).</summary>
     public static void EnsureLoaded()
@@ -63,6 +64,13 @@ public static class GemSprites
             [Special.Flame] = BakeSilhouette(flame, Colors.Black, 1f),
             [Special.Star] = BakeSilhouette(sparkle, Colors.White, StarOutlineAlpha),
         };
+
+        // Per-gem aura tints for the flame shader, derived from each gem's own
+        // art (docs/DECISIONS.md "Flame aura (visual)"): a blue gem gets a light
+        // blue glow. Base color is the mean over opaque pixels (the center
+        // pixel skews to the art's highlight); rim = base lightened 15%,
+        // core = base lightened 55% toward white — the "glowing" version.
+        _aura = _color.ToDictionary(kv => kv.Key, kv => AuraFrom(kv.Value));
     }
 
     /// <summary>Base sprite for a gem: the Hypercube art, or the color sprite.</summary>
@@ -84,6 +92,37 @@ public static class GemSprites
     {
         EnsureLoaded();
         return special is Special.Flame or Special.Star ? _outline![special.Value] : null;
+    }
+
+    /// <summary>Flame-aura colors for a gem type: core (inner glow, light) and
+    /// rim (edge, closer to the gem's own color). Cached from the art.</summary>
+    public static (Color Core, Color Rim) AuraColors(GemType type)
+    {
+        EnsureLoaded();
+        return _aura![type];
+    }
+
+    private static (Color Core, Color Rim) AuraFrom(Texture2D texture)
+    {
+        var image = texture.GetImage();
+        var w = image.GetWidth();
+        var h = image.GetHeight();
+        double r = 0, g = 0, b = 0;
+        long n = 0;
+        for (var y = 0; y < h; y++)
+        {
+            for (var x = 0; x < w; x++)
+            {
+                var p = image.GetPixel(x, y);
+                if (p.A <= 0.5f) continue;
+                r += p.R;
+                g += p.G;
+                b += p.B;
+                n++;
+            }
+        }
+        var baseColor = new Color((float)(r / n), (float)(g / n), (float)(b / n), 1f);
+        return (baseColor.Lerp(Colors.White, 0.55f), baseColor.Lerp(Colors.White, 0.15f));
     }
 
     /// <summary>Size of the overlay as a fraction of the base sprite.</summary>

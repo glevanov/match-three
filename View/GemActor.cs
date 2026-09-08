@@ -122,6 +122,11 @@ public partial class GemActor : Node2D
             _fireRing.Size = fireSize;
             _fireRing.Position = -fireSize / 2f;
             _fireRingMaterial.SetShaderParameter("mask_texture", baseTexture);
+            // Per-gem aura tint: a blue gem glows light blue (GemSprites.
+            // AuraColors derives core/rim from the gem's own art).
+            var (coreColor, rimColor) = GemSprites.AuraColors(Type);
+            _fireRingMaterial.SetShaderParameter("core_color", coreColor);
+            _fireRingMaterial.SetShaderParameter("rim_color", rimColor);
             _fireRingMaterial.SetShaderParameter("time_offset", (GemId * 37 % 1000) / 1000f * Mathf.Tau);
             _fireRing.Visible = true;
         }
