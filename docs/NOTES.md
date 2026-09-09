@@ -6,6 +6,27 @@
   graceful-end placeholder.
 - **Timer value 75s is placeholder.** Tune against actual play.
 
+## Dev tooling: Android export/deploy script
+
+Use `scripts/export-android.sh` for phone builds. It:
+
+- ensures Godot can find `dotnet` (prepends `$HOME/.dotnet` when needed)
+- exports with the safe .NET flow: `godot --headless --export-debug "Android"`
+- intentionally avoids `--build-solutions` during export (that previously produced a broken APK with missing managed assemblies)
+- validates that the APK actually contains `MatchThree.dll`, `MatchThree.Engine.dll`, and `GodotSharp.dll`
+- optionally installs and launches via `adb`
+- suppresses one known spurious Godot 4.7.2 headless-export warning about `export/android/shutdown_adb_on_exit`
+
+Typical use:
+
+```sh
+scripts/export-android.sh --install --run
+```
+
+If you still see `FeatureFlagsImplExport ... package android.xr` or `gralloc5`
+lines in device `logcat`, those are platform/driver noise, not this repo's
+export flow.
+
 ## Dev tooling: effect debug screen
 
 `Scenes/DebugStarGlow.tscn` (+ `View/DebugStarGlow.cs`) is a standalone 3×3
@@ -18,7 +39,5 @@ To launch it on the phone (then REVERT the main scene afterwards):
 
 ```sh
 sed -i 's#run/main_scene="res://Scenes/Menu.tscn"#run/main_scene="res://Scenes/DebugStarGlow.tscn"#' project.godot
-/tmp/godot_mono/Godot_v4.7.2-stable_mono_linux_x86_64/godot --headless --export-debug "Android" build/matchthree-debug.apk
-adb install -r build/matchthree-debug.apk
-adb shell am force-stop com.matchthree && adb shell am start -n com.matchthree/com.godot.game.GodotAppLauncher
+scripts/export-android.sh --install --run
 ```

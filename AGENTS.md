@@ -29,6 +29,10 @@ original source art; `Assets/` holds what the game actually loads.
   tests.
 - **NUnit on the engine.** Any new mechanic gets a `dotnet test` before UI
   integration (precedent: precedence, unique-cell scoring).
+- **Android debug export.** Use `scripts/export-android.sh` for APK device
+  builds/deploys (for example `--install --run`). Do **not** combine Godot
+  `--export-debug` with `--build-solutions`; that can produce an APK missing
+  managed assemblies and crash on startup.
 - **One writer per branch.** When delegating, either use a worktree or hand off
   parameters; agents in this repo coordinate via AGENTS.md.
 
