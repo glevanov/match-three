@@ -25,11 +25,13 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 - **Birth rule:** runs sharing cells form one **shape** (a T/L is one shape of two intersecting runs); **each shape births one special** — one gem from the winning pattern of that shape **transforms**, the rest clear normally. Non-overlapping shapes in the same cascade round each birth their own special. Hypercube stays colorless.
 - **Precedence:** 5-in-row > T/L > 4-in-row > plain 3, applied within a shape. Max shape wins when multiple patterns share a cell; shapes that share no cells resolve independently. Deterministic and testable.
 - **Cascade rule:** a special caught in any later cascade match **detonates**; no silently-destroyed specials.
-- **Hypercube trigger:** has no color; swapping with a normal gem clears all gems of the swapped color. A Hypercube only triggers on a gesture that targeted it — see Input lock (a stale buffered swap never consumes a newly-arrived Hypercube).
+- **Chain-detonation rule:** when a **Flame** or **Star** is cleared by a blast/line effect (including one swept up by a combo), it detonates in the same step; chain recursively until no new Flame/Stars are hit.
+- **Blast-hit Hypercube rule:** when a detonating Flame or Star clears a Hypercube, that Hypercube activates once using the detonator's color.
+- **Hypercube trigger:** has no color; swapping with a normal gem clears all gems of the swapped color. Outside the blast-hit rule above, a Hypercube only activates on a gesture that targeted it — see Input lock (a stale buffered swap never consumes a newly-arrived Hypercube).
 
 ## Combos
 
-Fire when a player swap swaps two specials. Emits `Step.ComboActivate(specialA, specialB, affectedCells)` before normal `Destroy → Fall → Spawn`.
+Fire when a player swap swaps two specials. Emits `Step.ComboActivate(specialA, specialB, affectedCells)` before normal `Destroy → Fall → Spawn`. The swapped pair is consumed by the combo effect itself; any other Flame/Star swept up by that combo then follows the chain-detonation rule above.
 
 | Combo | Effect |
 |---|---|

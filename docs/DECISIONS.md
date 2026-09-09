@@ -10,7 +10,7 @@ game rules derived from these live in [MECHANICS.md](MECHANICS.md).
 | Rendering | Godot nodes (per-gem GemActor scenes) |
 | Input during lock | Buffer most-recent drag, not drop; stale-drop only when a Hypercube enters/leaves the buffered pair |
 | Special birth | Per shape (runs sharing cells): one gem transforms per shape per round; others clear |
-| Cascade-swept specials | They detonate |
+| Cascade-/blast-swept specials | Flame/Star chain-detonate; blast-hit Hypercubes trigger on the detonator's color |
 | Unique-cell scoring | Set<Position>, tested |
 | Game over | Timer (Classic) or dead board + failed reshuffle (Zen) |
 | Classic timer | 75 s placeholder per round, no bonuses yet |

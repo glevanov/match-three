@@ -8,7 +8,7 @@ namespace MatchThree.Engine.Rules;
 /// <see cref="Step"/>s which the UI plays back for animation.
 ///
 /// The resolution loop also handles special gems — births (one gem per
-/// shape group transforms, precedence 5 &gt; T/L &gt; 4 &gt; 3), cascade-swept
+/// shape group transforms, precedence 5 &gt; T/L &gt; 4 &gt; 3), cascade/chain
 /// detonation, player swap combos, and Hypercube+Hypercube board regeneration.
 /// </summary>
 public sealed class GameEngine

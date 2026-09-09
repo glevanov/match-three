@@ -131,7 +131,7 @@ explicitly.
 | Flame 3x3 / Star row+col / Hypercube colorless | SpecialComboTest (pure + integration) |
 | Birth: per shape, one special, rest clear | SpecialComboTest per-shape-group tests |
 | Precedence 5 &gt; T/L &gt; 4 &gt; 3 | SpecialComboTest precedence cases |
-| Cascade-swept specials detonate | SpecialComboTest.flameSwept + engine round loop |
+| Cascade-/blast-swept specials chain-detonate; blast-hit Hypercubes trigger on the detonator color | SpecialComboTest.flameSwept + SpecialComboTest.flameBlastChains + engine round loop |
 | Hypercube trigger (plain/special partner) | SpecialComboTest + --selftest-hypercube |
 | Six combos + ComboActivate before Destroy | SpecialComboTest (all six, step order) |
 | H+H full clear + immediate regeneration | SpecialComboTest + --selftest-hypercube (810 pts, no specials) |

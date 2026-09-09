@@ -161,24 +161,18 @@ public static class SpecialRules
         };
 
     /// <summary>
-    /// Extra detonations from specials swept into a cascade round's match cells.
-    /// The matched cells themselves are cleared anyway; this adds their blasts.
+    /// Extra cleared cells from Flame/Star detonations seeded by a cascade
+    /// round's matched cells. The matched cells themselves are cleared anyway;
+    /// this adds the recursive chain (including Hypercubes triggered from the
+    /// detonator's color).
     /// </summary>
-    public static ISet<Position> SweptBlastCells(Board board, ISet<Position> matched)
-    {
-        var extra = new HashSet<Position>();
-        foreach (var pos in matched)
-        {
-            var gem = board.GemAt(pos);
-            // gem.special is nullable (Special?); use an explicit property
-            // pattern to unwrap it.
-            if (gem is { Special: { } special } && special != Special.Hypercube)
-            {
-                extra.UnionWith(DetonationCells(board, pos, special));
-            }
-        }
-        return extra;
-    }
+    public static ISet<Position> SweptBlastCells(Board board, ISet<Position> matched) =>
+        ChainReactionCells(
+            board,
+            initiallyCleared: matched,
+            initialDetonations: Array.Empty<DetonationSeed>())
+        .Except(matched)
+        .ToHashSet();
 
     /// <summary>
     /// Cells cleared when <paramref name="hyperPos"/>'s hypercube triggers
@@ -197,19 +191,28 @@ public static class SpecialRules
         if (partnerGem is null) return new HashSet<Position> { hyperPos };
 
         var color = partnerGem.Value.Type;
-        var affected = new HashSet<Position> { hyperPos };
-        foreach (var pos in board.Positions())
-        {
-            if (board.GemAt(pos)?.Type != color) continue;
-            if (partnerSpecial is null) affected.Add(pos);
-            else affected.UnionWith(DetonationCells(board, pos, partnerSpecial.Value));
-        }
-        return affected;
+        if (partnerSpecial is null) return HypercubeTriggerCellsByColor(board, hyperPos, color, null);
+
+        var transformed = board.Positions()
+            .Where(pos =>
+                pos != hyperPos &&
+                board.GemAt(pos) is { Type: var type, Special: not Special.Hypercube } &&
+                type == color)
+            .ToHashSet();
+
+        return ChainReactionCells(
+            board,
+            initiallyCleared: new[] { hyperPos },
+            initialDetonations: transformed.Select(pos => new DetonationSeed(pos, partnerSpecial.Value, color)),
+            ignoredDetonators: transformed);
     }
 
     /// <summary>
     /// The cells cleared by a player-swap combo (MECHANICS.md combo table).
     /// Both swapped positions count as cleared (the specials are consumed).
+    /// Secondary Flame/Star specials caught in the combo area then detonate;
+    /// the swapped pair themselves stay consumed by the combo effect instead of
+    /// re-firing their native detonation on top.
     /// </summary>
     public static ISet<Position> ComboAffectedCells(
         Board board,
@@ -233,7 +236,7 @@ public static class SpecialRules
             return HypercubeTriggerCells(board, hyperPos, partnerPos, partnerSpec);
         }
 
-        return (specA, specB) switch
+        var affected = (specA, specB) switch
         {
             (Special.Flame, Special.Flame) => Blast(swapA, radius: 2, board),
             (Special.Flame, Special.Star) or (Special.Star, Special.Flame) => ThickCross(swapA, board),
@@ -243,7 +246,106 @@ public static class SpecialRules
             // the Hypercube branch above; this arm is unreachable.
             _ => new HashSet<Position>(),
         };
+
+        return ChainReactionCells(
+            board,
+            initiallyCleared: affected,
+            initialDetonations: Array.Empty<DetonationSeed>(),
+            ignoredDetonators: new HashSet<Position> { swapA, swapB });
     }
+
+    private sealed record DetonationSeed(Position Center, Special Effect, GemType Color);
+
+    /// <summary>
+    /// Recursively resolves Flame/Star detonations from already-cleared cells
+    /// and/or explicit detonation seeds. A detonating Flame/Star can trigger a
+    /// Hypercube once, using the detonator's color. Ignored positions are
+    /// consumed by the caller's effect already (combo participants, temporary
+    /// Hypercube+special transforms), so they do not also fire their board
+    /// native special kind.
+    /// </summary>
+    private static ISet<Position> ChainReactionCells(
+        Board board,
+        IEnumerable<Position> initiallyCleared,
+        IEnumerable<DetonationSeed> initialDetonations,
+        ISet<Position>? ignoredDetonators = null)
+    {
+        var ignored = ignoredDetonators ?? new HashSet<Position>();
+        var affected = initiallyCleared.ToHashSet();
+        var pending = new Queue<DetonationSeed>();
+        var queuedDetonators = new HashSet<Position>();
+        var triggeredHypercubes = new HashSet<Position>();
+
+        void EnqueueSeed(DetonationSeed seed)
+        {
+            if (queuedDetonators.Add(seed.Center)) pending.Enqueue(seed);
+        }
+
+        void EnqueueActualDetonator(Position pos)
+        {
+            if (ignored.Contains(pos)) return;
+            var gem = board.GemAt(pos);
+            if (gem is { Special: { } special, Type: var color } && special != Special.Hypercube)
+            {
+                EnqueueSeed(new DetonationSeed(pos, special, color));
+            }
+        }
+
+        foreach (var seed in initialDetonations.OrderBy(seed => seed.Center.Row).ThenBy(seed => seed.Center.Col))
+        {
+            EnqueueSeed(seed);
+        }
+        foreach (var pos in OrderByBoard(initiallyCleared))
+        {
+            EnqueueActualDetonator(pos);
+        }
+
+        while (pending.Count > 0)
+        {
+            var seed = pending.Dequeue();
+            foreach (var cell in OrderByBoard(DetonationCells(board, seed.Center, seed.Effect)))
+            {
+                affected.Add(cell);
+
+                var gem = board.GemAt(cell);
+                if (gem is not { Special: { } special }) continue;
+
+                if (special == Special.Hypercube)
+                {
+                    if (triggeredHypercubes.Add(cell))
+                    {
+                        affected.UnionWith(HypercubeTriggerCellsByColor(board, cell, seed.Color, null));
+                    }
+                }
+                else
+                {
+                    EnqueueActualDetonator(cell);
+                }
+            }
+        }
+
+        return affected;
+    }
+
+    private static ISet<Position> HypercubeTriggerCellsByColor(
+        Board board,
+        Position hyperPos,
+        GemType color,
+        Special? partnerSpecial)
+    {
+        var affected = new HashSet<Position> { hyperPos };
+        foreach (var pos in board.Positions())
+        {
+            var gem = board.GemAt(pos);
+            if (gem is not { Type: var type, Special: not Special.Hypercube } || type != color) continue;
+            if (partnerSpecial is null) affected.Add(pos);
+            else affected.UnionWith(DetonationCells(board, pos, partnerSpecial.Value));
+        }
+        return affected;
+    }
+
+    private static IEnumerable<Position> OrderByBoard(IEnumerable<Position> cells) =>
+        cells.OrderBy(pos => pos.Row).ThenBy(pos => pos.Col);
 
     // --- shape analysis -----------------------------------------------------
 

@@ -5,9 +5,9 @@ using NUnit.Framework;
 namespace MatchThree.Engine.Tests;
 
 /// <summary>
-/// Special-gem tests: birth precedence, all six combos, cascade-swept
-/// detonation, Hypercube+Hypercube regeneration, and unique-cell scoring with
-/// combos. Pure rule tests call <see cref="SpecialRules"/> directly; integration
+/// Special-gem tests: birth precedence, all six combos, chain detonation of
+/// swept/blasted specials, Hypercube+Hypercube regeneration, and unique-cell
+/// scoring with combos. Pure rule tests call <see cref="SpecialRules"/> directly; integration
 /// tests run full <see cref="GameEngine.ResolveSwap"/> resolutions.
 /// </summary>
 public class SpecialComboTest
@@ -311,7 +311,7 @@ public class SpecialComboTest
         Assert.That(Scorer.RoundScore(cells, 1) / Scorer.BASE_POINTS_PER_GEM, Is.EqualTo(25));
     }
 
-    // --- integration: cascade-swept detonation ------------------------------
+    // --- integration: cascade / chain detonation ----------------------------
 
     [Test]
     public void FlameSweptIntoACascadeMatchDetonatesAndBlastsTheArea()
@@ -335,6 +335,35 @@ public class SpecialComboTest
         Assert.That(firstDestroy.Positions, Has.Count.EqualTo(9));
         Assert.That(firstDestroy.Positions.Contains(Pos(3, 4)), Is.True); // blast cell outside the run
         Assert.That(firstDestroy.Positions.Contains(Pos(5, 4)), Is.True);
+    }
+
+    [Test]
+    public void FlameBlastChainsIntoABlastedStarAndHypercube()
+    {
+        var engine = Engine();
+        // Same RED-flame sweep as above, but the 3x3 also catches a STAR and a
+        // HYPERCUBE. The star must clear row 3 + col 5; the hypercube must
+        // trigger on RED, the detonating flame's color.
+        var board = Board9(new Dictionary<Position, Gem>
+        {
+            [Pos(0, 0)] = Gem(GemType.Red),
+            [Pos(3, 5)] = Gem(GemType.Green, Special.Star),
+            [Pos(4, 3)] = Gem(GemType.Red),
+            [Pos(4, 4)] = Gem(GemType.Red, Special.Flame),
+            [Pos(4, 5)] = Gem(GemType.Yellow),
+            [Pos(5, 3)] = Gem(GemType.Blue, Special.Hypercube),
+            [Pos(5, 5)] = Gem(GemType.Red),
+            [Pos(8, 8)] = Gem(GemType.Red),
+        });
+        var resolution = engine.ResolveSwap(board, Pos(4, 5), Pos(5, 5));
+        Assert.That(resolution, Is.Not.Null);
+        var firstDestroy = resolution!.Steps.OfType<Step.Destroy>().First();
+
+        Assert.That(firstDestroy.Positions, Has.Count.EqualTo(23));
+        Assert.That(firstDestroy.Positions.Contains(Pos(3, 8)), Is.True); // star row
+        Assert.That(firstDestroy.Positions.Contains(Pos(0, 5)), Is.True); // star column
+        Assert.That(firstDestroy.Positions.Contains(Pos(0, 0)), Is.True); // hypercube RED clear
+        Assert.That(firstDestroy.Positions.Contains(Pos(8, 8)), Is.True);
     }
 
     // --- integration: swaps of specials -------------------------------------
