@@ -9,24 +9,29 @@ namespace MatchThree.View;
 /// Flame/Star overlay art whose alpha silhouettes are traced once into outline
 /// textures.
 ///
-/// - Orange renders with white.png — the orange art reads almost the same as
-///   yellow on the board; the gem type stays Orange logically.
-/// - Flame overlay is a small centered inset (0.45 of the gem); the Star
-///   sparkle spans the gem at 55% opacity with a 70%-alpha white outline.
+/// - Orange uses assets/orange.png downscaled to 256px (it used to render with
+///   white.png because the old orange art read almost the same as yellow on
+///   the board; the real orange is used again now — user direction).
+/// - Flame overlay is a small centered inset (0.45 of the gem); the Star's
+///   glow-star art (Kenney star_06) is zoomed ~2.2x so its cross fills the
+///   whole gem, at 30% opacity, no outline (user direction).
 /// </summary>
 public static class GemSprites
 {
     /// <summary>Star overlay alpha (see-through sparkle over the gem).</summary>
-    public const float StarOverlayAlpha = 0.55f;
-
-    /// <summary>Star outline alpha — readable on any base color.</summary>
-    public const float StarOutlineAlpha = 0.7f;
+    public const float StarOverlayAlpha = 0.30f;
 
     /// <summary>Flame overlay size as a fraction of the gem (inset keeps it inside).</summary>
     public const float FlameOverlayFraction = 0.45f;
 
     /// <summary>Fraction of the cell a gem sprite spans; the rest is gutter between gems.</summary>
     public const float GemWidthFraction = 0.94f;
+
+    /// <summary>Star overlay zoom: star_06's bright cross spans only ~43% of
+    /// its texture (soft alpha falloff), so drawing it at 1x leaves a small
+    /// star on the gem. 2.2x brings the cross to the gem's full width and lets
+    /// the soft ray tails fade just past the gem edge.</summary>
+    public const float StarOverlayFraction = 2.2f;
 
     private static Dictionary<GemType, Texture2D>? _color;
     private static Texture2D? _hypercube;
@@ -46,23 +51,24 @@ public static class GemSprites
             [GemType.Blue] = Load("blue.png"),
             [GemType.Yellow] = Load("yellow.png"),
             [GemType.Purple] = Load("purple.png"),
-            [GemType.Orange] = Load("white.png"), // see class docs
+            [GemType.Orange] = Load("orange.png"), // real orange art again (see class docs)
         };
         _hypercube = Load("hypercube.png");
 
         var flame = Load("flame.png");
-        var sparkle = Load("sparkle.png");
+        var star = Load("star_06.png");
         _art = new Dictionary<Special, Texture2D>
         {
             [Special.Flame] = flame,
-            [Special.Star] = sparkle,
+            [Special.Star] = star,
         };
         _outline = new Dictionary<Special, Texture2D>
         {
-            // Trace the alpha silhouette and stroke it black (flame) / white at
-            // 0.7 (star); bake that stroke into textures once.
+            // Only the Flame silhouette is baked — reserved for its optional
+            // center icon (docs/DECISIONS.md "Flame aura (visual)": re-enabling
+            // the icon is a one-liner in GemActor.ApplyAppearance). The Star's
+            // soft glow art gets NO outline (user direction: no border).
             [Special.Flame] = BakeSilhouette(flame, Colors.Black, 1f),
-            [Special.Star] = BakeSilhouette(sparkle, Colors.White, StarOutlineAlpha),
         };
 
         // Per-gem aura tints for the flame shader, derived from each gem's own
@@ -91,7 +97,9 @@ public static class GemSprites
     public static Texture2D? OutlineFor(Special? special)
     {
         EnsureLoaded();
-        return special is Special.Flame or Special.Star ? _outline![special.Value] : null;
+        if (special is null) return null;
+        // Flame's baked icon silhouette (star has no outline — user direction).
+        return _outline!.GetValueOrDefault(special.Value);
     }
 
     /// <summary>Flame-aura colors for a gem type: core (inner glow, light) and
@@ -127,15 +135,19 @@ public static class GemSprites
 
     /// <summary>Size of the overlay as a fraction of the base sprite.</summary>
     public static float OverlayFraction(Special? special) =>
-        special == Special.Flame ? FlameOverlayFraction : 1f;
+        special switch
+        {
+            Special.Flame => FlameOverlayFraction,
+            Special.Star => StarOverlayFraction,
+            _ => 1f,
+        };
 
     /// <summary>Alpha of the overlay (Star see-through, Flame solid).</summary>
     public static float OverlayAlpha(Special? special) =>
         special == Special.Star ? StarOverlayAlpha : 1f;
 
-    /// <summary>Alpha of the silhouette outline.</summary>
-    public static float OutlineAlpha(Special? special) =>
-        special == Special.Star ? StarOutlineAlpha : 1f;
+    /// <summary>Alpha of the silhouette outline (flame's icon stroke, opaque black).</summary>
+    public static float OutlineAlpha(Special? special) => 1f;
 
     private static Texture2D Load(string name) =>
         GD.Load<Texture2D>($"res://Assets/Sprites/{name}");
@@ -143,8 +155,10 @@ public static class GemSprites
     /// <summary>
     /// Traces the outer boundary where <paramref name="texture"/>'s alpha channel
     /// transitions from transparent to opaque, dilates it one pixel (a ~2-3px
-    /// stroke) and bakes it into a
-    /// texture of <paramref name="color"/> at <paramref name="alpha"/>.
+    /// stroke) and bakes it into a texture of <paramref name="color"/> at
+    /// <paramref name="alpha"/>. Used only for Flame's optional icon silhouette
+    /// (the Star has no outline); flame edges are hard, so the 0.4 alpha
+    /// threshold matches the alpha > 0 boundary.
     /// </summary>
     private static Texture2D BakeSilhouette(Texture2D texture, Color color, float alpha)
     {
@@ -152,7 +166,7 @@ public static class GemSprites
         var w = image.GetWidth();
         var h = image.GetHeight();
 
-        bool Opaque(int x, int y) => x >= 0 && x < w && y >= 0 && y < h && image.GetPixel(x, y).A > 0f;
+        bool Opaque(int x, int y) => x >= 0 && x < w && y >= 0 && y < h && image.GetPixel(x, y).A > 0.4f;
 
         var boundary = new bool[w, h];
         for (var y = 0; y < h; y++)
