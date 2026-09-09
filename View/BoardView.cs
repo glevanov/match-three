@@ -38,7 +38,9 @@ public partial class BoardView : Node2D
         GemSprites.EnsureLoaded();
         LayoutBoard();
         _audio = GetNodeOrNull<GameAudio>("../GameAudio");
-        _player = new StepPlayer(this, _config, _cellSizePx, () => _audio?.PlaySwapSfx());
+        _player = new StepPlayer(this, _config, _cellSizePx,
+            onSwap: () => _audio?.PlaySwapSfx(),
+            onDestroy: cascade => _audio?.PlayPop(cascade));
         Game.Instance.Bind(this);
     }
 

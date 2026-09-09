@@ -19,11 +19,19 @@ public partial class GameAudio : Node
 {
     private AudioStreamPlayer _music = null!;
     private AudioStreamPlayer _swipe = null!;
+    private AudioStreamPlayer _pop = null!;
+
+    /// <summary>Pitch climb per cascade generation (2 semitones) — see DECISIONS.md "Audio (v1)".</summary>
+    private const float PopSemitonesPerCascade = 2f;
+
+    /// <summary>Pitch-rise ceiling so deep cascades stay musical, not cartoonish.</summary>
+    private const float PopMaxSemitones = 6f;
 
     public override void _Ready()
     {
         _music = GetNode<AudioStreamPlayer>("Music");
         _swipe = GetNode<AudioStreamPlayer>("Swipe");
+        _pop = GetNode<AudioStreamPlayer>("Pop");
 
         var game = Game.Instance;
         game.RoundStarted += StartMusic;
@@ -41,6 +49,16 @@ public partial class GameAudio : Node
     /// buffered swaps included) — invalid-swap rejections stay silent.
     /// Policy: docs/DECISIONS.md "Audio (v1)".</summary>
     public void PlaySwapSfx() => _swipe.Play();
+
+    /// <summary>Gem-clear pop for a <see cref="Step.Destroy"/>: one pop per
+    /// cascade generation, pitched up 2 semitones per generation (capped at
+    /// 6) so deep cascades audibly escalate. Policy: DECISIONS.md "Audio (v1)".</summary>
+    public void PlayPop(int cascade)
+    {
+        var semitones = Mathf.Min((cascade - 1) * PopSemitonesPerCascade, PopMaxSemitones);
+        _pop.PitchScale = Mathf.Pow(2f, semitones / 12f);
+        _pop.Play();
+    }
 
     private void StartMusic() => _music.Play();
 

@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://View/GameAudio.cs" id="4_audio"]
 [ext_resource type="AudioStreamMP3" uid="uid://bcd1j4pchaqwk" path="res://Assets/Audio/music.mp3" id="5_music"]
 [ext_resource type="AudioStreamMP3" uid="uid://dlo33tggw033s" path="res://Assets/Audio/swipe.mp3" id="6_swipe"]
+[ext_resource type="AudioStreamMP3" uid="uid://qcp8tkgysjfi" path="res://Assets/Audio/pop.mp3" id="7_pop"]
 
 [node name="Main" type="Node2D"]
 
@@ -142,3 +143,9 @@ volume_db = -5.0
 [node name="Swipe" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("6_swipe")
 volume_db = 6.0
+
+; pop.mp3 is a hot master (peaks +0.03 dBFS even trimmed): -3 dB keeps it
+; clean and punchy. Pitch rises per cascade in code (GameAudio.PlayPop).
+[node name="Pop" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("7_pop")
+volume_db = -3.0

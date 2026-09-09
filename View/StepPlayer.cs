@@ -39,19 +39,25 @@ public sealed class StepPlayer
     private readonly Dictionary<int, GemActor> _actors = new();
     private readonly int?[,] _ids;
     private readonly Action? _onSwap;
+    private readonly Action<int>? _onDestroy;
+    private int _destroyCount;
 
     /// <param name="parent">Node the actor instances are added to (the BoardView).</param>
     /// <param name="config">Board geometry (9x9).</param>
     /// <param name="cellSizePx">Pixel size of one board cell.</param>
     /// <param name="onSwap">Invoked when a genuine engine <see cref="Step.Swap"/>
     /// animates (accepted swap only; rejection playback stays silent).</param>
-    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null)
+    /// <param name="onDestroy">Invoked when a <see cref="Step.Destroy"/> animates,
+    /// with the 1-based cascade generation (the engine emits one Destroy step per
+    /// cascade round, so this doubles as cascade depth for pitch rising).</param>
+    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null)
     {
         _parent = parent;
         _config = config;
         _cellSizePx = cellSizePx;
         _ids = new int?[config.Height, config.Width];
         _onSwap = onSwap;
+        _onDestroy = onDestroy;
         _actorScene = GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
     }
 
@@ -100,6 +106,9 @@ public sealed class StepPlayer
     /// <summary>Plays a full engine resolution; invokes <paramref name="onSettled"/> after the last step.</summary>
     public async Task PlayAsync(List<Step> steps, Action<Board>? onSettled, Action<int>? onScore)
     {
+        // One resolution = one swap's full cascade; the destroy counter (and
+        // with it the pop pitch) resets per resolution.
+        _destroyCount = 0;
         foreach (var step in steps)
         {
             await PlayStepAsync(step, onScore);
@@ -130,6 +139,8 @@ public sealed class StepPlayer
                 MarkSpecial(birth.GemId, birth.Special);
                 break;
             case Step.Destroy destroy:
+                _destroyCount++;
+                _onDestroy?.Invoke(_destroyCount);
                 await DestroyActorsAsync(destroy.Positions);
                 break;
             case Step.Score score:
