@@ -19,7 +19,9 @@ public partial class Hud : CanvasLayer
     private Label _timeLabel = null!;
     private Label _modeLabel = null!;
     private Button _menuButton = null!;
+    private Button _musicButton = null!;
     private AcceptDialog _exitDialog = null!;
+    private GameAudio _audio = null!;
 
     public override void _Ready()
     {
@@ -28,8 +30,10 @@ public partial class Hud : CanvasLayer
         _scoreLabel = GetNode<Label>("HudBox/ScoreLabel");
         _timeLabel = GetNode<Label>("HudBox/TimeLabel");
         _modeLabel = GetNode<Label>("HudBox/ModeLabel");
-        _menuButton = GetNode<Button>("HudBox/MenuButton");
+                _menuButton = GetNode<Button>("HudBox/MenuButton");
+        _musicButton = GetNode<Button>("HudBox/MusicButton");
         _exitDialog = GetNode<AcceptDialog>("ExitDialog");
+        _audio = GetNode<GameAudio>("../GameAudio");
 
         // The bar is positioned relative to the BOARD, not the screen top:
         // BoardView centers board + bar as one block below the safe area, and
@@ -67,6 +71,15 @@ public partial class Hud : CanvasLayer
         _menuButton.Pressed += () => _exitDialog.PopupCentered();
         _exitDialog.Confirmed += () => GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
 
+        // Background-music toggle: state lives on GameAudio (persisted via
+        // SettingsStore); the button just mirrors it.
+        _musicButton.Pressed += () =>
+        {
+            _audio.ToggleMusic();
+            UpdateMusicButton();
+        };
+        UpdateMusicButton();
+
         // Initial state (restart also re-emits ScoreChanged/TimerChanged).
         _scoreLabel.Text = $"Score: {game.Score}";
         _modeLabel.Text = game.Mode == GameMode.Classic ? "Classic" : "Zen";
@@ -74,6 +87,10 @@ public partial class Hud : CanvasLayer
         _timeLabel.Visible = seconds >= 0;
         if (seconds >= 0) _timeLabel.Text = $"Time: {seconds}";
     }
+
+    /// <summary>Mirrors the persisted music toggle into the button label.</summary>
+    private void UpdateMusicButton() =>
+        _musicButton.Text = _audio.MusicEnabled ? "♪ On" : "♪ Off";
 
     /// <summary>
     /// Sizes the exit confirmation popup to match the hand-set font sizes

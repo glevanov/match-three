@@ -1,4 +1,5 @@
 using Godot;
+using MatchThree.Engine.Data;
 
 namespace MatchThree.View;
 
@@ -14,6 +15,10 @@ namespace MatchThree.View;
 /// RoundStarted (Play again), and it stops when the round ends (RoundEnded)
 /// or the node is freed with the scene (back to menu). Self-test runs
 /// (--selftest*) skip the music entirely — they are automation, not play.
+///
+/// The HUD music button toggles <see cref="MusicEnabled"/> (persisted via
+/// SettingsStore, user://settings.json); toggling off stops the current
+/// track, toggling on resumes only while a round is active.
 /// </summary>
 public partial class GameAudio : Node
 {
@@ -21,12 +26,25 @@ public partial class GameAudio : Node
     private AudioStreamPlayer _swipe = null!;
     private AudioStreamPlayer _pop = null!;
     private AudioStreamPlayer _flame = null!;
+    private SettingsStore _settings = null!;
+    private bool _roundActive;
+
+    /// <summary>Background-music toggle state (persisted; default on).</summary>
+    public bool MusicEnabled { get; private set; } = true;
 
     /// <summary>Pitch climb per cascade generation (2 semitones) — see DECISIONS.md "Audio (v1)".</summary>
     private const float PopSemitonesPerCascade = 2f;
 
     /// <summary>Pitch-rise ceiling so deep cascades stay musical, not cartoonish.</summary>
     private const float PopMaxSemitones = 6f;
+
+    public override void _EnterTree()
+    {
+        // Loaded here (before any sibling _Ready) so HUD can read the
+        // initial toggle state when it binds the button.
+        _settings = new SettingsStore(ProjectSettings.GlobalizePath("user://"));
+        MusicEnabled = _settings.Load().MusicEnabled;
+    }
 
     public override void _Ready()
     {
@@ -36,14 +54,32 @@ public partial class GameAudio : Node
         _flame = GetNode<AudioStreamPlayer>("Flame");
 
         var game = Game.Instance;
-        game.RoundStarted += StartMusic;
-        game.RoundEnded += (_, _) => StopMusic();
+        game.RoundStarted += () => { _roundActive = true; StartMusic(); };
+        game.RoundEnded += (_, _) => { _roundActive = false; StopMusic(); };
 
         // The menu's StartRound emitted RoundStarted before this scene existed,
         // so bind the initial state here: a round is live when the scene
         // appears with no game-over recorded yet.
+        _roundActive = game.GameOverReason is null;
         var selftest = OS.GetCmdlineUserArgs().Any(a => a.StartsWith("--selftest"));
-        if (!selftest && game.GameOverReason is null) StartMusic();
+        if (!selftest && _roundActive) StartMusic();
+    }
+
+    /// <summary>HUD button handler: flips the persisted music toggle and
+    /// applies it immediately (off stops the track; on resumes only while
+    /// a round is active, so the game-over overlay stays silent).</summary>
+    public void ToggleMusic()
+    {
+        MusicEnabled = !MusicEnabled;
+        _settings.Save(new GameSettings(MusicEnabled));
+        if (MusicEnabled)
+        {
+            if (_roundActive) StartMusic();
+        }
+        else
+        {
+            StopMusic();
+        }
     }
 
     /// <summary>Whoosh for an accepted swap: StepPlayer invokes this when a
@@ -67,7 +103,11 @@ public partial class GameAudio : Node
     /// the doomed actors). Policy: DECISIONS.md "Audio (v1)".</summary>
     public void PlayFlameSfx() => _flame.Play();
 
-    private void StartMusic() => _music.Play();
+    private void StartMusic()
+    {
+        if (!MusicEnabled) return;
+        _music.Play();
+    }
 
     private void StopMusic() => _music.Stop();
 }

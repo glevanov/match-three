@@ -38,28 +38,35 @@ layout_mode = 3
 anchors_preset = 10
 anchor_right = 1.0
 mouse_filter = 0
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="MenuButton" type="Button" parent="HUD/HudBox"]
-custom_minimum_size = Vector2(120, 56)
+custom_minimum_size = Vector2(96, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Menu"
 
+; Background-music toggle (♪ On / ♪ Off), persisted in user://settings.json.
+[node name="MusicButton" type="Button" parent="HUD/HudBox"]
+custom_minimum_size = Vector2(64, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "♪ On"
+
 [node name="ScoreLabel" type="Label" parent="HUD/HudBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Score: 0"
 
 [node name="TimeLabel" type="Label" parent="HUD/HudBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Time: 75"
 
 [node name="ModeLabel" type="Label" parent="HUD/HudBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 1, 1, 0.6)
 text = "Classic"
 

@@ -57,7 +57,8 @@ match-three/
 ├── MatchThree.csproj/.sln       ← game assembly (Godot.NET.Sdk), refs Engine
 ├── Engine/                      ← pure C# rules, no Godot dependency
 │   ├── Model/   Board, Gem, GemType, Special, Position, BoardConfig
-│   ├── Data/    GameMode, HighScoreStore (user://highscores.json)
+│   ├── Data/    GameMode, HighScoreStore (user://highscores.json),
+│   │            SettingsStore (user://settings.json — music toggle)
 │   └── Rules/   GameEngine (its `Resolution` record is declared at the
 │                bottom of GameEngine.cs), MatchDetector, Gravity, Refill,
 │                Scorer, SpecialRules, BoardGenerator, LegalMoveDetector,

@@ -7,6 +7,7 @@ game rules derived from these live in [MECHANICS.md](MECHANICS.md).
 | Decision | Value |
 |---|---|
 | Board size | 9×9 (locked; tunable later) |
+| Music toggle (v6) | HUD button (♪ On/♪ Off) toggles the background music live and persists the preference in `user://settings.json` via `SettingsStore` (pure C#, NUnit-tested, mirrors HighScoreStore). Default **on**; toggling off stops the current track immediately; toggling on resumes only while a round is active (game-over overlay stays silent; the menu has no music node at all). Survives scene changes and app restarts. |
 | Rendering | Godot nodes (per-gem GemActor scenes) |
 | Input during lock | Buffer most-recent drag, not drop; stale-drop only when a Hypercube enters/leaves the buffered pair |
 | Special birth | Per shape (runs sharing cells): one gem transforms per shape per round; others clear |
