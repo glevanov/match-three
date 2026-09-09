@@ -24,9 +24,9 @@ cutover and survive only in git history. Game rules live in
   (`gem_fire.gdshader` flame aura, `gem_star.gdshader` star bloom).
   `Assets/Icon/icon.png` is re-exported from the original `assets/icon.jpg`.
 - Audio: `Assets/Audio/` — `music.mp3` (looping board-music bed, imported
-  with `loop=true`), `swipe.mp3` (swap-gesture whoosh) and `pop.mp3`
-  (gem-clear pop, pitched per cascade in code). Provenance and
-  source links: [ASSET_SOURCES.md](ASSET_SOURCES.md); play policy:
+  with `loop=true`), `swipe.mp3` (swap whoosh), `pop.mp3` (gem-clear pop,
+  pitched per cascade) and `flame.mp3` (Flame detonation whoosh). Provenance
+  and source links: [ASSET_SOURCES.md](ASSET_SOURCES.md); play policy:
   DECISIONS.md "Audio (v1)".
 
 ## Architecture
@@ -71,7 +71,8 @@ match-three/
 ├── Assets/
 │   ├── Sprites/ the 8 gem/special PNGs (copied from the old app assets)
 │   ├── Audio/   music.mp3 (looping board bed) + swipe.mp3 (swap whoosh)
-│   │            + pop.mp3 (gem-clear pop); sources: ASSET_SOURCES.md
+│   │            + pop.mp3 (gem-clear pop) + flame.mp3 (Flame whoosh);
+│   │            sources: ASSET_SOURCES.md
 │   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
 │   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)

@@ -10,14 +10,17 @@ store/public distribution).
 | `Audio/music.mp3` (loop=true) | https://pixabay.com/music/beats-travel-nature-lofi-music-349633/ | `tunetank-travel-nature-lofi-music-349633.mp3` | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/swipe.mp3` | https://pixabay.com/sound-effects/film-special-effects-fast-swipe-48158/ | `freesound_community-fast-swipe-48158.mp3` | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/pop.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-pop-402324/ | `dragon-studio-pop-402324.mp3` (DRAGON-STUDIO) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/flame.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-fire-whoosh-1-317280/ | `djartmusic-short-fire-whoosh_1-317280.mp3` (djartmusic) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 
 Notes:
 
 - `music.mp3` and `swipe.mp3` are byte-identical to the downloaded originals
-  (no transcode/trim). `pop.mp3` is a **trimmed re-encode**: the source is
-  0.72 s with ~188 ms lead-in + ~390 ms trail silence (the actual pop body
-  is only 0.19–0.31 s); it was cut to 0.145 s with the attack intact
-  (256 kbps mp3). The untrimmed original can be re-fetched from the URL.
+  (no transcode/trim). `pop.mp3` and `flame.mp3` are **trimmed re-encodes**
+  (256 kbps mp3): pop - 0.72 s source with ~188 ms lead + ~390 ms trail
+  silence (actual pop body 0.19–0.31 s), cut to 0.145 s with the attack
+  intact; flame - 5.04 s source with ~848 ms lead + ~2.6 s trail silence,
+  cut to 1.61 s (the whoosh body 0.84–2.45 s). Untrimmed originals can be
+  re-fetched from the URLs above.
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS
   integrated, peaks to -0.03 dBFS), ~2.5 s silence fade-out at the tail — so
   each loop pass plays like a complete song that restarts. It is looped at

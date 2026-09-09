@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://902jk3jedubdl"]
+[gd_scene load_steps=9 format=3 uid="uid://902jk3jedubdl"]
 
 [ext_resource type="Script" path="res://View/BoardView.cs" id="1_board"]
 [ext_resource type="Script" path="res://View/Hud.cs" id="2_hud"]
@@ -7,6 +7,7 @@
 [ext_resource type="AudioStreamMP3" uid="uid://bcd1j4pchaqwk" path="res://Assets/Audio/music.mp3" id="5_music"]
 [ext_resource type="AudioStreamMP3" uid="uid://dlo33tggw033s" path="res://Assets/Audio/swipe.mp3" id="6_swipe"]
 [ext_resource type="AudioStreamMP3" uid="uid://qcp8tkgysjfi" path="res://Assets/Audio/pop.mp3" id="7_pop"]
+[ext_resource type="AudioStreamMP3" uid="uid://ktmtd1j4f4t4" path="res://Assets/Audio/flame.mp3" id="8_flame"]
 
 [node name="Main" type="Node2D"]
 
@@ -138,14 +139,20 @@ script = ExtResource("4_audio")
 stream = ExtResource("5_music")
 volume_db = -5.0
 
-; swipe.mp3 is a quiet file (peak ~ -9.3 dBFS): +6 dB to sit clearly above
-; the music bed without clipping (v3, DECISIONS.md "Audio (v1)").
+; swipe.mp3 is a quiet file (peak ~ -9.3 dBFS): +3 dB before clipping —
+; settled midpoint after user iterated v1 (0 dB, too quiet) and v3
+; (+6 dB, too loud). DECISIONS.md "Audio (v1)".
 [node name="Swipe" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("6_swipe")
-volume_db = 6.0
+volume_db = 3.0
 
 ; pop.mp3 is a hot master (peaks +0.03 dBFS even trimmed): -3 dB keeps it
 ; clean and punchy. Pitch rises per cascade in code (GameAudio.PlayPop).
 [node name="Pop" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("7_pop")
 volume_db = -3.0
+
+; flame.mp3 (trimmed fire whoosh) also masters hot (+0.29 dBFS): -4 dB.
+[node name="Flame" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("8_flame")
+volume_db = -4.0

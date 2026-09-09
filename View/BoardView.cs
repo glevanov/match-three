@@ -40,7 +40,8 @@ public partial class BoardView : Node2D
         _audio = GetNodeOrNull<GameAudio>("../GameAudio");
         _player = new StepPlayer(this, _config, _cellSizePx,
             onSwap: () => _audio?.PlaySwapSfx(),
-            onDestroy: cascade => _audio?.PlayPop(cascade));
+            onDestroy: cascade => _audio?.PlayPop(cascade),
+            onFlame: () => _audio?.PlayFlameSfx());
         Game.Instance.Bind(this);
     }
 

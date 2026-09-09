@@ -40,6 +40,7 @@ public sealed class StepPlayer
     private readonly int?[,] _ids;
     private readonly Action? _onSwap;
     private readonly Action<int>? _onDestroy;
+    private readonly Action? _onFlame;
     private int _destroyCount;
 
     /// <param name="parent">Node the actor instances are added to (the BoardView).</param>
@@ -50,7 +51,11 @@ public sealed class StepPlayer
     /// <param name="onDestroy">Invoked when a <see cref="Step.Destroy"/> animates,
     /// with the 1-based cascade generation (the engine emits one Destroy step per
     /// cascade round, so this doubles as cascade depth for pitch rising).</param>
-    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null)
+    /// <param name="onFlame">Invoked when a <see cref="Step.Destroy"/> clears at
+    /// least one Flame gem — covers swap-combo consumption and swept
+    /// chain-detonations alike (the engine consumes the swapped pair and
+    /// sweeps flames through Destroy steps only).</param>
+    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null, Action? onFlame = null)
     {
         _parent = parent;
         _config = config;
@@ -58,6 +63,7 @@ public sealed class StepPlayer
         _ids = new int?[config.Height, config.Width];
         _onSwap = onSwap;
         _onDestroy = onDestroy;
+        _onFlame = onFlame;
         _actorScene = GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
     }
 
@@ -183,16 +189,25 @@ public sealed class StepPlayer
     private async Task DestroyActorsAsync(ISet<Position> positions)
     {
         var doomed = new List<GemActor>();
+        var flameDetonated = false;
         foreach (var p in positions)
         {
             var id = _ids[p.Row, p.Col];
             if (id is not null)
             {
-                if (_actors.TryGetValue(id.Value, out var actor)) doomed.Add(actor);
+                if (_actors.TryGetValue(id.Value, out var actor))
+                {
+                    doomed.Add(actor);
+                    // A Flame gem destroyed by any effect detonates (MECHANICS.md
+                    // chain-detonation rule): one whoosh per Destroy step.
+                    flameDetonated |= actor.SpecialKind == Special.Flame;
+                }
                 _ids[p.Row, p.Col] = null;
             }
         }
         if (doomed.Count == 0) return;
+
+        if (flameDetonated) _onFlame?.Invoke();
 
         await Task.WhenAll(doomed.Select(a => a.VanishAsync(DestroyMillis)));
 

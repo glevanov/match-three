@@ -20,6 +20,7 @@ public partial class GameAudio : Node
     private AudioStreamPlayer _music = null!;
     private AudioStreamPlayer _swipe = null!;
     private AudioStreamPlayer _pop = null!;
+    private AudioStreamPlayer _flame = null!;
 
     /// <summary>Pitch climb per cascade generation (2 semitones) — see DECISIONS.md "Audio (v1)".</summary>
     private const float PopSemitonesPerCascade = 2f;
@@ -32,6 +33,7 @@ public partial class GameAudio : Node
         _music = GetNode<AudioStreamPlayer>("Music");
         _swipe = GetNode<AudioStreamPlayer>("Swipe");
         _pop = GetNode<AudioStreamPlayer>("Pop");
+        _flame = GetNode<AudioStreamPlayer>("Flame");
 
         var game = Game.Instance;
         game.RoundStarted += StartMusic;
@@ -59,6 +61,11 @@ public partial class GameAudio : Node
         _pop.PitchScale = Mathf.Pow(2f, semitones / 12f);
         _pop.Play();
     }
+
+    /// <summary>Fire whoosh when a Destroy step clears at least one Flame gem
+    /// (swap-combo consumption or swept chain-detonation; StepPlayer detects
+    /// the doomed actors). Policy: DECISIONS.md "Audio (v1)".</summary>
+    public void PlayFlameSfx() => _flame.Play();
 
     private void StartMusic() => _music.Play();
 
