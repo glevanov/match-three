@@ -16,7 +16,14 @@ namespace MatchThree.View;
 public partial class BoardView : Node2D
 {
     private const float BoardFillFraction = 0.95f;
-    private static readonly Color BoardBackground = new(0x26 / 255f, 0x32 / 255f, 0x38 / 255f);
+    /// <summary>
+    /// How opaque the board's backdrop is (1 = solid, 0 = fully transparent):
+    /// at ~0.75 the night-sky photo behind shows through as a dark tint,
+    /// while the opaque gems stay fully readable on top. Lower = more
+    /// see-through (DECISIONS.md "Board background (v1)").
+    /// </summary>
+    private const float BoardBackgroundAlpha = 0.75f;
+    private static readonly Color BoardBackground = new(0x26 / 255f, 0x32 / 255f, 0x38 / 255f, BoardBackgroundAlpha);
     private static readonly Color GridColor = new(1f, 1f, 1f, 0.08f);
 
     private readonly BoardConfig _config = new();
