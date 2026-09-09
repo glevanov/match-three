@@ -19,8 +19,6 @@ script = ExtResource("1_actor")
 
 [node name="Art" type="Sprite2D" parent="Overlay"]
 
-[node name="Silhouette" type="Sprite2D" parent="Overlay"]
-
 [node name="FireRing" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_fire")
 visible = false

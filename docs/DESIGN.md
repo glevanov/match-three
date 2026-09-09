@@ -18,9 +18,9 @@ cutover and survive only in git history. Game rules live in
 - **NUnit** for engine tests (`Tests/`), run with `dotnet test`.
 - Records + sealed record hierarchies + switch pattern matching for value
   equality and exhaustive `switch` analysis.
-- Art: the 9 PNGs in `Assets/Sprites/` (six colors — Orange now uses its
+- Art: the 8 PNGs in `Assets/Sprites/` (six colors — Orange now uses its
   real art, downscaled from the original `assets/orange.png` — plus
-  hypercube/flame/star_06) and the procedural effects in `Assets/Shaders/`
+  hypercube/star_06) and the procedural effects in `Assets/Shaders/`
   (`gem_fire.gdshader` flame aura, `gem_star.gdshader` star bloom).
   `Assets/Icon/icon.png` is re-exported from the original `assets/icon.jpg`.
 
@@ -63,7 +63,7 @@ match-three/
 ├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn,
 │                DebugStarGlow.tscn (debug only; NOTES.md)
 ├── Assets/
-│   ├── Sprites/ the 9 gem/special PNGs (copied from the old app assets)
+│   ├── Sprites/ the 8 gem/special PNGs (copied from the old app assets)
 │   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
 │   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)
@@ -88,13 +88,13 @@ match-three/
 - `StepPlayer.cs`: gem-id → GemActor map + logical id grid; sequences steps
   with `async`/`await` on `ToSignal(tween, Finished)`; parallel effects via
   `Task.WhenAll`. Timing: swap 150ms, destroy 200ms, fall 90+70/row ms.
-- `GemActor.cs` on `GemActor.tscn`: base sprite plus per-special shader
-  effects — Flame: `gem_fire.gdshader` body aura (FireRing rect, tinted
-  from the gem's own art; its center icon/silhouette is dropped but one
-  line away from re-enabling); Star: 30%-alpha star_06 overlay plus the
-  pulsing additive `gem_star.gdshader` bloom (StarGlow rect). The effect
-  rects are scaled up (1.35×/1.5×) so halos bleed past the silhouette,
-  with in-shader UV remap keeping the alpha masks aligned 1:1 (DECISIONS.md).
+- `GemActor.cs` on `GemActor.tscn`: base sprite plus per-special effects —
+  Flame: `gem_fire.gdshader` body aura only (FireRing rect, tinted from
+  the gem's own art; center-icon art retired, DECISIONS.md); Star:
+  30%-alpha star_06 overlay (no outline) plus the pulsing additive
+  `gem_star.gdshader` bloom (StarGlow rect). The effect rects are scaled
+  up (1.35×/1.5×) so halos bleed past the silhouette, with in-shader UV
+  remap keeping the alpha masks aligned 1:1 (DECISIONS.md).
 - `Hud.cs` / `MenuScreen.cs` / `GameOverScreen.cs`: HUD strip, mode menu with
   per-mode high scores, game-over overlay (Best + New-high-score + Play again
   / Menu). Exit-to-menu goes through a confirm dialog.

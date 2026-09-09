@@ -11,11 +11,12 @@ namespace MatchThree.View;
 ///   GemActor (Node2D, this script)
 ///   ├── Base (Sprite2D)          color sprite, or the Hypercube art
 ///   ├── FireRing (ColorRect)     procedural shader aura over the gem body,
-///   │                            Flame gems only (same span as the gem)
+///   │                            Flame gems only (rect is 1.35x the footprint
+///   │                            so the halo has margin to bleed)
 ///   ├── Overlay (Node2D)
-///   │   ├── Art (Sprite2D)       Star glow-star art (no outline; user direction)
-///   │   └── Silhouette (Sprite2D) baked alpha-silhouette outline — Flame's
-///   │                            optional icon only (icon currently dropped)
+///   │   └── Art (Sprite2D)       Star glow-star art only, 30% alpha, no
+///   │                            outline (user direction) — Flame's
+///   │                            center-icon art is retired (DECISIONS.md)
 ///   └── StarGlow (ColorRect)     procedural pulsing-glow shader behind/around
 ///                                the star art, Star gems only
 ///
@@ -39,7 +40,6 @@ public partial class GemActor : Node2D
 
     private Sprite2D _base = null!;
     private Sprite2D _art = null!;
-    private Sprite2D _silhouette = null!;
     private ColorRect _fireRing = null!;
     private ShaderMaterial _fireRingMaterial = null!;
     private ColorRect _starGlow = null!;
@@ -60,7 +60,6 @@ public partial class GemActor : Node2D
         _base = GetNode<Sprite2D>("Base");
         var overlay = GetNode<Node2D>("Overlay");
         _art = overlay.GetNode<Sprite2D>("Art");
-        _silhouette = overlay.GetNode<Sprite2D>("Silhouette");
 
         // Per-instance material: every GemActor instantiates the same .tscn, so
         // the shared ShaderMaterial must be duplicated or setting time_offset on
@@ -160,12 +159,12 @@ public partial class GemActor : Node2D
             _fireRing.Visible = false;
         }
 
-        // Overlay: the aura alone is now the "on fire" cue, so Flame dropped
-        // its center icon (docs/DECISIONS.md "Flame aura (visual)"); only Star
-        // keeps a separate see-through overlay (30% opacity, full gem).
+        // Overlay: Flame has no overlay art — the aura alone is its cue and the
+        // center-icon art is retired (docs/DECISIONS.md "Flame aura (visual)");
+        // only Star keeps a separate see-through overlay (30% alpha, full gem,
+        // no outline).
         var overlayTexture = SpecialKind == Special.Star ? GemSprites.ArtFor(Special.Star) : null;
         _art.Visible = overlayTexture is not null;
-        _silhouette.Visible = overlayTexture is not null;
         if (overlayTexture is null)
         {
             _starGlow.Visible = false;
@@ -176,20 +175,6 @@ public partial class GemActor : Node2D
         _art.Texture = overlayTexture;
         _art.Scale = Vector2.One * (overlaySpan / Mathf.Max(overlayTexture.GetWidth(), overlayTexture.GetHeight()));
         _art.Modulate = new Color(1f, 1f, 1f, GemSprites.OverlayAlpha(SpecialKind));
-
-        var outlineTexture = GemSprites.OutlineFor(SpecialKind);
-        if (outlineTexture is not null)
-        {
-            _silhouette.Texture = outlineTexture;
-            _silhouette.Scale = Vector2.One * (overlaySpan / Mathf.Max(outlineTexture.GetWidth(), outlineTexture.GetHeight()));
-            _silhouette.Modulate = new Color(1f, 1f, 1f, GemSprites.OutlineAlpha(SpecialKind));
-        }
-        else
-        {
-            // No baked outline for this overlay art: keep the silhouette hidden
-            // instead of showing a stale texture from a previous appearance.
-            _silhouette.Visible = false;
-        }
 
         // Star glow: additive pulsing bloom behind/around the glow-star art
         // (see gem_star.gdshader). Same mask-from-alpha technique as the fire
