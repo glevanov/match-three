@@ -18,9 +18,11 @@ cutover and survive only in git history. Game rules live in
 - **NUnit** for engine tests (`Tests/`), run with `dotnet test`.
 - Records + sealed record hierarchies + switch pattern matching for value
   equality and exhaustive `switch` analysis.
-- Art: the 9 PNGs in `Assets/Sprites/` (six colors — Orange renders
-  `white.png` — plus hypercube/flame/sparkle) and `Assets/Icon/icon.png`
-  (re-exported from the original `assets/icon.jpg`).
+- Art: the 9 PNGs in `Assets/Sprites/` (six colors — Orange now uses its
+  real art, downscaled from the original `assets/orange.png` — plus
+  hypercube/flame/star_06) and the procedural effects in `Assets/Shaders/`
+  (`gem_fire.gdshader` flame aura, `gem_star.gdshader` star bloom).
+  `Assets/Icon/icon.png` is re-exported from the original `assets/icon.jpg`.
 
 ## Architecture
 
@@ -56,10 +58,14 @@ match-three/
 ├── View/        Game.cs (autoload) + Game.SelfTests.cs (headless
 │                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
-│                GameOverScreen.cs, MenuScreen.cs
-├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn
+│                GameOverScreen.cs, MenuScreen.cs, SafeArea.cs,
+│                DebugStarGlow.cs (debug effect screen; NOTES.md)
+├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn,
+│                DebugStarGlow.tscn (debug only; NOTES.md)
 ├── Assets/
 │   ├── Sprites/ the 9 gem/special PNGs (copied from the old app assets)
+│   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
+│   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)
 ├── Tests/       NUnit project, runs via dotnet test (no Godot runtime)
 ├── assets/      original source art (icon.jpg, cat_with_gem.jpeg, PNGs)
@@ -82,8 +88,13 @@ match-three/
 - `StepPlayer.cs`: gem-id → GemActor map + logical id grid; sequences steps
   with `async`/`await` on `ToSignal(tween, Finished)`; parallel effects via
   `Task.WhenAll`. Timing: swap 150ms, destroy 200ms, fall 90+70/row ms.
-- `GemActor.cs` on `GemActor.tscn`: Sprite2D base + Flame/Star overlay art +
-  baked alpha-silhouette outlines.
+- `GemActor.cs` on `GemActor.tscn`: base sprite plus per-special shader
+  effects — Flame: `gem_fire.gdshader` body aura (FireRing rect, tinted
+  from the gem's own art; its center icon/silhouette is dropped but one
+  line away from re-enabling); Star: 30%-alpha star_06 overlay plus the
+  pulsing additive `gem_star.gdshader` bloom (StarGlow rect). The effect
+  rects are scaled up (1.35×/1.5×) so halos bleed past the silhouette,
+  with in-shader UV remap keeping the alpha masks aligned 1:1 (DECISIONS.md).
 - `Hud.cs` / `MenuScreen.cs` / `GameOverScreen.cs`: HUD strip, mode menu with
   per-mode high scores, game-over overlay (Best + New-high-score + Play again
   / Menu). Exit-to-menu goes through a confirm dialog.
@@ -140,7 +151,7 @@ explicitly.
 | Invariants checked only after settle | Engine loop structure + settled-board assertions |
 | Generation: no pre-match, legal move, regenerate | BoardGeneratorTest (50 boards) |
 | Reshuffle Fisher-Yates, ids/types preserved, 20 retries | GameEngineTest.reshuffle (multiset preserved, null on dead) |
-| Classic 75s timer ends round | --selftest-timer (Time's up! -&gt; GameOver -&gt; Restart) |
+| Classic 75 s timer ends round; failed reshuffle ends either mode | --selftest-timer (Time's up! -&gt; GameOver -&gt; Restart); Game.cs Attach (null reshuffle -&gt; EndGame) |
 | Zen: ends on dead board + failed reshuffle | Engine test (reshuffle null) + Attach wiring; E2E needs a contrived dead board |
 | Non-goals (no hints/bonus/mid-session persistence) | Honors by construction; only highscores persist |
 
