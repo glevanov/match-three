@@ -21,6 +21,7 @@ public partial class BoardView : Node2D
 
     private readonly BoardConfig _config = new();
     private StepPlayer? _player;
+    private GameAudio? _audio;
     private float _cellSizePx;
     private Vector2 _boardSize;
 
@@ -37,6 +38,7 @@ public partial class BoardView : Node2D
         GemSprites.EnsureLoaded();
         LayoutBoard();
         _player = new StepPlayer(this, _config, _cellSizePx);
+        _audio = GetNodeOrNull<GameAudio>("../GameAudio");
         Game.Instance.Bind(this);
     }
 
@@ -153,6 +155,7 @@ public partial class BoardView : Node2D
         {
             _dragStart = null; // gesture consumed: no tap fallback on release
             _dragAccum = Vector2.Zero;
+            _audio?.PlaySwapSfx();
             Game.Instance.SubmitSwap(SwapIntent.Of(start, target.Value));
         }
     }
@@ -185,6 +188,7 @@ public partial class BoardView : Node2D
             case var c when c.IsOrthogonallyAdjacentTo(_selected!.Value):
                 var selected = _selected.Value;
                 SetSelected(null);
+                _audio?.PlaySwapSfx();
                 Game.Instance.SubmitSwap(SwapIntent.Of(selected, c));
                 break;
             case var c:

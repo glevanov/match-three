@@ -1,8 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://902jk3jedubdl"]
+[gd_scene load_steps=8 format=3 uid="uid://902jk3jedubdl"]
 
 [ext_resource type="Script" path="res://View/BoardView.cs" id="1_board"]
 [ext_resource type="Script" path="res://View/Hud.cs" id="2_hud"]
 [ext_resource type="Script" path="res://View/GameOverScreen.cs" id="3_gameover"]
+[ext_resource type="Script" path="res://View/GameAudio.cs" id="4_audio"]
+[ext_resource type="AudioStreamMP3" uid="uid://bcd1j4pchaqwk" path="res://Assets/Audio/music.mp3" id="5_music"]
+[ext_resource type="AudioStreamMP3" uid="uid://dlo33tggw033s" path="res://Assets/Audio/swipe.mp3" id="6_swipe"]
 
 [node name="Main" type="Node2D"]
 
@@ -123,3 +126,16 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Menu"
+
+[node name="GameAudio" type="Node" parent="."]
+script = ExtResource("4_audio")
+
+; music.mp3 loops at import time (Assets/Audio/music.mp3.import: loop=true).
+; volume_db -10: the master sits at ~ -11 LUFS, hot for a background bed
+; (docs/DECISIONS.md "Audio (v1)").
+[node name="Music" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("5_music")
+volume_db = -10.0
+
+[node name="Swipe" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("6_swipe")

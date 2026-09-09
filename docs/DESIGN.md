@@ -23,6 +23,10 @@ cutover and survive only in git history. Game rules live in
   hypercube/star_06) and the procedural effects in `Assets/Shaders/`
   (`gem_fire.gdshader` flame aura, `gem_star.gdshader` star bloom).
   `Assets/Icon/icon.png` is re-exported from the original `assets/icon.jpg`.
+- Audio: `Assets/Audio/` — `music.mp3` (looping board-music bed, imported
+  with `loop=true`) and `swipe.mp3` (swap-gesture whoosh). Provenance and
+  source links: [ASSET_SOURCES.md](ASSET_SOURCES.md); play policy:
+  DECISIONS.md "Audio (v1)".
 
 ## Architecture
 
@@ -58,19 +62,23 @@ match-three/
 ├── View/        Game.cs (autoload) + Game.SelfTests.cs (headless
 │                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
-│                GameOverScreen.cs, MenuScreen.cs, SafeArea.cs,
+│                GameOverScreen.cs, MenuScreen.cs, GameAudio.cs (round
+│                music + swap sfx), SafeArea.cs,
 │                DebugStarGlow.cs (debug effect screen; NOTES.md)
 ├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn,
 │                DebugStarGlow.tscn (debug only; NOTES.md)
 ├── Assets/
 │   ├── Sprites/ the 8 gem/special PNGs (copied from the old app assets)
+│   ├── Audio/   music.mp3 (looping board bed) + swipe.mp3 (swap whoosh);
+│   │            sources: ASSET_SOURCES.md
 │   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
 │   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)
 ├── Tests/       NUnit project, runs via dotnet test (no Godot runtime)
 ├── assets/      original source art (icon.jpg, cat_with_gem.jpeg, PNGs)
 └── docs/        MECHANICS.md (rules), DECISIONS.md (decision log),
-                 NOTES.md (known issues)
+                 NOTES.md (known issues), ASSET_SOURCES.md (third-party
+                 asset provenance: source URLs + license status)
 ```
 
 ## View layer
