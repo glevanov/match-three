@@ -38,16 +38,20 @@ public sealed class StepPlayer
     private readonly float _cellSizePx;
     private readonly Dictionary<int, GemActor> _actors = new();
     private readonly int?[,] _ids;
+    private readonly Action? _onSwap;
 
     /// <param name="parent">Node the actor instances are added to (the BoardView).</param>
     /// <param name="config">Board geometry (9x9).</param>
     /// <param name="cellSizePx">Pixel size of one board cell.</param>
-    public StepPlayer(Node parent, BoardConfig config, float cellSizePx)
+    /// <param name="onSwap">Invoked when a genuine engine <see cref="Step.Swap"/>
+    /// animates (accepted swap only; rejection playback stays silent).</param>
+    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null)
     {
         _parent = parent;
         _config = config;
         _cellSizePx = cellSizePx;
         _ids = new int?[config.Height, config.Width];
+        _onSwap = onSwap;
         _actorScene = GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
     }
 
@@ -117,6 +121,7 @@ public sealed class StepPlayer
         switch (step)
         {
             case Step.Swap swap:
+                _onSwap?.Invoke();
                 await SwapActorsAsync(swap.A, swap.B);
                 break;
             case Step.ComboActivate:

@@ -36,8 +36,10 @@ public partial class GameAudio : Node
         if (!selftest && game.GameOverReason is null) StartMusic();
     }
 
-    /// <summary>Whoosh for a committed swap gesture (BoardView calls this at the
-    /// drag/tap commit points — one sound per gesture, valid or not).</summary>
+    /// <summary>Whoosh for an accepted swap: StepPlayer invokes this when a
+    /// genuine engine <see cref="Step.Swap"/> animates (drag or tap-tap,
+    /// buffered swaps included) — invalid-swap rejections stay silent.
+    /// Policy: docs/DECISIONS.md "Audio (v1)".</summary>
     public void PlaySwapSfx() => _swipe.Play();
 
     private void StartMusic() => _music.Play();
