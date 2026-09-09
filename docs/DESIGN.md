@@ -23,6 +23,9 @@ cutover and survive only in git history. Game rules live in
   hypercube/star_06) and the procedural effects in `Assets/Shaders/`
   (`gem_fire.gdshader` flame aura, `gem_star.gdshader` star bloom).
   `Assets/Icon/icon.png` is re-exported from the original `assets/icon.jpg`.
+  Board backgrounds: 4 night-sky photos in `Assets/Backgrounds/`, one shown
+  per round behind the board (random pick, `View/Background.cs`; provenance:
+  ASSET_SOURCES.md).
 - Audio: `Assets/Audio/` — `music.mp3` (looping board-music bed, imported
   with `loop=true`), `swipe.mp3` (swap whoosh), `pop.mp3` (gem-clear pop,
   pitched per cascade) and `flame.mp3` (Flame detonation whoosh). Provenance
@@ -64,12 +67,15 @@ match-three/
 │                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
 │                GameOverScreen.cs, MenuScreen.cs, GameAudio.cs (round
-│                music + swap sfx), SafeArea.cs,
+│                music + swap sfx), Background.cs (per-round random
+│                night-sky photo behind the board), SafeArea.cs,
 │                DebugStarGlow.cs (debug effect screen; NOTES.md)
 ├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn,
 │                DebugStarGlow.tscn (debug only; NOTES.md)
 ├── Assets/
 │   ├── Sprites/ the 8 gem/special PNGs (copied from the old app assets)
+│   ├── Backgrounds/ 4 night-sky photos, one per round behind the board
+│   │            (random pick per round; sources: ASSET_SOURCES.md)
 │   ├── Audio/   music.mp3 (looping board bed) + swipe.mp3 (swap whoosh)
 │   │            + pop.mp3 (gem-clear pop) + flame.mp3 (Flame whoosh);
 │   │            sources: ASSET_SOURCES.md
@@ -108,6 +114,9 @@ match-three/
 - `Hud.cs` / `MenuScreen.cs` / `GameOverScreen.cs`: HUD strip, mode menu with
   per-mode high scores, game-over overlay (Best + New-high-score + Play again
   / Menu). Exit-to-menu goes through a confirm dialog.
+- `Background.cs` on Game.tscn: full-screen night-sky photo on a CanvasLayer
+  at layer -10 (behind board/HUD/overlay), new random photo per round; the
+  menu scene has no such layer, so photos only show while the board is up.
 - Easing note: Godot's Cubic+Out (fast-out-slow-in style).
 
 ## Engine notes (behavioral drift watchlist)

@@ -11,6 +11,10 @@ store/public distribution).
 | `Audio/swipe.mp3` | https://pixabay.com/sound-effects/film-special-effects-fast-swipe-48158/ | `freesound_community-fast-swipe-48158.mp3` | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/pop.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-pop-402324/ | `dragon-studio-pop-402324.mp3` (DRAGON-STUDIO) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/flame.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-fire-whoosh-1-317280/ | `djartmusic-short-fire-whoosh_1-317280.mp3` (djartmusic) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Backgrounds/milky_way.jpg` | https://pixabay.com/photos/milky-way-starry-sky-9859259/ | `studiofriluma-milky-way-9859259.jpg` (6000×4000) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Backgrounds/cosmos.jpg` | https://pixabay.com/photos/cosmos-milky-way-night-sky-stars-1853491/ | `pexels-cosmos-1853491.jpg` (6016×4016) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 
 Notes:
 
@@ -27,6 +31,17 @@ Notes:
   import time (`loop=true` in `Assets/Audio/music.mp3.import`) rather than
   in code. `pop.mp3`'s master also peaks hot (+0.03 dBFS), which is why the
   Pop player runs at -3 dB.
+- The four board backgrounds ship as **2560 px long-side Lanczos downscales**
+  of the full-resolution Pixabay originals (5–6 MP-class; the largest size
+  logged-out CDN serving is `_1280.jpg`, so the originals were downloaded
+  directly and are kept at `~/Downloads/` under the names listed above).
+  2560 px is beyond any phone screen's visible resolution (a covered-fit
+  portrait crop of a ~1080×2400 display uses ≈1350×2900 px of the source)
+  and keeps each imported texture ~5 MB ASTC instead of ~25–36 MB — APK
+  size and VRAM both stay sane. Re-encode was Lanczos + quality-90 JPEG
+  (optimize). They render landscape-cropped to the portrait viewport
+  (stretch/keep-aspect-covered, `View/Background.cs`), so the effective
+  on-screen image is a center slice of each photo.
 - Original downloads also remain at `~/Downloads/` next to the copy
   pipeline that produced `Assets/Audio/` (the pop original was fetched
   directly from the Pixabay CDN during setup; the URL above is the
