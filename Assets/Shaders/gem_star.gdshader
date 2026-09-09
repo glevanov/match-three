@@ -30,8 +30,8 @@ uniform float pulse_max = 0.33;    // additive alpha at the high point (kept und
                                    // the art's own 0.30 overlay so the bigger,
                                    // gem-filling star doesn't re-white the gem)
 uniform float scale_pulse = 0.06;  // +/- fraction the glint swells with the breath
-uniform float core_boost = 1.0;    // extra gain right on the sparkle's own silhouette
-uniform float rect_scale = 1.5;    // glow rect vs sparkle footprint; matches GemActor
+uniform float core_boost = 1.0;    // extra gain right on the glint's own silhouette
+uniform float rect_scale = 1.5;    // glow rect vs the glint's footprint; matches GemActor
 uniform sampler2D mask_texture : repeat_disable, filter_linear;
 
 // Mask alpha at a texUV, treating anything outside the texture as transparent
@@ -43,7 +43,7 @@ float maskAt(vec2 uv) {
     return texture(mask_texture, uv).a * inside;
 }
 
-// Average mask over a ring of `radius` texels — softens the sparkle's own
+// Average mask over a ring of `radius` texels — softens the glint's own
 // edges at small radii, builds an outer bloom at larger ones.
 float blur(vec2 uv, vec2 texel, float radius) {
     float m = maskAt(uv) * 0.4;
@@ -62,7 +62,7 @@ void fragment() {
     float breath = sin(phase) * 0.5 + 0.5; // 0..1, slow ease via the sine itself
     float intensity = mix(pulse_min, pulse_max, breath);
 
-    // Rect is rect_scale x the sparkle's footprint (margin for the halo), and
+    // Rect is rect_scale x the glint's footprint (margin for the halo), and
     // on top of that we zoom slightly in/out with the same breath: the SPARKLE
     // renders at rectpx / s, so s must dip at the bright peak for the glint to
     // swell as it brightens (review fix: the original plus sign shrank it).

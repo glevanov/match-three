@@ -17,7 +17,7 @@ namespace MatchThree.View;
 ///   │   └── Silhouette (Sprite2D) baked alpha-silhouette outline — Flame's
 ///   │                            optional icon only (icon currently dropped)
 ///   └── StarGlow (ColorRect)     procedural pulsing-glow shader behind/around
-///                                the sparkle art, Star gems only
+///                                the star art, Star gems only
 ///
 /// Animations are Tween-driven; the async methods complete when the tween's
 /// Finished signal fires, so StepPlayer can sequence steps with async/await.
@@ -32,7 +32,7 @@ public partial class GemActor : Node2D
     /// here so the two stay in sync).</summary>
     private const float AuraRectScale = 1.35f;
 
-    /// <summary>StarGlow rect vs the sparkle sprite's footprint — same idea as
+    /// <summary>StarGlow rect vs the star art's footprint — same idea as
     /// AuraRectScale, just a bit larger since the glow's outer bloom reaches
     /// further than the flame's halo.</summary>
     private const float StarGlowRectScale = 1.5f;
@@ -196,7 +196,7 @@ public partial class GemActor : Node2D
         // aura, just applied to star_06.png instead of the gem's own body —
         // it's drawn after Overlay in the scene tree so the glow sits on top,
         // but additive blending means it only ever adds brightness, never
-        // covers the crisp sparkle/silhouette underneath.
+        // covers the crisp star art underneath.
         if (SpecialKind == Special.Star)
         {
             var glowSize = new Vector2(overlayTexture.GetWidth(), overlayTexture.GetHeight())

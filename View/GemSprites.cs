@@ -9,16 +9,17 @@ namespace MatchThree.View;
 /// Flame/Star overlay art whose alpha silhouettes are traced once into outline
 /// textures.
 ///
-/// - Orange uses assets/orange.png downscaled to 256px (it used to render with
-///   white.png because the old orange art read almost the same as yellow on
-///   the board; the real orange is used again now — user direction).
+/// - Orange renders its own art again (user direction): Assets/Sprites/
+///   orange.png is a 256px downscale of assets/orange.png. (A placeholder
+///   era rendered orange gems white because the old orange art read almost
+///   the same as yellow on the board.)
 /// - Flame overlay is a small centered inset (0.45 of the gem); the Star's
 ///   glow-star art (Kenney star_06) is zoomed ~2.2x so its cross fills the
 ///   whole gem, at 30% opacity, no outline (user direction).
 /// </summary>
 public static class GemSprites
 {
-    /// <summary>Star overlay alpha (see-through sparkle over the gem).</summary>
+    /// <summary>Star overlay alpha (see-through glint over the gem).</summary>
     public const float StarOverlayAlpha = 0.30f;
 
     /// <summary>Flame overlay size as a fraction of the gem (inset keeps it inside).</summary>
