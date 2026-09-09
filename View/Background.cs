@@ -45,7 +45,11 @@ public partial class Background : CanvasLayer
 
         _texture = new TextureRect();
         AddChild(_texture);
-        _texture.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        // Full-rect against the viewport. NOTE: must be
+        // SetAnchorsAndOffsetsPreset — plain SetAnchorsPreset only moves the
+        // anchors and re-derives offsets to PRESERVE the current rect, so a
+        // freshly created 0x0 control stays 0x0 (renders nothing).
+        _texture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _texture.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
         _texture.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
         _texture.MouseFilter = Control.MouseFilterEnum.Ignore;
