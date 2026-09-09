@@ -22,6 +22,13 @@ namespace MatchThree.View;
 /// </summary>
 public partial class GemActor : Node2D
 {
+    /// <summary>FireRing rect vs the base sprite's footprint. The shader maps
+    /// texUV = (UV - 0.5) / rect_scale + 0.5, so the rect is a zoomed-out
+    /// view of the gem texture: margin around the silhouette lets the soft
+    /// halo render past the gem edge without being clipped (uniform set from
+    /// here so the two stay in sync).</summary>
+    private const float AuraRectScale = 1.35f;
+
     private Sprite2D _base = null!;
     private Sprite2D _art = null!;
     private Sprite2D _silhouette = null!;
@@ -113,15 +120,16 @@ public partial class GemActor : Node2D
         // Fire aura: shader covering the gem's own body (Flame only).
         // Evaluated before the overlay early-return so every appearance state
         // ends with the aura either on or off. The shader masks with
-        // baseTexture's alpha (docs/DECISIONS.md "Flame aura (visual)"), so the
-        // aura traces each GemType's actual silhouette — bleeding into
-        // neighboring cells is structurally impossible.
+        // baseTexture's alpha (docs/DECISIONS.md "Flame aura (visual)"), so
+        // the flame band traces each GemType's actual silhouette; the rect is
+        // AuraRectScale x Base's footprint to leave margin for the soft halo.
         if (SpecialKind == Special.Flame)
         {
-            var fireSize = new Vector2(baseTexture.GetWidth(), baseTexture.GetHeight()) * scale;
+            var fireSize = new Vector2(baseTexture.GetWidth(), baseTexture.GetHeight()) * scale * AuraRectScale;
             _fireRing.Size = fireSize;
             _fireRing.Position = -fireSize / 2f;
             _fireRingMaterial.SetShaderParameter("mask_texture", baseTexture);
+            _fireRingMaterial.SetShaderParameter("rect_scale", AuraRectScale);
             // Per-gem aura tint: a blue gem glows light blue (GemSprites.
             // AuraColors derives core/rim from the gem's own art).
             var (coreColor, rimColor) = GemSprites.AuraColors(Type);
