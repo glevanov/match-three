@@ -131,11 +131,14 @@ text = "Menu"
 script = ExtResource("4_audio")
 
 ; music.mp3 loops at import time (Assets/Audio/music.mp3.import: loop=true).
-; volume_db -10: the master sits at ~ -11 LUFS, hot for a background bed
-; (docs/DECISIONS.md "Audio (v1)").
+; volume_db -5: master sits at ~ -11 LUFS; raised from -10 per user
+; (v3, DECISIONS.md "Audio (v1)"): too quiet on device.
 [node name="Music" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("5_music")
-volume_db = -10.0
+volume_db = -5.0
 
+; swipe.mp3 is a quiet file (peak ~ -9.3 dBFS): +6 dB to sit clearly above
+; the music bed without clipping (v3, DECISIONS.md "Audio (v1)").
 [node name="Swipe" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("6_swipe")
+volume_db = 6.0
