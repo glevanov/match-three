@@ -175,10 +175,10 @@ volume_db = -3.0
 stream = ExtResource("8_flame")
 volume_db = -4.0
 
-; star.mp3 is a quiet glockenspiel sweep (peak ~ -9.4 dBFS): +5 dB boost.
+; star.mp3 (new v9 glockenspiel-a; quiet: peak ~ -17 dBFS): +12 dB boost.
 [node name="Star" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("9_star")
-volume_db = 5.0
+volume_db = 12.0
 
 ; hypercube.mp3 (cinematic impact + phone-speaker edge layer, peak ~ -0.6 dBFS
 ; after processing): -4 dB.
