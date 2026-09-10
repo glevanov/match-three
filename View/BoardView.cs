@@ -48,7 +48,9 @@ public partial class BoardView : Node2D
         _player = new StepPlayer(this, _config, _cellSizePx,
             onSwap: () => _audio?.PlaySwapSfx(),
             onDestroy: cascade => _audio?.PlayPop(cascade),
-            onFlame: () => _audio?.PlayFlameSfx());
+            onFlame: () => _audio?.PlayFlameSfx(),
+            onStar: () => _audio?.PlayStarSfx(),
+            onHypercube: () => _audio?.PlayHypercubeSfx());
         Game.Instance.Bind(this);
     }
 

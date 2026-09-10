@@ -11,6 +11,8 @@ store/public distribution).
 | `Audio/swipe.mp3` | https://pixabay.com/sound-effects/film-special-effects-fast-swipe-48158/ | `freesound_community-fast-swipe-48158.mp3` | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/pop.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-pop-402324/ | `dragon-studio-pop-402324.mp3` (DRAGON-STUDIO) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/flame.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-fire-whoosh-1-317280/ | `djartmusic-short-fire-whoosh_1-317280.mp3` (djartmusic) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/musical-glockenspiel-up-sweep-502134/ | `yusuf_sfx-glockenspiel-up-sweep-502134.mp3` (yusuf_sfx) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-hit-352702/ | `universfield-cinematic-impact-hit-352702.mp3` (universfield) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/milky_way.jpg` | https://pixabay.com/photos/milky-way-starry-sky-9859259/ | `studiofriluma-milky-way-9859259.jpg` (6000×4000) | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -19,12 +21,19 @@ store/public distribution).
 Notes:
 
 - `music.mp3` and `swipe.mp3` are byte-identical to the downloaded originals
-  (no transcode/trim). `pop.mp3` and `flame.mp3` are **trimmed re-encodes**
-  (256 kbps mp3): pop - 0.72 s source with ~188 ms lead + ~390 ms trail
-  silence (actual pop body 0.19–0.31 s), cut to 0.145 s with the attack
-  intact; flame - 5.04 s source with ~848 ms lead + ~2.6 s trail silence,
-  cut to 1.61 s (the whoosh body 0.84–2.45 s). Untrimmed originals can be
-  re-fetched from the URLs above.
+  (no transcode/trim). `pop.mp3`, `flame.mp3`, `star.mp3` and `hypercube.mp3`
+  are **trimmed re-encodes** (256 kbps mp3):
+  - pop: 0.72 s source with ~188 ms lead + ~390 ms trail silence (actual pop
+    body 0.19–0.31 s), cut to 0.145 s with the attack intact;
+  - flame: 5.04 s source with ~848 ms lead + ~2.6 s trail silence, cut to
+    1.61 s (the whoosh body 0.84–2.45 s);
+  - star: 1.91 s source, 168 ms lead, 1.23 s trail; the glockenspiel attack
+    spike sits at 0.16 s, cut to 0.61 s (0.14–0.75 s) keeping the spike
+    intact;
+  - hypercube: 3.05 s source with ~105 ms lead + ~0.5 s dead tail, cut to
+    2.35 s (0.10–2.45 s).
+  Untrimmed originals can be re-fetched from the URLs above (or stay in
+  ~/Downloads where the user placed them).
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS
   integrated, peaks to -0.03 dBFS), ~2.5 s silence fade-out at the tail — so
   each loop pass plays like a complete song that restarts. It is looped at

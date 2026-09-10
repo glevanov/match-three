@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://902jk3jedubdl"]
+[gd_scene load_steps=12 format=3 uid="uid://902jk3jedubdl"]
 
 [ext_resource type="Script" path="res://View/Background.cs" id="9_bg"]
 [ext_resource type="Script" path="res://View/BoardView.cs" id="1_board"]
@@ -9,6 +9,8 @@
 [ext_resource type="AudioStreamMP3" uid="uid://dlo33tggw033s" path="res://Assets/Audio/swipe.mp3" id="6_swipe"]
 [ext_resource type="AudioStreamMP3" uid="uid://qcp8tkgysjfi" path="res://Assets/Audio/pop.mp3" id="7_pop"]
 [ext_resource type="AudioStreamMP3" uid="uid://ktmtd1j4f4t4" path="res://Assets/Audio/flame.mp3" id="8_flame"]
+[ext_resource type="AudioStreamMP3" uid="uid://dcqgky2e4xu17" path="res://Assets/Audio/star.mp3" id="9_star"]
+[ext_resource type="AudioStreamMP3" uid="uid://dqdspv62nfwmy" path="res://Assets/Audio/hypercube.mp3" id="10_hyper"]
 
 [node name="Main" type="Node2D"]
 
@@ -172,3 +174,13 @@ volume_db = -3.0
 [node name="Flame" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("8_flame")
 volume_db = -4.0
+
+; star.mp3 is a quiet glockenspiel sweep (peak ~ -9.4 dBFS): +5 dB boost.
+[node name="Star" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("9_star")
+volume_db = 5.0
+
+; hypercube.mp3 (cinematic impact, peak ~ -4.3 dBFS): 0 dB.
+[node name="Hypercube" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("10_hyper")
+volume_db = 0.0

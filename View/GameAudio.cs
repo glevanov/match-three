@@ -26,6 +26,8 @@ public partial class GameAudio : Node
     private AudioStreamPlayer _swipe = null!;
     private AudioStreamPlayer _pop = null!;
     private AudioStreamPlayer _flame = null!;
+    private AudioStreamPlayer _star = null!;
+    private AudioStreamPlayer _hypercube = null!;
     private SettingsStore _settings = null!;
     private bool _roundActive;
 
@@ -52,6 +54,8 @@ public partial class GameAudio : Node
         _swipe = GetNode<AudioStreamPlayer>("Swipe");
         _pop = GetNode<AudioStreamPlayer>("Pop");
         _flame = GetNode<AudioStreamPlayer>("Flame");
+        _star = GetNode<AudioStreamPlayer>("Star");
+        _hypercube = GetNode<AudioStreamPlayer>("Hypercube");
 
         var game = Game.Instance;
         game.RoundStarted += () => { _roundActive = true; StartMusic(); };
@@ -102,6 +106,15 @@ public partial class GameAudio : Node
     /// (swap-combo consumption or swept chain-detonation; StepPlayer detects
     /// the doomed actors). Policy: DECISIONS.md "Audio (v1)".</summary>
     public void PlayFlameSfx() => _flame.Play();
+
+    /// <summary>Glockenspiel sweep when a Destroy step clears at least one
+    /// Star gem. Policy: DECISIONS.md "Audio (v1)".</summary>
+    public void PlayStarSfx() => _star.Play();
+
+    /// <summary>Cinematic impact when a Destroy step clears at least one
+    /// Hypercube gem (swap triggers, combo consumption, blast-hit activations).
+    /// Policy: DECISIONS.md "Audio (v1)".</summary>
+    public void PlayHypercubeSfx() => _hypercube.Play();
 
     private void StartMusic()
     {
