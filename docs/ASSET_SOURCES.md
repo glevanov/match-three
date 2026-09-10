@@ -31,7 +31,11 @@ Notes:
     spike sits at 0.16 s, cut to 0.61 s (0.14–0.75 s) keeping the spike
     intact;
   - hypercube: 3.05 s source with ~105 ms lead + ~0.5 s dead tail, cut to
-    2.35 s (0.10–2.45 s).
+    2.35 s (0.10–2.45 s), then **processed for phone audibility (v8)**: the
+    raw master is ~all sub-bass (RMS -25 dB lower above 300 Hz — inaudible
+    on phone speakers), so an edge layer (highpass ≥ 800 Hz + compressor +
+    makeup) is mixed under the sub body, +13 dB above 300 Hz / +19 dB above
+    800 Hz, alimiter 0.9. Peak went -4.3 → -0.6 dBFS (node runs at -4 dB).
   Untrimmed originals can be re-fetched from the URLs above (or stay in
   ~/Downloads where the user placed them).
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS
