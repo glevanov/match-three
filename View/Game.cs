@@ -116,8 +116,16 @@ public partial class Game : Node
             // mid-instantiation ("Parent node is busy adding/removing children").
             GetTree().CallDeferred("change_scene_to_file", "res://Scenes/Game.tscn");
         }
-        var timerSeconds = args.Contains("--selftest-timer") ? 2 : ClassicTimerSeconds;
-        StartTimerIfClassic(timerSeconds);
+        // The countdown belongs to a running round, not to the app: a round
+        // only starts via StartRound (menu), which starts its timer inside
+        // Restart(). Starting one here (default Mode=Classic) used to run a
+        // phantom 75s countdown on the menu and EndGame() invisibly while the
+        // player was still choosing a mode. Only --selftest-timer needs a
+        // pre-round timer.
+        if (args.Contains("--selftest-timer"))
+        {
+            StartTimerIfClassic(2);
+        }
     }
 
     /// <summary>Selftest launchers run once per process, not per scene bind.</summary>
@@ -200,6 +208,13 @@ public partial class Game : Node
         EmitSignal(SignalName.ScoreChanged, 0);
         EmitSignal(SignalName.RoundStarted);
         StartTimerIfClassic(ClassicTimerSeconds);
+
+        // Wake the (parked) consumer so it snaps the actor pool to the new
+        // board. Without this, "Play again" leaves the previous round's gems
+        // on screen while the engine silently resolves against this new board
+        // — every visible move then rejects there-and-back, nothing scores,
+        // and the board feels unresponsive for the whole round.
+        Enqueue(new BoardOp.Resync(_board));
     }
 
     /// <summary>
@@ -325,6 +340,27 @@ public partial class Game : Node
     }
 
     /// <summary>
+    /// Applies a board snapshot to the view, tolerating a stale
+    /// <see cref="BoardView"/> reference after a scene change: the freed node
+    /// throws inside ApplyBoard, and the next Bind installs the fresh view.
+    /// Kept exception-safe so a bad wake can never kill the consumer loop.
+    /// </summary>
+    private void TryApplyBoard(Board board)
+    {
+        // A stale reference to a scene node freed by a scene change must not
+        // be touched (the next Bind installs the fresh view).
+        if (_boardView is null || !GodotObject.IsInstanceValid(_boardView)) return;
+        try
+        {
+            _boardView.ApplyBoard(board);
+        }
+        catch (Exception e)
+        {
+            GD.PrintErr($"apply board failed: {e}");
+        }
+    }
+
+    /// <summary>
     /// The single consumer of the op queue — the ONLY writer of StepPlayer
     /// animation state. An op completes only when its animation fully played,
     /// and the actor pool reconciles with the settled board between ops.
@@ -338,7 +374,7 @@ public partial class Game : Node
             {
                 // Queue drained: reconcile the actor pool with the last board
                 // this consumer settled, or the published board on cold start.
-                _boardView!.ApplyBoard(settledBoard ?? _board);
+                TryApplyBoard(settledBoard ?? _board);
                 _queueSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 await _queueSignal.Task;
                 continue;
@@ -387,7 +423,7 @@ public partial class Game : Node
                     break;
                 }
                 case BoardOp.Resync resync:
-                    _boardView!.ApplyBoard(resync.Board);
+                    TryApplyBoard(resync.Board);
                     settledBoard = resync.Board;
                     break;
             }
