@@ -6,6 +6,34 @@
   graceful-end placeholder.
 - **Timer value 75s is placeholder.** Tune against actual play.
 
+## Dev tooling: on-device headless self-tests
+
+`scripts/selftest-android.sh --selftest-flow` (also `--selftest-swap`,
+`--selftest-reject`, `--selftest-burst=N`, `--selftest-timer`,
+`--selftest-special`, `--selftest-hypercube`, `--selftest-menu`) builds the
+current sources, patches them into the existing debug export and runs the test
+on the connected phone — no Godot binary needed. It prints PASS/FAIL from
+logcat and exits accordingly. `scripts/patch-debug-apk.py` is the underlying
+patcher (also usable to patch a build by hand).
+
+Two Android export quirks make that patch path non-obvious:
+
+- Godot 4.7 records every file's size + md5 in the APK's sparse PCK
+  (`assets/assets.sparsepck`) and slices the asset to the recorded size, so a
+  replaced `MatchThree.dll` only loads when that entry is updated (otherwise
+  the runtime reports `.NET: Failed to open assembly image`). The patcher does
+  this.
+- Launch-intent extras are ignored (`com.godot.game.GodotApp` is not exported),
+  so `--selftest-*` flags are packed into `assets/_cl_` instead. On desktop the
+  flags stay user args after `--`.
+
+The patcher also re-aligns the APK for 16 KB page devices (`zipalign -P 16`),
+required on Android 16 / targetSdk 36. Separately, Godot 4.7.2's own `.so`
+files still have 4 KB-aligned ELF LOAD segments, so the system's "app doesn't
+support 16 KB pages" dialog can appear once per launch regardless of APK
+alignment — dismiss it (or "Don't show again"). A Godot build with 16 KB
+aligned libs removes it.
+
 ## Dev tooling: Android export/deploy script
 
 Use `scripts/export-android.sh` for phone builds. It:
