@@ -29,6 +29,7 @@ public partial class GameAudio : Node
     private AudioStreamPlayer _star = null!;
     private AudioStreamPlayer _hypercube = null!;
     private SettingsStore _settings = null!;
+    private Game _game = null!;
     private bool _roundActive;
 
     /// <summary>Background-music toggle state (persisted; default on).</summary>
@@ -58,8 +59,9 @@ public partial class GameAudio : Node
         _hypercube = GetNode<AudioStreamPlayer>("Hypercube");
 
         var game = Game.Instance;
-        game.RoundStarted += () => { _roundActive = true; StartMusic(); };
-        game.RoundEnded += (_, _) => { _roundActive = false; StopMusic(); };
+        _game = game;
+        game.RoundStarted += OnRoundStarted;
+        game.RoundEnded += OnRoundEnded;
 
         // The menu's StartRound emitted RoundStarted before this scene existed,
         // so bind the initial state here: a round is live when the scene
@@ -67,6 +69,29 @@ public partial class GameAudio : Node
         _roundActive = game.GameOverReason is null;
         var selftest = OS.GetCmdlineUserArgs().Any(a => a.StartsWith("--selftest"));
         if (!selftest && _roundActive) StartMusic();
+    }
+
+    /// <summary>
+    /// The autoload outlives this scene: unsubscribe so the freed audio node
+    /// never receives round-lifecycle signals (a throwing stale handler also
+    /// aborts delivery to the live scene's subscribers).
+    /// </summary>
+    public override void _ExitTree()
+    {
+        _game.RoundStarted -= OnRoundStarted;
+        _game.RoundEnded -= OnRoundEnded;
+    }
+
+    private void OnRoundStarted()
+    {
+        _roundActive = true;
+        StartMusic();
+    }
+
+    private void OnRoundEnded(string reason, int score)
+    {
+        _roundActive = false;
+        StopMusic();
     }
 
     /// <summary>HUD button handler: flips the persisted music toggle and

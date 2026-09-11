@@ -85,6 +85,14 @@ public partial class Game : Node
 
     private BufferedSwap? _bufferedSwap;
 
+    /// <summary>
+    /// Bumped by every <see cref="Bind"/>. Drain loops capture their epoch and
+    /// exit once a newer scene's consumer replaces them — a superseded loop
+    /// must never touch the queue or the view again (two writers cancel each
+    /// other's Tweens and wedge the phase for good).
+    /// </summary>
+    private int _drainEpoch;
+
     public Game() : this(GameMode.Classic)
     {
     }
@@ -137,7 +145,8 @@ public partial class Game : Node
     public void Bind(BoardView view)
     {
         _boardView = view;
-        _ = DrainLoopAsync();
+        var epoch = ++_drainEpoch;
+        _ = DrainLoopAsync(epoch);
 
         if (_selftestsStarted) return;
         _selftestsStarted = true;
@@ -365,11 +374,15 @@ public partial class Game : Node
     /// animation state. An op completes only when its animation fully played,
     /// and the actor pool reconciles with the settled board between ops.
     /// </summary>
-    private async Task DrainLoopAsync()
+    private async Task DrainLoopAsync(int epoch)
     {
         Board? settledBoard = null;
         while (true)
         {
+            // Superseded by a newer scene's consumer: stop without dequeuing,
+            // applying a board, or re-arming the wake-up signal.
+            if (epoch != _drainEpoch) return;
+
             if (!_opQueue.TryDequeue(out var op))
             {
                 // Queue drained: reconcile the actor pool with the last board
@@ -395,6 +408,7 @@ public partial class Game : Node
                     {
                         GD.PrintErr($"op playback failed: {e}");
                     }
+                    if (epoch != _drainEpoch) return;
                     if (gen != _generation)
                     {
                         settledBoard = null; // round restarted mid-play; drop stale state
@@ -414,6 +428,7 @@ public partial class Game : Node
                     {
                         GD.PrintErr($"rejection playback failed: {e}");
                     }
+                    if (epoch != _drainEpoch) return;
                     if (gen != _generation)
                     {
                         settledBoard = null;

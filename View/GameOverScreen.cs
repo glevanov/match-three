@@ -15,6 +15,7 @@ public partial class GameOverScreen : CanvasLayer
     private Label _newHighLabel = null!;
     private Button _playAgainButton = null!;
     private Button _menuButton = null!;
+    private Game _game = null!;
 
     public override void _Ready()
     {
@@ -26,20 +27,35 @@ public partial class GameOverScreen : CanvasLayer
         _playAgainButton = GetNode<Button>("Panel/VBox/PlayAgainButton");
         _menuButton = GetNode<Button>("Panel/VBox/MenuButton");
 
-        Game.Instance.RoundEnded += (reason, score) =>
-        {
-            var game = Game.Instance;
-            // Persist a new high score exactly once when a round ends: saving
-            // here (not in Game.cs) keeps it tied to the round-end UI.
-            var savedNew = game.HighScores.SaveIfBeats(game.Mode, score);
-            _reasonLabel.Text = reason;
-            _scoreLabel.Text = $"Score: {score}";
-            _highScoreLabel.Text = $"Best: {game.HighScores.Load().ForMode(game.Mode)}";
-            _newHighLabel.Visible = savedNew;
-            Visible = true;
-        };
-        Game.Instance.RoundStarted += () => Visible = false;
+        _game = Game.Instance;
+        _game.RoundEnded += OnRoundEnded;
+        _game.RoundStarted += OnRoundStarted;
         _playAgainButton.Pressed += () => Game.Instance.Restart();
         _menuButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
     }
+
+    /// <summary>
+    /// The autoload outlives this scene. A stale RoundEnded handler throws on
+    /// the disposed overlay and, running first, aborts delivery to the live
+    /// overlay — the next round then ends with no game-over screen at all.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        _game.RoundEnded -= OnRoundEnded;
+        _game.RoundStarted -= OnRoundStarted;
+    }
+
+    private void OnRoundEnded(string reason, int score)
+    {
+        // Persist a new high score exactly once when a round ends: saving
+        // here (not in Game.cs) keeps it tied to the round-end UI.
+        var savedNew = _game.HighScores.SaveIfBeats(_game.Mode, score);
+        _reasonLabel.Text = reason;
+        _scoreLabel.Text = $"Score: {score}";
+        _highScoreLabel.Text = $"Best: {_game.HighScores.Load().ForMode(_game.Mode)}";
+        _newHighLabel.Visible = savedNew;
+        Visible = true;
+    }
+
+    private void OnRoundStarted() => Visible = false;
 }

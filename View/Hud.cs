@@ -22,6 +22,7 @@ public partial class Hud : CanvasLayer
     private Button _musicButton = null!;
     private AcceptDialog _exitDialog = null!;
     private GameAudio _audio = null!;
+    private Game _game = null!;
 
     public override void _Ready()
     {
@@ -62,12 +63,9 @@ public partial class Hud : CanvasLayer
         StyleExitDialog(cancelButton);
 
         var game = Game.Instance;
-        game.ScoreChanged += score => _scoreLabel.Text = $"Score: {score}";
-        game.TimerChanged += seconds =>
-        {
-            _timeLabel.Visible = seconds >= 0;
-            if (seconds >= 0) _timeLabel.Text = $"Time: {seconds}";
-        };
+        _game = game;
+        game.ScoreChanged += OnScoreChanged;
+        game.TimerChanged += OnTimerChanged;
         _menuButton.Pressed += () => _exitDialog.PopupCentered();
         _exitDialog.Confirmed += () => GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
 
@@ -84,6 +82,25 @@ public partial class Hud : CanvasLayer
         _scoreLabel.Text = $"Score: {game.Score}";
         _modeLabel.Text = game.Mode == GameMode.Classic ? "Classic" : "Zen";
         var seconds = game.SecondsLeft;
+        _timeLabel.Visible = seconds >= 0;
+        if (seconds >= 0) _timeLabel.Text = $"Time: {seconds}";
+    }
+
+    /// <summary>
+    /// The autoload outlives this scene: a stale handler would throw on the
+    /// next signal (disposed node) and, running first, abort delivery to the
+    /// live HUD — the classic "timer/score stop updating after a menu trip".
+    /// </summary>
+    public override void _ExitTree()
+    {
+        _game.ScoreChanged -= OnScoreChanged;
+        _game.TimerChanged -= OnTimerChanged;
+    }
+
+    private void OnScoreChanged(int score) => _scoreLabel.Text = $"Score: {score}";
+
+    private void OnTimerChanged(int seconds)
+    {
         _timeLabel.Visible = seconds >= 0;
         if (seconds >= 0) _timeLabel.Text = $"Time: {seconds}";
     }
