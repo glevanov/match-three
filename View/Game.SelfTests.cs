@@ -210,9 +210,150 @@ public partial class Game
         }
     }
 
+    /// <summary>
+    /// `--selftest-flow`: the basic player flow end to end, including the
+    /// regression case that used to break it (a menu round-trip):
+    ///
+    ///   1. Classic round starts; a legal swap scores; the LIVE HUD labels
+    ///      mirror the engine's score and seconds.
+    ///   2. Back to the menu scene, then a second round (exactly what the menu
+    ///      button does). The timer must keep ticking and the live HUD must
+    ///      keep updating — dead scene UI used to stay subscribed to the
+    ///      autoload's signals and abort delivery to the live scene.
+    ///   3. The view must render the engine board cell-for-cell (Play again /
+    ///      Restart used to leave the previous round's gems on screen).
+    ///   4. Round end shows the game-over overlay on the LIVE scene, and Play
+    ///      again resets the round, hides the overlay and resyncs the view.
+    ///
+    /// Exercised on device with:
+    ///   adb shell am start -n com.matchthree/com.godot.game.GodotAppLauncher \
+    ///       --esa parameters "--selftest-flow"
+    /// </summary>
+    private async Task SelfTestFlowAsync()
+    {
+        try
+        {
+            await WaitUntilReadyAsync();
+
+            // --- round 1: start, score, HUD mirrors the engine ---------------
+            StartRound(GameMode.Classic);
+            await WaitUntilReadyAsync();
+            if (Mode != GameMode.Classic || SecondsLeft <= 0)
+                throw new InvalidOperationException($"round 1 is not a live Classic round (mode={Mode}, seconds={SecondsLeft})");
+            VerifyHud("round 1 start");
+            await SubmitScoringSwapAsync("round 1");
+            VerifyHud("round 1 after swap");
+            VerifyViewMatchesBoard("round 1 after swap");
+
+            // --- menu round-trip, then round 2 (the regression case) --------
+            GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
+            await NextFrameAsync();
+            await NextFrameAsync();
+            StartRound(GameMode.Classic);
+            await WaitUntilReadyAsync();
+            if (Score != 0)
+                throw new InvalidOperationException($"score carried into round 2: {Score}");
+
+            var beforeTick = SecondsLeft;
+            await WaitSecondsAsync(1.2);
+            if (SecondsLeft >= beforeTick)
+                throw new InvalidOperationException($"timer did not tick in round 2 ({beforeTick} -> {SecondsLeft})");
+            VerifyHud("round 2 after a timer tick");
+
+            await SubmitScoringSwapAsync("round 2");
+            VerifyHud("round 2 after swap");
+            VerifyViewMatchesBoard("round 2 after swap");
+
+            // --- round end: live overlay, then Play again --------------------
+            EndGame("selftest flow end");
+            await NextFrameAsync();
+            if (!GameOverVisible())
+                throw new InvalidOperationException("game-over overlay did not appear on the live scene");
+            if (GameOverReasonText() != "selftest flow end")
+                throw new InvalidOperationException($"overlay reason is '{GameOverReasonText()}', expected the round's reason");
+
+            Restart();
+            await WaitUntilReadyAsync();
+            await NextFrameAsync();
+            if (_phase != GamePhase.Idle || GameOverReason is not null || Score != 0)
+                throw new InvalidOperationException("Play again did not reset the round");
+            if (SecondsLeft <= 0)
+                throw new InvalidOperationException($"Play again did not re-arm the Classic timer ({SecondsLeft})");
+            if (GameOverVisible())
+                throw new InvalidOperationException("game-over overlay is still visible after Play again");
+            VerifyViewMatchesBoard("Play again");
+            await SubmitScoringSwapAsync("round 3 (Play again)");
+            VerifyHud("round 3 after swap");
+
+            GD.Print($"SELFTEST-OK-flow: menu round-trip, HUD labels, view/engine sync, " +
+                     $"game-over overlay and Play again resync all verified (score={Score})");
+            GetTree().Quit(0);
+        }
+        catch (Exception e)
+        {
+            Fail($"SELFTEST-flow: {e}");
+        }
+    }
+
+    /// <summary>Submits the first legal swap and asserts that it scored.</summary>
+    private async Task SubmitScoringSwapAsync(string label)
+    {
+        var (a, b) = FindLegalSwap() ?? throw new InvalidOperationException($"{label}: no legal swap on the settled board");
+        var before = Score;
+        SubmitSwap(SwapIntent.Of(a, b));
+        await WaitForIdleAsync();
+        await NextFrameAsync();
+        if (Score <= before)
+            throw new InvalidOperationException($"{label}: legal swap ({a.Row},{a.Col})<->({b.Row},{b.Col}) scored nothing");
+        GD.Print($"FLOW: {label}: swap ({a.Row},{a.Col})<->({b.Row},{b.Col}) scored {Score - before} (total {Score})");
+    }
+
+    /// <summary>
+    /// The live HUD labels must mirror the engine state. A dead scene's HUD
+    /// used to keep receiving these signals and throw first, which aborted
+    /// delivery to the live HUD — the labels then froze on their initial text.
+    /// </summary>
+    private void VerifyHud(string label)
+    {
+        var scoreText = HudLabel("ScoreLabel").Text;
+        if (scoreText != $"Score: {Score}")
+            throw new InvalidOperationException($"{label}: HUD score label '{scoreText}' != engine score {Score}");
+        var timeText = HudLabel("TimeLabel").Text;
+        if (timeText != $"Time: {SecondsLeft}")
+            throw new InvalidOperationException($"{label}: HUD time label '{timeText}' != engine seconds {SecondsLeft}");
+    }
+
+    /// <summary>The view must render exactly the engine board: same gem id per cell.</summary>
+    private void VerifyViewMatchesBoard(string label)
+    {
+        var view = _boardView;
+        if (view is null || !GodotObject.IsInstanceValid(view))
+            throw new InvalidOperationException($"{label}: no live BoardView bound");
+        var mismatches = _board.Positions().Count(p => _board.GemAt(p)?.Id != view.GemIdAt(p));
+        if (mismatches != 0)
+            throw new InvalidOperationException($"{label}: view diverged from the engine board at {mismatches} cell(s)");
+    }
+
+    private Label HudLabel(string name) =>
+        GetTree().CurrentScene?.GetNodeOrNull<Label>($"HUD/HudBox/{name}")
+            ?? throw new InvalidOperationException($"HUD label {name} not found on the live scene");
+
+    private bool GameOverVisible() =>
+        GetTree().CurrentScene?.GetNodeOrNull<CanvasLayer>("GameOver")?.Visible ?? false;
+
+    private string GameOverReasonText() =>
+        GetTree().CurrentScene?.GetNodeOrNull<Label>("GameOver/Panel/VBox/ReasonLabel")?.Text ?? string.Empty;
+
+    private async Task WaitSecondsAsync(double seconds) =>
+        await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);
+
     private async Task WaitUntilReadyAsync()
     {
-        while (_boardView is null || _phase != GamePhase.Idle) await NextFrameAsync();
+        // A stale (freed) BoardView from a previous scene is not "ready":
+        // IsInstanceValid goes false the moment the old scene is freed, so
+        // this wait survives the menu round-trips the flow test performs.
+        while (_boardView is null || !GodotObject.IsInstanceValid(_boardView) || _phase != GamePhase.Idle)
+            await NextFrameAsync();
         await NextFrameAsync(); // actor pool reconciled at least once by the drain loop
     }
 

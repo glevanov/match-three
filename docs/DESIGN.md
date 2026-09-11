@@ -141,7 +141,12 @@ match-three/
 - Headless self-tests (user args after `--`, exit 0 = pass):
   `--selftest-swap`, `--selftest-reject`, `--selftest-burst=N`,
   `--selftest-timer`, `--selftest-special`, `--selftest-hypercube`,
-  `--selftest-menu`.
+  `--selftest-menu`, `--selftest-flow` (basic round lifecycle: HUD labels,
+  view/engine sync, menu round-trip, game-over overlay, Play again).
+  On Android, `scripts/selftest-android.sh --selftest-*` builds the current
+  sources, patches them into the debug export and runs the test on the
+  connected device (no Godot binary required); `--selftest-flow` is the
+  regression test for the round lifecycle across menu round-trips.
 - Board simulation metrics (150 boards, 9x9/6): avg legal moves ≈ 18.8,
   random-swap match probability ≈ 0.13.
 
@@ -173,6 +178,7 @@ explicitly.
 | Generation: no pre-match, legal move, regenerate | BoardGeneratorTest (50 boards) |
 | Reshuffle Fisher-Yates, ids/types preserved, 20 retries | GameEngineTest.reshuffle (multiset preserved, null on dead) |
 | Classic 75 s timer ends round; failed reshuffle ends either mode | --selftest-timer (Time's up! -&gt; GameOver -&gt; Restart); Game.cs Attach (null reshuffle -&gt; EndGame) |
+| Round lifecycle across menu round-trips: live HUD labels, view/engine board sync, game-over overlay, Play again resync | --selftest-flow (device run via scripts/selftest-android.sh); negative-checked by reverting the fix |
 | Zen: ends on dead board + failed reshuffle | Engine test (reshuffle null) + Attach wiring; E2E needs a contrived dead board |
 | Non-goals (no hints/bonus/mid-session persistence) | Honors by construction; only highscores persist |
 

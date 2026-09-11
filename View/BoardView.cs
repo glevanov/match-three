@@ -68,6 +68,9 @@ public partial class BoardView : Node2D
     /// <summary>True when the cell currently holds a gem (input gating).</summary>
     public bool HasGem(Position position) => _player!.HasGem(position);
 
+    /// <summary>Gem id the view currently renders in the cell (self-test/debug inspection).</summary>
+    public int? GemIdAt(Position position) => _player!.GemIdAt(position);
+
     /// <summary>Forces one redraw (after selection changes).</summary>
     public void RefreshSelection() => QueueRedraw();
 

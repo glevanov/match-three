@@ -82,6 +82,16 @@ public sealed class StepPlayer
         position.Col >= 0 && position.Col < _config.Width &&
         _ids[position.Row, position.Col] is not null;
 
+    /// <summary>
+    /// Gem id currently rendered in the cell, or null when empty/out of bounds
+    /// (view-state inspection for self-tests and debugging).
+    /// </summary>
+    public int? GemIdAt(Position position) =>
+        position.Row >= 0 && position.Row < _config.Height &&
+        position.Col >= 0 && position.Col < _config.Width
+            ? _ids[position.Row, position.Col]
+            : null;
+
     /// <summary>Snaps the actor pool to a settled <paramref name="board"/> (initial load and post-playback).</summary>
     public void ApplyBoard(Board board)
     {

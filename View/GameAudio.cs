@@ -67,8 +67,7 @@ public partial class GameAudio : Node
         // so bind the initial state here: a round is live when the scene
         // appears with no game-over recorded yet.
         _roundActive = game.GameOverReason is null;
-        var selftest = OS.GetCmdlineUserArgs().Any(a => a.StartsWith("--selftest"));
-        if (!selftest && _roundActive) StartMusic();
+        if (!Game.IsSelfTestRun && _roundActive) StartMusic();
     }
 
     /// <summary>

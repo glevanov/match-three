@@ -36,6 +36,21 @@ public partial class Game : Node
     /// <summary>Placeholder Classic round length (MECHANICS.md: tunable per round).</summary>
     public const int ClassicTimerSeconds = 75;
 
+    private static string[]? _selfTestArgs;
+
+    /// <summary>
+    /// Command line args that drive the headless self-tests. On desktop they
+    /// are user args (after `--`); on Android the launch activity is not
+    /// exported and Godot ignores launch-intent extras, so the flags are
+    /// packed into the export preset's extra args (assets/_cl_) and surface as
+    /// regular engine args instead. Scan both.
+    /// </summary>
+    public static string[] SelfTestArgs =>
+        _selfTestArgs ??= OS.GetCmdlineUserArgs().Concat(OS.GetCmdlineArgs()).ToArray();
+
+    /// <summary>True for any --selftest* run (CI/desktop headless or on-device).</summary>
+    public static bool IsSelfTestRun => SelfTestArgs.Any(a => a.StartsWith("--selftest"));
+
     /// <summary>Score changed; HUD listens.</summary>
     [Signal]
     public delegate void ScoreChangedEventHandler(int score);
@@ -116,8 +131,8 @@ public partial class Game : Node
         _phase = GamePhase.Idle;
         _highScores = new HighScoreStore(ProjectSettings.GlobalizePath("user://"));
 
-        var args = OS.GetCmdlineUserArgs();
-        if (args.Any(a => a.StartsWith("--selftest")))
+        var args = SelfTestArgs;
+        if (IsSelfTestRun)
         {
             // Main scene is the menu; self-tests drive the game scene directly.
             // Deferred: changing scenes inside an autoload _Ready hits the tree
@@ -151,13 +166,14 @@ public partial class Game : Node
         if (_selftestsStarted) return;
         _selftestsStarted = true;
 
-        var args = OS.GetCmdlineUserArgs();
+        var args = SelfTestArgs;
         if (args.Contains("--selftest-swap")) _ = SelfTestSwapAsync();
         if (args.Contains("--selftest-reject")) _ = SelfTestRejectAsync();
         if (args.Contains("--selftest-timer")) _ = SelfTestTimerAsync();
         if (args.Contains("--selftest-special")) _ = SelfTestSpecialAsync();
         if (args.Contains("--selftest-hypercube")) _ = SelfTestHypercubeAsync();
         if (args.Contains("--selftest-menu")) _ = SelfTestMenuAsync();
+        if (args.Contains("--selftest-flow")) _ = SelfTestFlowAsync();
         var burstArg = args.FirstOrDefault(a => a.StartsWith("--selftest-burst="));
         if (burstArg is not null && int.TryParse(burstArg.Split('=')[1], out var burst) && burst > 0)
         {
