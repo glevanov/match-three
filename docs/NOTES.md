@@ -28,11 +28,38 @@ Two Android export quirks make that patch path non-obvious:
   flags stay user args after `--`.
 
 The patcher also re-aligns the APK for 16 KB page devices (`zipalign -P 16`),
-required on Android 16 / targetSdk 36. Separately, Godot 4.7.2's own `.so`
-files still have 4 KB-aligned ELF LOAD segments, so the system's "app doesn't
-support 16 KB pages" dialog can appear once per launch regardless of APK
-alignment — dismiss it (or "Don't show again"). A Godot build with 16 KB
-aligned libs removes it.
+required on Android 16 / targetSdk 36.
+
+### The "app doesn't support 16 KB pages" warning
+
+On Android 16 devices that can use 16 KB pages, a debuggable APK whose native
+libs are not 16 KB ELF-aligned triggers a compatibility dialog at launch, and
+that dialog can swallow touches until dismissed. Godot 4.7.2's own libs
+(`libgodot_android.so`, `libc++_shared.so`) are already 16 KB aligned; the
+offenders are the **.NET 8 Mono runtime packs** (`libmonosgen-2.0.so`,
+`libmono-component-*.so`, `libSystem.*.so`): their LOAD segments are
+`p_align=0x1000` and only 4 KB congruent, so they cannot be fixed by
+flipping ELF headers — they need a re-link. .NET added 16 KB alignment in
+.NET 9 (Godot 4.5+ targets `net9.0` for Android), so moving the project off
+the pinned Godot 4.7.2 / `net8.0` stack is the real fix.
+
+Until then the same dialog is suppressed by either of these:
+
+- `scripts/export-android.sh` ensures
+  `android/build/src/main/AndroidManifest.xml` carries
+  `android:pageSizeCompat="enabled"` (API 36 attribute; the template's
+  `compileSdk` is 36) before every export. The app then explicitly runs in
+  page-size compat mode and Android does not show the warning, while the
+  build stays debuggable. The edit lives in the script because the `android/`
+  build template is gitignored (generated locally by the editor).
+- For an APK that is already built, `scripts/patch-debug-apk.py ...
+  --no-debuggable` flips `android:debuggable` to false in the binary
+  manifest, which suppresses the same warning (verified on device: dialog
+  with the debug build, no dialog after the patch), at the cost of
+  `adb shell run-as` and editor remote debugging.
+
+Tapping "Don't show again" in the dialog also stops it for that device, and
+the choice survives reinstalls until the app is uninstalled.
 
 ## Dev tooling: Android export/deploy script
 
