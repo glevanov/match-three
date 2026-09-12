@@ -9,7 +9,7 @@ Godot 4.7.2 (.NET/C#) match-three game.
 - `Scenes/` — Godot scenes
 - `Tests/` — NUnit engine tests
 - `Assets/` — runtime-loaded assets
-- `assets/` — original source art kept for reference
+- `original-art/` — original source art kept for reference
 - `scripts/` — Android export and self-test helpers
 - `docs/` — design, mechanics, decisions, notes
 

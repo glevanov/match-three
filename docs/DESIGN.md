@@ -20,7 +20,7 @@ and survive only in git history.
 - **`MatchThree.csproj` is the Godot-facing game assembly.** It references the
   engine project and contains the view, scenes, and presentation code.
 - **NUnit** backs the engine test suite in `Tests/`.
-- **Assets** live in `Assets/`; original source art is preserved in `assets/`.
+- **Assets** live in `Assets/`; original source art is preserved in `original-art/`.
   Asset provenance is tracked in [ASSET_SOURCES.md](ASSET_SOURCES.md).
 
 ## Architecture
@@ -76,7 +76,7 @@ match-three/
 ├── Assets/                      ← runtime sprites, shaders, audio,
 │                                  backgrounds, icon
 ├── Tests/                       ← NUnit engine tests
-├── assets/                      ← original source art kept for reference
+├── original-art/                ← original source art kept for reference
 ├── scripts/                     ← Android export and self-test helpers
 └── docs/                        ← mechanics, decisions, notes, provenance
 ```
