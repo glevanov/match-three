@@ -76,6 +76,7 @@ Notes:
   pipeline that produced `Assets/Audio/` (the pop original was fetched
   directly from the Pixabay CDN during setup; the URL above is the
   canonical source).
-- If the tracks are ever replaced, re-run the Godot import (`godot
-  --headless --import`) so the `.import` files (committed) match the new
-  sources.
+- If the tracks are ever replaced, re-run the Godot import (`PATH="$HOME/.dotnet:$PATH"
+  godot --headless --import` — a bare `godot` without `dotnet` on PATH SIGSEGVs
+  at startup, docs/NOTES.md "ad-hoc Godot runs") so the `.import` files
+  (committed) match the new sources.

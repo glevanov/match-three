@@ -5,6 +5,12 @@
   Consider min-conflict or biased placement during tuning. For now it's a
   graceful-end placeholder.
 - **Timer value 75s is placeholder.** Tune against actual play.
+- **Cosmetic shutdown warnings in headless self-tests.** Runs that quit while a
+  one-shot SFX is still playing print `ObjectDB instances were leaked at exit`
+  and `N resources still in use at exit` (with `--verbose`, naming e.g.
+  `res://Assets/Audio/swipe.mp3`). The `SELFTEST-OK-*` line is still printed
+  and the process exits 0 — nothing to chase. Visible on `--selftest-swap`
+  too, so it is not tied to any one sound asset.
 
 ## Dev tooling: on-device headless self-tests
 
@@ -87,6 +93,21 @@ scripts/export-android.sh --install --run
 If you still see `FeatureFlagsImplExport ... package android.xr` or `gralloc5`
 lines in device `logcat`, those are platform/driver noise, not this repo's
 export flow.
+
+## Dev tooling: ad-hoc Godot runs
+
+The repo scripts prepend `$HOME/.dotnet` themselves, but a bare `godot
+--headless ...` — for example the `godot --headless --import` an asset swap
+needs — requires `dotnet` on PATH too. Without it Godot's .NET host fails
+(`One of the dependent libraries is missing` / `Failed to load hostfxr`) and
+the process dies with SIGSEGV; that crash is the missing PATH, not a project
+problem. Run ad-hoc Godot commands as:
+
+```sh
+PATH="$HOME/.dotnet:$PATH" godot --headless --import
+```
+
+`DOTNET_ROOT` is not required (Godot derives it from `dotnet` on PATH).
 
 ## Dev tooling: debug screens
 
