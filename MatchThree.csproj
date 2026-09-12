@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!--
       All projects target net9.0. Godot 4.7.2's generated template would use
-      net8.0 on desktop and switch to net9.0 only under
+      an older TFM on desktop and switch to net9.0 only under
       GodotTargetPlatform=android, but this project keeps one TFM everywhere:
       Android requires net9.0 (Godot 4.5+, and only the .NET 9 Mono runtime
       packs are 16 KB page aligned — docs/NOTES.md), and on desktop/editor the

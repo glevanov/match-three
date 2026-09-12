@@ -12,12 +12,13 @@ cutover and survive only in git history. Game rules live in
   (`Godot.NET.Sdk/4.7.2`), `project.godot` feature tag and editor version must
   not drift apart. The game, `Engine/` and `Tests/` all target `net9.0`, so
   every build needs the .NET 9 SDK/runtime. Godot's generated template would
-  keep `net8.0` on desktop and use `net9.0` only for Android
+  keep an older TFM on desktop and use `net9.0` only for Android
   (`GodotTargetPlatform=android`); this project deliberately uses one TFM
   everywhere — Android requires `net9.0` (Godot 4.5+, and only the .NET 9
   Mono runtime packs are 16 KB page aligned) and the desktop/editor Godot
   host rolls forward to the installed .NET 9 runtime. Details and the
-  verification recipe live in [NOTES.md](NOTES.md#16-kb-page-alignment-resolved-in-the-net-9-android-target).
+  verification recipe live in
+  [NOTES.md](NOTES.md#16-kb-page-alignment-resolved-in-the-net-9-android-target).
 - **`Engine/`** — pure C# class library, **zero `Godot` namespace dependency**.
   Builds and tests with `dotnet build` / `dotnet test` alone. Excluded from
   the game assembly via `<Compile Remove>` in `MatchThree.csproj` and

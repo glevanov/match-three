@@ -36,15 +36,15 @@ On Android 16 devices that can use 16 KB pages, an APK whose native libs are
 not 16 KB ELF-aligned (`p_align=0x4000`) triggers an "app doesn't support
 16 KB pages" compatibility dialog at launch, and that dialog can swallow
 touches until dismissed. Godot 4.7.2's own libs (`libgodot_android.so`,
-`libc++_shared.so`) are aligned; the **.NET 8 Mono runtime packs**
-(`libmonosgen-2.0.so`, `libmono-component-*.so`, `libSystem.*.so`) had
-`p_align=0x1000` and 4 KB-congruent LOAD segments, which cannot be fixed by
-flipping ELF headers — they need a re-link. .NET 9 ships re-linked packs, and
-Godot 4.5+ requires Android exports to target `net9.0`
-(godotengine/godot#110263).
+`libc++_shared.so`) are aligned; the Mono runtime packs shipped with earlier
+.NET versions (`libmonosgen-2.0.so`, `libmono-component-*.so`,
+`libSystem.*.so`) had `p_align=0x1000` and 4 KB-congruent LOAD segments,
+which cannot be fixed by flipping ELF headers — they need a re-link. .NET 9
+ships re-linked packs, and Godot 4.5+ requires Android exports to target
+`net9.0` (godotengine/godot#110263).
 
 The game, `Engine/` and `Tests/` therefore all target `net9.0`
-unconditionally (Godot's generated template would keep `net8.0` for
+unconditionally (Godot's generated template would keep an older TFM for
 non-Android and switch only under `GodotTargetPlatform=android`, but one TFM
 everywhere keeps the engine and tests on the same runtime). On desktop the
 Godot .NET host rolls forward to the latest installed major runtime

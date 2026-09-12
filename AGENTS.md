@@ -37,8 +37,8 @@ original source art; `Assets/` holds what the game actually loads.
   `net9.0`, so every build needs the .NET 9 SDK/runtime. On Android this is
   mandatory (Godot 4.5+ requires `net9.0`; only the .NET 9 Mono runtime packs
   are 16 KB page aligned) and on desktop/editor it works because Godot's .NET
-  host rolls forward to the latest installed major runtime. Don't downgrade to
-  `net8.0`, and don't re-add page-size compat workarounds (docs/NOTES.md
+  host rolls forward to the latest installed major runtime. Don't lower the
+  target framework, and don't re-add page-size compat workarounds (docs/NOTES.md
   "16 KB page alignment").
 - **One writer per branch.** When delegating, either use a worktree or hand off
   parameters; agents in this repo coordinate via AGENTS.md.

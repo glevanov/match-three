@@ -173,7 +173,7 @@ def patch_manifest_debuggable(path: str) -> None:
     Debug APKs are debuggable, which keeps adb run-as / editor remote
     debugging working but is unwanted for hand-made builds. Before Android
     exports moved to the net9.0 TFM the flip also suppressed the Android 16
-    16 KB page-size compatibility dialog (the .NET 8 Mono runtime libs were
+    16 KB page-size compatibility dialog (the older Mono runtime libs were
     only 4 KB aligned); exports are net9.0 now, so the native libs are 16 KB
     aligned and the dialog is gone at the source (docs/NOTES.md "16 KB page
     alignment").
