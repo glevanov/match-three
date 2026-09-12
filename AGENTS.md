@@ -33,6 +33,12 @@ original source art; `Assets/` holds what the game actually loads.
   builds/deploys (for example `--install --run`). Do **not** combine Godot
   `--export-debug` with `--build-solutions`; that can produce an APK missing
   managed assemblies and crash on startup.
+- **Android exports target net9.0.** `MatchThree.csproj` keeps Godot's
+  generated conditional TFM: `net8.0` for desktop/editor builds, `net9.0`
+  when `GodotTargetPlatform=android`. Godot 4.5+ requires `net9.0` on Android
+  (.NET 9 Mono libs are 16 KB page aligned), and Android builds need the
+  .NET 9 SDK. Don't flatten the condition, and don't re-add page-size compat
+  workarounds (docs/NOTES.md "16 KB page alignment").
 - **One writer per branch.** When delegating, either use a worktree or hand off
   parameters; agents in this repo coordinate via AGENTS.md.
 

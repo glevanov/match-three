@@ -30,42 +30,53 @@ Two Android export quirks make that patch path non-obvious:
 The patcher also re-aligns the APK for 16 KB page devices (`zipalign -P 16`),
 required on Android 16 / targetSdk 36.
 
-### The "app doesn't support 16 KB pages" warning
+### 16 KB page alignment (resolved in the .NET 9 Android target)
 
-On Android 16 devices that can use 16 KB pages, a debuggable APK whose native
-libs are not 16 KB ELF-aligned triggers a compatibility dialog at launch, and
-that dialog can swallow touches until dismissed. Godot 4.7.2's own libs
-(`libgodot_android.so`, `libc++_shared.so`) are already 16 KB aligned; the
-offenders are the **.NET 8 Mono runtime packs** (`libmonosgen-2.0.so`,
-`libmono-component-*.so`, `libSystem.*.so`): their LOAD segments are
-`p_align=0x1000` and only 4 KB congruent, so they cannot be fixed by
-flipping ELF headers — they need a re-link. .NET added 16 KB alignment in
-.NET 9 (Godot 4.5+ targets `net9.0` for Android), so moving the project off
-the pinned Godot 4.7.2 / `net8.0` stack is the real fix.
+On Android 16 devices that can use 16 KB pages, an APK whose native libs are
+not 16 KB ELF-aligned (`p_align=0x4000`) triggers an "app doesn't support
+16 KB pages" compatibility dialog at launch, and that dialog can swallow
+touches until dismissed. Godot 4.7.2's own libs (`libgodot_android.so`,
+`libc++_shared.so`) are aligned; the **.NET 8 Mono runtime packs**
+(`libmonosgen-2.0.so`, `libmono-component-*.so`, `libSystem.*.so`) had
+`p_align=0x1000` and 4 KB-congruent LOAD segments, which cannot be fixed by
+flipping ELF headers — they need a re-link. .NET 9 ships re-linked packs, and
+Godot 4.5+ requires Android exports to target `net9.0`
+(godotengine/godot#110263).
 
-Until then the same dialog is suppressed by either of these:
+`MatchThree.csproj` therefore keeps Godot's generated conditional TFM:
 
-- `scripts/export-android.sh` ensures
-  `android/build/src/main/AndroidManifest.xml` carries
-  `android:pageSizeCompat="enabled"` (API 36 attribute; the template's
-  `compileSdk` is 36) before every export. The app then explicitly runs in
-  page-size compat mode and Android does not show the warning, while the
-  build stays debuggable. The edit lives in the script because the `android/`
-  build template is gitignored (generated locally by the editor).
-- For an APK that is already built, `scripts/patch-debug-apk.py ...
-  --no-debuggable` flips `android:debuggable` to false in the binary
-  manifest, which suppresses the same warning (verified on device: dialog
-  with the debug build, no dialog after the patch), at the cost of
-  `adb shell run-as` and editor remote debugging.
+```xml
+<TargetFramework>net8.0</TargetFramework>
+<TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+```
 
-Tapping "Don't show again" in the dialog also stops it for that device, and
-the choice survives reinstalls until the app is uninstalled.
+Desktop/editor builds stay on `net8.0` (the Godot 4.7.2 host TFM); Android
+exports resolve `GodotTargetPlatform=android` (Godot sets it, and the SDK
+also infers it from the `android-*` RID, so `dotnet publish -r android-arm64`
+works standalone). **Android builds need the .NET 9 SDK** (`dotnet
+--list-sdks`); desktop builds still work with .NET 8.
+
+Verify an export with:
+
+```sh
+unzip -q -d /tmp/apk build/matchthree-debug.apk 'lib/arm64-v8a/*'
+for f in /tmp/apk/lib/arm64-v8a/*.so; do
+    readelf -lW "$f" | awk '/^  LOAD/{print "'"$f"'", $NF}'
+done   # every p_align must be 0x4000
+zipalign -c -P 16 -v 4 build/matchthree-debug.apk
+```
+
+The earlier `android:pageSizeCompat="enabled"` manifest workaround was
+removed once the libs were aligned: forcing page-size compat mode would keep
+the app off native 16 KB pages. `scripts/patch-debug-apk.py --no-debuggable`
+still exists for producing non-debuggable APKs by hand, but is no longer
+needed for this warning.
 
 ## Dev tooling: Android export/deploy script
 
 Use `scripts/export-android.sh` for phone builds. It:
 
-- ensures Godot can find `dotnet` (prepends `$HOME/.dotnet` when needed)
+- ensures Godot can find `dotnet` (prepends `$HOME/.dotnet` when needed; Android builds need a 9.0 SDK there — see the 16 KB section)
 - exports with the safe .NET flow: `godot --headless --export-debug "Android"`
 - intentionally avoids `--build-solutions` during export (that previously produced a broken APK with missing managed assemblies)
 - validates that the APK actually contains `MatchThree.dll`, `MatchThree.Engine.dll`, and `GodotSharp.dll`

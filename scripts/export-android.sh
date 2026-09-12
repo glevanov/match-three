@@ -106,34 +106,6 @@ fi
 
 mkdir -p "$(dirname "$apk_path")"
 
-# 16 KB page-size compatibility: Godot 4.7.2's own native libs are 16 KB
-# aligned, but the .NET 8 Mono runtime packs are not (only .NET 9+ is).
-# Android 16 then shows a compatibility warning dialog at launch for
-# debuggable builds, which can swallow touches. Setting
-# android:pageSizeCompat="enabled" on <application> opts the app into
-# page-size compat mode explicitly, and Android then launches it without the
-# warning. The build template lives in the gitignored android/ tree, so ensure
-# the attribute here, idempotently.
-manifest="$repo_root/android/build/src/main/AndroidManifest.xml"
-if [[ -f "$manifest" ]] && ! grep -q 'android:pageSizeCompat' "$manifest"; then
-    if command -v python3 >/dev/null 2>&1; then
-        python3 - "$manifest" <<'PY'
-import re, sys
-path = sys.argv[1]
-src = open(path).read()
-if 'android:pageSizeCompat' not in src:
-    src, n = re.subn(r'(<application\b)', r'\1\n        android:pageSizeCompat="enabled"', src, count=1)
-    if n == 0:
-        raise SystemExit(f"error: no <application> tag in {path}")
-    open(path, "w").write(src)
-    print(f"    manifest: added android:pageSizeCompat=\"enabled\" to {path}")
-PY
-    else
-        echo "    warning: python3 not found; add android:pageSizeCompat=\"enabled\" to" >&2
-        echo "             $manifest to avoid the Android 16 16 KB warning dialog" >&2
-    fi
-fi
-
 echo "==> Exporting Android debug APK"
 echo "    repo:  $repo_root"
 echo "    godot: $godot_bin"

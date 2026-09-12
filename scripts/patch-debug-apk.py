@@ -170,12 +170,13 @@ def _axml_resource_map(data: bytes) -> list[int]:
 def patch_manifest_debuggable(path: str) -> None:
     """Flip android:debuggable to false in the binary AndroidManifest.xml.
 
-    Godot debug exports are debuggable, and Android 16 shows the 16 KB page size
-    compatibility warning for debuggable apps whose native libs are not 16 KB
-    aligned (Godot 4.7.2 itself is aligned; the .NET 8 Mono runtime packs are
-    not). The proper build-side fix is android:pageSizeCompat="enabled" in the
-    Android build template manifest; this is the same-dialog switch for an APK
-    that is already built (at the cost of adb run-as / editor remote debug).
+    Debug APKs are debuggable, which keeps adb run-as / editor remote
+    debugging working but is unwanted for hand-made builds. Before Android
+    exports moved to the net9.0 TFM the flip also suppressed the Android 16
+    16 KB page-size compatibility dialog (the .NET 8 Mono runtime libs were
+    only 4 KB aligned); exports are net9.0 now, so the native libs are 16 KB
+    aligned and the dialog is gone at the source (docs/NOTES.md "16 KB page
+    alignment").
     """
     data = bytearray(open(path, "rb").read())
     if struct.unpack_from("<H", data, 0)[0] != 0x0003:
@@ -224,8 +225,8 @@ def main() -> None:
                         help="append a command-line arg to assets/_cl_ (repeatable)")
     parser.add_argument("--install", action="store_true", help="adb install the patched APK")
     parser.add_argument("--no-debuggable", action="store_true",
-                        help="set android:debuggable=false (suppresses the Android 16 16 KB "
-                             "page-size compatibility dialog on this device)")
+                        help="set android:debuggable=false (no longer needed for the "
+                             "16 KB dialog: Android exports use aligned .NET 9 libs)")
     parser.add_argument("--serial", help="adb device serial for --install")
     args = parser.parse_args()
 
