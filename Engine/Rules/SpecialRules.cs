@@ -2,28 +2,10 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// Special-gem rules (MECHANICS.md). All functions are deterministic and
-/// unit-testable — the engine calls these, the tests call these directly.
-///
-/// Birth is per shape (MECHANICS.md): runs sharing cells form one shape, and
-/// each shape births exactly one special by precedence <b>5-in-row &gt; T/L &gt;
-/// 4-in-row &gt; plain 3</b> — one matched gem transforms, the rest clear normally.
-/// Non-overlapping shapes resolve independently, so one cascade round can birth
-/// several specials.
-/// </summary>
 public static class SpecialRules
 {
-    /// <summary>A gem chosen to transform into a special during a cascade round.</summary>
-    /// <param name="Special">Special kind born.</param>
-    /// <param name="GemId">Stable id of the transformed gem.</param>
-    /// <param name="Cell">Birth cell (pre-fall).</param>
     public sealed record Birth(Special Special, int GemId, Position Cell);
 
-    /// <summary>
-    /// True when the swap of <paramref name="gemA"/> and <paramref name="gemB"/>
-    /// is legal even without a match.
-    /// </summary>
     public static bool SwapContactLegal(Gem? gemA, Gem? gemB)
     {
         var specA = gemA?.Special;
@@ -33,12 +15,6 @@ public static class SpecialRules
                specB == Special.Hypercube;
     }
 
-    /// <summary>
-    /// Decides the specials born from one cascade round: runs are clustered into
-    /// shapes by shared cells, and each shape births at most one special by
-    /// precedence (5-run &gt; T/L &gt; 4-run; plain 3-runs birth nothing). Groups are
-    /// ordered by their first run's index in <paramref name="matches"/> — deterministic.
-    /// </summary>
     public static List<Birth> ResolveBirths(Board board, List<Match> matches) =>
         ShapeGroups(matches)
             .Select(group => BirthForShape(board, group))
@@ -46,11 +22,6 @@ public static class SpecialRules
             .Select(birth => birth!)
             .ToList();
 
-    /// <summary>
-    /// Clusters runs into shapes: runs sharing any cell belong to the same shape
-    /// (a T/L is one shape of two intersecting runs; a shared cell implies the
-    /// same gem and color, since a cell holds one gem).
-    /// </summary>
     private static List<List<Match>> ShapeGroups(List<Match> matches)
     {
         var parent = new int[matches.Count];
@@ -88,7 +59,6 @@ public static class SpecialRules
             }
         }
 
-        // Deterministic group order: first run's index in `matches`.
         var groups = new List<List<Match>>();
         var groupByRoot = new Dictionary<int, int>();
         for (var index = 0; index < matches.Count; index++)
@@ -105,24 +75,17 @@ public static class SpecialRules
         return groups;
     }
 
-    /// <summary>The one special born from a single shape (or null for plain 3-runs).</summary>
     private static Birth? BirthForShape(Board board, List<Match> runs)
     {
-        // 1. 5-in-row wins over everything (including a crossing T/L).
         var five = runs.FirstOrDefault(m => m.Positions.Count >= 5);
         if (five is not null)
         {
-            // Pick the first group cell with no special, falling back to the
-            // third cell (index 2). FirstOrDefault can't express "not found"
-            // for a value-type Position (default == (0,0) is a real cell), so
-            // search explicitly.
             var cell = FindFirstPlainCell(five.Positions, board) ?? five.Positions[2];
             var gem = board.GemAt(cell)
                 ?? throw new InvalidOperationException($"matched run cell {cell} is empty");
             return new Birth(Special.Hypercube, gem.Id, cell);
         }
 
-        // 2. T/L: a position shared by a horizontal and a vertical run.
         var cross = IntersectionCell(board, runs);
         if (cross is not null)
         {
@@ -131,7 +94,6 @@ public static class SpecialRules
             return new Birth(Special.Star, gem.Id, cross.Value);
         }
 
-        // 3. 4-in-row becomes a Flame.
         var four = runs.FirstOrDefault(m => m.Positions.Count == 4);
         if (four is not null)
         {
@@ -141,16 +103,9 @@ public static class SpecialRules
             return new Birth(Special.Flame, gem.Id, cell);
         }
 
-        // 4. Plain 3-runs birth nothing.
         return null;
     }
 
-    /// <summary>
-    /// Cells cleared when <paramref name="special"/> detonates around
-    /// <paramref name="center"/>: Flame = 3x3, Star = its row + column.
-    /// Hypercubes never reach this path (colorless: they cannot be part of a
-    /// match), so they add nothing here.
-    /// </summary>
     public static ISet<Position> DetonationCells(Board board, Position center, Special special) =>
         special switch
         {
@@ -160,12 +115,6 @@ public static class SpecialRules
             _ => throw new ArgumentOutOfRangeException(nameof(special)),
         };
 
-    /// <summary>
-    /// Extra cleared cells from Flame/Star detonations seeded by a cascade
-    /// round's matched cells. The matched cells themselves are cleared anyway;
-    /// this adds the recursive chain (including Hypercubes triggered from the
-    /// detonator's color).
-    /// </summary>
     public static ISet<Position> SweptBlastCells(Board board, ISet<Position> matched) =>
         ChainReactionCells(
             board,
@@ -174,13 +123,6 @@ public static class SpecialRules
         .Except(matched)
         .ToHashSet();
 
-    /// <summary>
-    /// Cells cleared when <paramref name="hyperPos"/>'s hypercube triggers
-    /// against the gem at <paramref name="partnerPos"/> (MECHANICS.md trigger
-    /// rule and combo table). A plain partner clears every gem of its color; a
-    /// special partner powers every gem of its color up into that special,
-    /// which then detonates. The hypercube itself is always consumed and included.
-    /// </summary>
     public static ISet<Position> HypercubeTriggerCells(
         Board board,
         Position hyperPos,
@@ -207,13 +149,6 @@ public static class SpecialRules
             ignoredDetonators: transformed);
     }
 
-    /// <summary>
-    /// The cells cleared by a player-swap combo (MECHANICS.md combo table).
-    /// Both swapped positions count as cleared (the specials are consumed).
-    /// Secondary Flame/Star specials caught in the combo area then detonate;
-    /// the swapped pair themselves stay consumed by the combo effect instead of
-    /// re-firing their native detonation on top.
-    /// </summary>
     public static ISet<Position> ComboAffectedCells(
         Board board,
         Position swapA,
@@ -221,9 +156,6 @@ public static class SpecialRules
         Special specA,
         Special specB)
     {
-        // Hypercube combos: every gem of the swapped partner's color powers up
-        // into the partner's special, then detonates simultaneously; the
-        // hypercube itself is consumed too.
         if (specA == Special.Hypercube || specB == Special.Hypercube)
         {
             if (specA == Special.Hypercube && specB == Special.Hypercube)
@@ -241,9 +173,6 @@ public static class SpecialRules
             (Special.Flame, Special.Flame) => Blast(swapA, radius: 2, board),
             (Special.Flame, Special.Star) or (Special.Star, Special.Flame) => ThickCross(swapA, board),
             (Special.Star, Special.Star) => StarLines(swapA, board).Union(StarLines(swapB, board)).ToHashSet(),
-            // Elided left-to-right for the compiler: the enum has exactly three
-            // members, so (Flame,Hypercube)/(Star,Hypercube)/... are covered by
-            // the Hypercube branch above; this arm is unreachable.
             _ => new HashSet<Position>(),
         };
 
@@ -256,14 +185,6 @@ public static class SpecialRules
 
     private sealed record DetonationSeed(Position Center, Special Effect, GemType Color);
 
-    /// <summary>
-    /// Recursively resolves Flame/Star detonations from already-cleared cells
-    /// and/or explicit detonation seeds. A detonating Flame/Star can trigger a
-    /// Hypercube once, using the detonator's color. Ignored positions are
-    /// consumed by the caller's effect already (combo participants, temporary
-    /// Hypercube+special transforms), so they do not also fire their board
-    /// native special kind.
-    /// </summary>
     private static ISet<Position> ChainReactionCells(
         Board board,
         IEnumerable<Position> initiallyCleared,
@@ -347,9 +268,6 @@ public static class SpecialRules
     private static IEnumerable<Position> OrderByBoard(IEnumerable<Position> cells) =>
         cells.OrderBy(pos => pos.Row).ThenBy(pos => pos.Col);
 
-    // --- shape analysis -----------------------------------------------------
-
-    /// <summary>First cell in <paramref name="cells"/> holding a non-special gem, or null.</summary>
     private static Position? FindFirstPlainCell(List<Position> cells, Board board)
     {
         foreach (var pos in cells)
@@ -381,8 +299,6 @@ public static class SpecialRules
         return null;
     }
 
-    // --- area helpers -------------------------------------------------------
-
     private static ISet<Position> Blast(Position center, int radius, Board board)
     {
         var cells = new HashSet<Position>();
@@ -405,7 +321,6 @@ public static class SpecialRules
         return cells;
     }
 
-    /// <summary>The 3-wide row + 3-wide column "thick cross" through <paramref name="center"/>.</summary>
     private static ISet<Position> ThickCross(Position center, Board board)
     {
         var cells = new HashSet<Position>();

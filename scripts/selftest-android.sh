@@ -1,22 +1,17 @@
 #!/usr/bin/env bash
-# Build the current sources, patch them into the exported debug APK with a
-# --selftest-* flag baked in, install on the connected device, launch, and
-# report the self-test result from logcat.
-#
-# Why patch instead of export: a Godot binary is not always available, and
-# launch-intent extras are ignored by Godot 4.7 Android builds (the activity
-# is not exported), so the flag is packed into assets/_cl_ instead. The
-# matching debug export must exist (scripts/export-android.sh).
-#
-# Usage: scripts/selftest-android.sh --selftest-flow [options]
-#   --serial SERIAL    adb device serial
-#   --timeout SECONDS  how long to wait for the result (default 120)
-#   --base-apk PATH    debug export to patch (default build/matchthree-debug.apk)
-#   --keep-apk PATH    keep the patched APK at PATH
 set -euo pipefail
 
 usage() {
-    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+    cat <<'EOF'
+Usage: scripts/selftest-android.sh --selftest-FLAG [options]
+
+Options:
+  --serial SERIAL    adb device serial
+  --timeout SECONDS  how long to wait for the result (default 120)
+  --base-apk PATH    debug export to patch (default build/matchthree-debug.apk)
+  --keep-apk PATH    keep the patched APK at PATH
+  -h, --help         Show this help
+EOF
     exit "${1:-0}"
 }
 
@@ -82,7 +77,7 @@ echo "==> Launching $flag"
 
 deadline=$(( $(date +%s) + timeout_s ))
 while (( $(date +%s) < deadline )); do
-    log="$("${adb_cmd[@]}" logcat -d -s godot:* 2>/dev/null || true)"
+    log="$(${adb_cmd[@]} logcat -d -s godot:* 2>/dev/null || true)"
     if grep -q "SELFTEST-OK" <<<"$log"; then
         grep "SELFTEST-OK" <<<"$log" | tail -1
         echo "PASS: $flag"

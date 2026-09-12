@@ -2,10 +2,8 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>Scans a board for maximal runs of 3+ same-type gems (horizontal and vertical).</summary>
 public static class MatchDetector
 {
-    /// <summary>All maximal horizontal and vertical runs on <paramref name="board"/>.</summary>
     public static List<Match> FindMatches(Board board)
     {
         var matches = new List<Match>();
@@ -30,7 +28,6 @@ public static class MatchDetector
                     continue;
                 }
 
-                // Hypercubes are colorless and can never be part of a run.
                 if (ContainsHypercube(first))
                 {
                     start++;

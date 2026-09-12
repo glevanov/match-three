@@ -15,10 +15,6 @@
 
 [node name="Main" type="Node2D"]
 
-; Random night-sky photo on its own canvas layer BELOW board/HUD/overlay:
-; layer -10 renders behind the root canvas, so photos only show while the
-; board scene is up (Menu.tscn has no such layer). View/Background.cs picks
-; one photo per round and crops it to fill the viewport.
 [node name="Background" type="CanvasLayer" parent="."]
 layer = -10
 script = ExtResource("9_bg")
@@ -50,7 +46,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Menu"
 
-; Background-music toggle (♪ On / ♪ Off), persisted in user://settings.json.
 [node name="MusicButton" type="Button" parent="HUD/HudBox"]
 custom_minimum_size = Vector2(64, 56)
 layout_mode = 2
@@ -151,47 +146,30 @@ text = "Menu"
 [node name="GameAudio" type="Node" parent="."]
 script = ExtResource("4_audio")
 
-; music.mp3 loops at import time (Assets/Audio/music.mp3.import: loop=true).
-; volume_db -5: master sits at ~ -11 LUFS; raised from -10 per user
-; (v3, DECISIONS.md "Audio (v1)"): too quiet on device.
 [node name="Music" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("5_music")
 volume_db = -5.0
 
-; swipe.mp3 is a quiet file (peak ~ -9.3 dBFS): +3 dB before clipping —
-; settled midpoint after user iterated v1 (0 dB, too quiet) and v3
-; (+6 dB, too loud). DECISIONS.md "Audio (v1)".
 [node name="Swipe" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("6_swipe")
 volume_db = 3.0
 
-; pop.mp3 is a hot master (peaks +0.03 dBFS even trimmed): -3 dB keeps it
-; clean and punchy. Pitch rises per cascade in code (GameAudio.PlayPop).
 [node name="Pop" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("7_pop")
 volume_db = -3.0
 
-; flame.mp3 (trimmed fire whoosh) also masters hot (+0.29 dBFS): -4 dB.
 [node name="Flame" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("8_flame")
 volume_db = -4.0
 
-; star.mp3 (big fire-blast whoosh + phone-speaker edge layer; peak ~ -1.3 dBFS):
-; -4 dB (v14 — the old glockenspiel master was quiet and ran at +12).
 [node name="Star" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("9_star")
 volume_db = -4.0
 
-; hypercube.mp3 (cinematic whoosh, peak ~ -0.5 dBFS; intrinsically bright so
-; no phone-speaker edge layer): -3 dB — keeps the v11 hit loudness with a
-; brighter phone band (v12 source, DRAGON-STUDIO).
 [node name="Hypercube" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("10_hyper")
 volume_db = -3.0
 
-; birth.mp3 (soft two-tone alert when a special gem is born; already
-; phone-friendly — no processing beyond trim + gain; peak ~ -7.8 dBFS):
-; -3 dB, a light accent under the detonations (v17).
 [node name="Birth" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("11_birth")
 volume_db = -3.0

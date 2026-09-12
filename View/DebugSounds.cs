@@ -2,11 +2,6 @@ using Godot;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// Debug-only sound preview screen, reachable from the Debug submenu. It
-/// mirrors the board scene's one-shot SFX mix (but not the music) so the
-/// sounds can be auditioned quickly without starting a round.
-/// </summary>
 public partial class DebugSounds : Control
 {
     private const string DebugMenuScenePath = "res://Scenes/DebugMenu.tscn";
@@ -41,8 +36,6 @@ public partial class DebugSounds : Control
 
     private void PlayPopPreview()
     {
-        // Preview the base (first-cascade) pitch; in-game later cascades are
-        // pitched up by GameAudio.PlayPop.
         _pop.PitchScale = 1f;
         _pop.Play();
     }

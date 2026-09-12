@@ -2,11 +2,6 @@ using Godot;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// Small debug submenu reachable from the main menu. It keeps the production
-/// menu to one Debug entry, then fans out into the separate gem-effect and
-/// sound-effect preview screens.
-/// </summary>
 public partial class DebugMenuScreen : Control
 {
     private const string MenuScenePath = "res://Scenes/Menu.tscn";

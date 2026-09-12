@@ -4,15 +4,9 @@ using NUnit.Framework;
 
 namespace MatchThree.Engine.Tests;
 
-/// <summary>
-/// Simulates many generated 9x9/6 boards and reports the two tuning metrics named
-/// in DESIGN.md: average legal-move count, and the probability that a random
-/// adjacent swap is legal. Values print to the test stdout so they can be read
-/// from `dotnet test`.
-/// </summary>
 public class BoardSimulationTest
 {
-    private readonly BoardConfig config = new(); // 9x9, 6 gem types
+    private readonly BoardConfig config = new();
 
     [Test]
     public void ReportSimulationMetrics()
@@ -59,7 +53,6 @@ public class BoardSimulationTest
             $"avg legal moves per board: {avgLegalMoves:F4}, " +
             $"random-swap match probability: {swapMatchProbability:F4}");
 
-        // Loose sanity bounds so the test is a real gate but not flaky.
         Assert.That(avgLegalMoves, Is.GreaterThan(1.0));
         Assert.That(avgLegalMoves, Is.LessThan(80.0));
         Assert.That(swapMatchProbability, Is.GreaterThan(0.0));

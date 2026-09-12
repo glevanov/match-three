@@ -5,9 +5,6 @@ usage() {
     cat <<'EOF'
 Usage: scripts/export-android.sh [options]
 
-Export the Android debug APK with Godot's .NET export flow, optionally install
-it on a connected device, and optionally launch it.
-
 Options:
   --install         Install the exported APK with adb
   --run             Launch the app after export/install
@@ -18,20 +15,6 @@ Options:
 
 Environment:
   GODOT_BIN         Default Godot binary if --godot is not passed
-
-Notes:
-  - This script intentionally uses `godot --export-debug` without
-    `--build-solutions`. Combining them previously produced APKs missing the
-    packaged .NET assemblies (`Assemblies not found`) and the app crashed on
-    startup on device.
-  - If `dotnet` is not on PATH, the script automatically prepends
-    `$HOME/.dotnet` when available.
-
-Examples:
-  scripts/export-android.sh
-  scripts/export-android.sh --install --run
-  GODOT_BIN=/tmp/godot_mono/Godot_v4.7.2-stable_mono_linux_x86_64/godot \
-    scripts/export-android.sh --install --run
 EOF
 }
 
@@ -50,6 +33,7 @@ run_app=false
 serial=""
 package_name="com.matchthree"
 launcher_activity="com.godot.game.GodotAppLauncher"
+suppress_shutdown_adb_warning='/^ERROR: EditorSettings not instantiated yet when getting setting "export\/android\/shutdown_adb_on_exit"\.$/{N;d;}'
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -110,13 +94,8 @@ echo "==> Exporting Android debug APK"
 echo "    repo:  $repo_root"
 echo "    godot: $godot_bin"
 echo "    apk:   $apk_path"
-# Godot 4.7.2 headless Android export prints one known spurious warning here:
-# `EditorSettings not instantiated yet when getting setting
-#  export/android/shutdown_adb_on_exit`.
-# Upstream fixed it later; suppress only that exact two-line block so real
-# export errors still surface.
 "$godot_bin" --headless --path "$repo_root" --export-debug "Android" "$apk_path" 2>&1 |
-    sed '/^ERROR: EditorSettings not instantiated yet when getting setting "export\/android\/shutdown_adb_on_exit"\.$/{N;d;}'
+    sed "$suppress_shutdown_adb_warning"
 
 apk_listing="$(unzip -l "$apk_path")"
 for required in \

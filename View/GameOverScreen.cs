@@ -2,11 +2,6 @@ using Godot;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// GameOver overlay: final score, mode high score (with a "New high score!"
-/// note when the round beat it), Play again, and a Back-to-menu button. Hidden
-/// on RoundStarted.
-/// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
     private Label _reasonLabel = null!;
@@ -34,16 +29,8 @@ public partial class GameOverScreen : CanvasLayer
         _menuButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
     }
 
-    /// <summary>
-    /// The autoload outlives this scene. A stale RoundEnded handler throws on
-    /// the disposed overlay and, running first, aborts delivery to the live
-    /// overlay — the next round then ends with no game-over screen at all.
-    /// </summary>
     public override void _ExitTree()
     {
-        // See GameAudio._ExitTree: a scene change during scene setup can free
-        // this overlay before _Ready ran, leaving _game null and nothing
-        // subscribed.
         if (_game is null) return;
         _game.RoundEnded -= OnRoundEnded;
         _game.RoundStarted -= OnRoundStarted;
@@ -51,8 +38,6 @@ public partial class GameOverScreen : CanvasLayer
 
     private void OnRoundEnded(string reason, int score)
     {
-        // Persist a new high score exactly once when a round ends: saving
-        // here (not in Game.cs) keeps it tied to the round-end UI.
         var savedNew = _game.HighScores.SaveIfBeats(_game.Mode, score);
         _reasonLabel.Text = reason;
         _scoreLabel.Text = $"Score: {score}";

@@ -27,8 +27,6 @@ public class ScorerTest
     [Test]
     public void OverlappingClearRegionsAreCountedOnce()
     {
-        // A row clear and a column clear sharing the crossing cell (2,2):
-        // 5 unique cells, not 6.
         var rowClear = new[] { Pos(2, 0), Pos(2, 1), Pos(2, 2) };
         var columnClear = new[] { Pos(0, 2), Pos(1, 2), Pos(2, 2) };
         var combined = rowClear.Concat(columnClear).ToList();

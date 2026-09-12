@@ -1,15 +1,5 @@
 <Project Sdk="Godot.NET.Sdk/4.7.2">
   <PropertyGroup>
-    <!--
-      All projects target net9.0. Godot 4.7.2's generated template would use
-      an older TFM on desktop and switch to net9.0 only under
-      GodotTargetPlatform=android, but this project keeps one TFM everywhere:
-      Android requires net9.0 (Godot 4.5+, and only the .NET 9 Mono runtime
-      packs are 16 KB page aligned — docs/NOTES.md), and on desktop/editor the
-      Godot .NET host rolls forward to the latest installed major runtime
-      (rollForward: LatestMajor), so the net9.0 assembly loads there too.
-      The .NET 9 SDK/runtime is therefore required for every build.
-    -->
     <TargetFramework>net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Nullable>enable</Nullable>
@@ -18,11 +8,6 @@
     <AssemblyName>MatchThree</AssemblyName>
   </PropertyGroup>
 
-  <!--
-    Engine/ and Tests/ are standalone .NET projects (pure C#, no Godot
-    dependency). Exclude them from this Godot assembly and reference the
-    engine explicitly so the game code sees the same types the tests do.
-  -->
   <ItemGroup>
     <Compile Remove="Engine/**/*.cs" />
     <Compile Remove="Tests/**/*.cs" />

@@ -7,16 +7,7 @@ namespace MatchThree.View;
 
 public partial class Game
 {
-    // headless self-tests — see AGENTS.md for context.
-    // Moved out of Game.cs to keep the gameplay state machine readable.
-    // --- headless self-tests ------------------------------------------------
 
-    /// <summary>
-    /// `--selftest-swap` runtime verification (CI/automation): waits for the
-    /// BoardView, submits the first legal swap found by brute force, awaits the
-    /// full playback, then verifies the actor pool matches the settled board
-    /// and exits 0. Any error aborts with exit code 1.
-    /// </summary>
     private async Task SelfTestSwapAsync()
     {
         try
@@ -26,7 +17,7 @@ public partial class Game
 
             SubmitSwap(SwapIntent.Of(a, b));
             await WaitForIdleAsync();
-            await NextFrameAsync(); // let the drain loop reconcile the actor pool
+            await NextFrameAsync();
 
             VerifySettled("SELFTEST-OK-swap", $"swap ({a.Row},{a.Col})<->({b.Row},{b.Col}) played");
         }
@@ -36,10 +27,6 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-reject`: submits an adjacent-but-illegal swap (no match) and
-    /// verifies the there-and-back rejection animation returns the phase to Idle.
-    /// </summary>
     private async Task SelfTestRejectAsync()
     {
         try
@@ -58,11 +45,6 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-burst=N`: submits N legal swaps back-to-back without waiting
-    /// — exercising the input-lock buffer (most-recent wins) and the drain loop
-    /// under rapid cascades. Ends when the queue drains and the phase is Idle.
-    /// </summary>
     private async Task SelfTestBurstAsync(int burst)
     {
         try
@@ -87,11 +69,6 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-timer`: runs with a 2-second Classic timer, waits for the
-    /// round to end (RoundEnded / GameOver phase), then restarts and verifies
-    /// the round resets to Idle with a fresh board.
-    /// </summary>
     private async Task SelfTestTimerAsync()
     {
         try
@@ -120,11 +97,6 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-special`: loads a board with two adjacent Flame gems, swaps
-    /// them (Flame+Flame combo: 25 unique cells at depth 1 = 250 points), and
-    /// verifies the combo plays through the full pipeline to a settled board.
-    /// </summary>
     private async Task SelfTestSpecialAsync()
     {
         try
@@ -152,11 +124,6 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-hypercube`: swaps two adjacent Hypercubes — full-board clear
-    /// (81 cells = 810 points), immediate regeneration, invariant-clean board
-    /// with no specials.
-    /// </summary>
     private async Task SelfTestHypercubeAsync()
     {
         try
@@ -185,18 +152,10 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-menu`: starts from the menu scene, picks Zen mode, verifies
-    /// the scene switch lands in the game with Mode=Zen, no timer, and the
-    /// board settled — exit 0.
-    /// </summary>
     private async Task SelfTestMenuAsync()
     {
         try
         {
-            // We are already in the game scene (Game._Ready switched from menu).
-            // Simulate a menu-driven round start in the other direction: back to
-            // the menu, then start a Zen round.
             StartRound(GameMode.Zen);
             await WaitUntilReadyAsync();
 
@@ -210,32 +169,12 @@ public partial class Game
         }
     }
 
-    /// <summary>
-    /// `--selftest-flow`: the basic player flow end to end, including the
-    /// regression case that used to break it (a menu round-trip):
-    ///
-    ///   1. Classic round starts; a legal swap scores; the LIVE HUD labels
-    ///      mirror the engine's score and seconds.
-    ///   2. Back to the menu scene, then a second round (exactly what the menu
-    ///      button does). The timer must keep ticking and the live HUD must
-    ///      keep updating — dead scene UI used to stay subscribed to the
-    ///      autoload's signals and abort delivery to the live scene.
-    ///   3. The view must render the engine board cell-for-cell (Play again /
-    ///      Restart used to leave the previous round's gems on screen).
-    ///   4. Round end shows the game-over overlay on the LIVE scene, and Play
-    ///      again resets the round, hides the overlay and resyncs the view.
-    ///
-    /// Exercised on device with:
-    ///   adb shell am start -n com.matchthree/com.godot.game.GodotAppLauncher \
-    ///       --esa parameters "--selftest-flow"
-    /// </summary>
     private async Task SelfTestFlowAsync()
     {
         try
         {
             await WaitUntilReadyAsync();
 
-            // --- round 1: start, score, HUD mirrors the engine ---------------
             StartRound(GameMode.Classic);
             await WaitUntilReadyAsync();
             if (Mode != GameMode.Classic || SecondsLeft <= 0)
@@ -245,7 +184,6 @@ public partial class Game
             VerifyHud("round 1 after swap");
             VerifyViewMatchesBoard("round 1 after swap");
 
-            // --- menu round-trip, then round 2 (the regression case) --------
             GetTree().ChangeSceneToFile("res://Scenes/Menu.tscn");
             await NextFrameAsync();
             await NextFrameAsync();
@@ -264,7 +202,6 @@ public partial class Game
             VerifyHud("round 2 after swap");
             VerifyViewMatchesBoard("round 2 after swap");
 
-            // --- round end: live overlay, then Play again --------------------
             EndGame("selftest flow end");
             await NextFrameAsync();
             if (!GameOverVisible())
@@ -295,7 +232,6 @@ public partial class Game
         }
     }
 
-    /// <summary>Submits the first legal swap and asserts that it scored.</summary>
     private async Task SubmitScoringSwapAsync(string label)
     {
         var (a, b) = FindLegalSwap() ?? throw new InvalidOperationException($"{label}: no legal swap on the settled board");
@@ -308,11 +244,6 @@ public partial class Game
         GD.Print($"FLOW: {label}: swap ({a.Row},{a.Col})<->({b.Row},{b.Col}) scored {Score - before} (total {Score})");
     }
 
-    /// <summary>
-    /// The live HUD labels must mirror the engine state. A dead scene's HUD
-    /// used to keep receiving these signals and throw first, which aborted
-    /// delivery to the live HUD — the labels then froze on their initial text.
-    /// </summary>
     private void VerifyHud(string label)
     {
         var scoreText = HudLabel("ScoreLabel").Text;
@@ -323,7 +254,6 @@ public partial class Game
             throw new InvalidOperationException($"{label}: HUD time label '{timeText}' != engine seconds {SecondsLeft}");
     }
 
-    /// <summary>The view must render exactly the engine board: same gem id per cell.</summary>
     private void VerifyViewMatchesBoard(string label)
     {
         var view = _boardView;
@@ -349,12 +279,9 @@ public partial class Game
 
     private async Task WaitUntilReadyAsync()
     {
-        // A stale (freed) BoardView from a previous scene is not "ready":
-        // IsInstanceValid goes false the moment the old scene is freed, so
-        // this wait survives the menu round-trips the flow test performs.
         while (_boardView is null || !GodotObject.IsInstanceValid(_boardView) || _phase != GamePhase.Idle)
             await NextFrameAsync();
-        await NextFrameAsync(); // actor pool reconciled at least once by the drain loop
+        await NextFrameAsync();
     }
 
     private async Task WaitForIdleAsync()
@@ -394,7 +321,6 @@ public partial class Game
         return null;
     }
 
-    /// <summary>The settled board must be full, match-free, and the phase back to Idle.</summary>
     private void VerifySettled(string label, string detail)
     {
         var settledCount = _board.Positions().Count(p => _board.GemAt(p) is not null);

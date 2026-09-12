@@ -3,7 +3,6 @@ using NUnit.Framework;
 
 namespace MatchThree.Engine.Tests;
 
-/// <summary>Tests for the settings persistence logic (JSON SettingsStore).</summary>
 public class SettingsStoreTest
 {
     private string _tempDir = null!;

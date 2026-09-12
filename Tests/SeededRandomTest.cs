@@ -36,7 +36,6 @@ public class SeededRandomTest
     [Test]
     public void DifferentSeedsWithSameLower32BitsProduceDifferentSequences()
     {
-        // Two ticks values 2^32 apart previously collapsed to the same int seed.
         long seedA = 1_000_000L;
         long seedB = seedA + (1L << 32);
 

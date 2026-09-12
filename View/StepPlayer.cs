@@ -4,32 +4,14 @@ using MatchThree.Engine.Rules;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// Plays back engine <see cref="Step"/> events as animations over a pool of
-/// instanced <see cref="GemActor"/> nodes.
-///
-/// The player owns the only mutable render state: a gem-id -&gt; actor map plus a
-/// logical id grid (which gem sits in which cell). BoardView renders the nodes;
-/// Game.cs resolves steps and hands them to the UI to play back (AGENTS.md).
-///
-/// Timing constants (from MECHANICS.md where they exist):
-///  - swap: ~150ms
-///  - invalid swap there-and-back: ~150ms
-///  - destroy/shrink: 200ms
-///  - falls/spawns: ~70ms per row, min 90ms (constant speed, simultaneous landing)
-/// </summary>
 public sealed class StepPlayer
 {
-    /// <summary>Swap duration (ms).</summary>
     public const float SwapMillis = 150f;
 
-    /// <summary>Destroy/shrink duration (ms).</summary>
     public const float DestroyMillis = 200f;
 
-    /// <summary>Base fall duration (ms).</summary>
     public const float FallBaseMillis = 90f;
 
-    /// <summary>Additional duration per row fallen (ms).</summary>
     public const float FallPerRowMillis = 70f;
 
     private readonly Node _parent;
@@ -46,27 +28,6 @@ public sealed class StepPlayer
     private readonly Action? _onSpecialBirth;
     private int _destroyCount;
 
-    /// <param name="parent">Node the actor instances are added to (the BoardView).</param>
-    /// <param name="config">Board geometry (9x9).</param>
-    /// <param name="cellSizePx">Pixel size of one board cell.</param>
-    /// <param name="onSwap">Invoked when a genuine engine <see cref="Step.Swap"/>
-    /// animates (accepted swap only; rejection playback stays silent).</param>
-    /// <param name="onDestroy">Invoked when a <see cref="Step.Destroy"/> animates,
-    /// with the 1-based cascade generation (the engine emits one Destroy step per
-    /// cascade round, so this doubles as cascade depth for pitch rising).</param>
-    /// <param name="onFlame">Invoked when a <see cref="Step.Destroy"/> clears at
-    /// least one Flame gem.</param>
-    /// <param name="onStar">Invoked when a <see cref="Step.Destroy"/> clears at
-    /// least one Star gem.</param>
-    /// <param name="onHypercube">Invoked when a <see cref="Step.Destroy"/> clears
-    /// at least one Hypercube gem. All special detonations - swap-combo
-    /// consumption, swept chain-detonations, trigger/blast-hit clears - route
-    /// through Destroy steps, so inspecting the doomed actors covers every case.
-    /// Convention (see onFlame docs): one SFX per Destroy step.</param>
-    /// <param name="onSpecialBirth">Invoked when a <see cref="Step.SpecialBirth"/>
-    /// plays — a matched gem transforms into a special. One chime per birth, so
-    /// several non-overlapping shapes in the same cascade round each trigger it
-    /// (MECHANICS.md birth rule).</param>
     public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null, Action? onFlame = null, Action? onStar = null, Action? onHypercube = null, Action? onSpecialBirth = null)
     {
         _parent = parent;
@@ -82,23 +43,17 @@ public sealed class StepPlayer
         _actorScene = GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
     }
 
-    /// <summary>True when the cell currently holds a gem.</summary>
     public bool HasGem(Position position) =>
         position.Row >= 0 && position.Row < _config.Height &&
         position.Col >= 0 && position.Col < _config.Width &&
         _ids[position.Row, position.Col] is not null;
 
-    /// <summary>
-    /// Gem id currently rendered in the cell, or null when empty/out of bounds
-    /// (view-state inspection for self-tests and debugging).
-    /// </summary>
     public int? GemIdAt(Position position) =>
         position.Row >= 0 && position.Row < _config.Height &&
         position.Col >= 0 && position.Col < _config.Width
             ? _ids[position.Row, position.Col]
             : null;
 
-    /// <summary>Snaps the actor pool to a settled <paramref name="board"/> (initial load and post-playback).</summary>
     public void ApplyBoard(Board board)
     {
         var liveIds = board.Positions()
@@ -134,11 +89,8 @@ public sealed class StepPlayer
         }
     }
 
-    /// <summary>Plays a full engine resolution; invokes <paramref name="onSettled"/> after the last step.</summary>
     public async Task PlayAsync(List<Step> steps, Action<Board>? onSettled, Action<int>? onScore)
     {
-        // One resolution = one swap's full cascade; the destroy counter (and
-        // with it the pop pitch) resets per resolution.
         _destroyCount = 0;
         foreach (var step in steps)
         {
@@ -149,7 +101,6 @@ public sealed class StepPlayer
         if (settled is not null) onSettled?.Invoke(settled.Board);
     }
 
-    /// <summary>Animates an invalid swap: swap across and right back (no onSettled).</summary>
     public async Task PlayRejectionAsync(Position a, Position b)
     {
         await SwapActorsAsync(a, b);
@@ -165,7 +116,7 @@ public sealed class StepPlayer
                 await SwapActorsAsync(swap.A, swap.B);
                 break;
             case Step.ComboActivate:
-                break; // the following Destroy animates the clear
+                break;
             case Step.SpecialBirth birth:
                 MarkSpecial(birth.GemId, birth.Special);
                 _onSpecialBirth?.Invoke();
@@ -176,7 +127,7 @@ public sealed class StepPlayer
                 await DestroyActorsAsync(destroy.Positions);
                 break;
             case Step.Score score:
-                onScore?.Invoke(score.Delta); // points accumulate live
+                onScore?.Invoke(score.Delta);
                 break;
             case Step.Fall fall:
                 await FallActorsAsync(fall.Moves);
@@ -185,11 +136,10 @@ public sealed class StepPlayer
                 await SpawnActorsAsync(spawn.Gems);
                 break;
             case Step.Settled:
-                break; // handled in PlayAsync
+                break;
         }
     }
 
-    /// <summary>Marks an existing actor as a special after a birth step.</summary>
     private void MarkSpecial(int gemId, Special special)
     {
         if (_actors.TryGetValue(gemId, out var actor)) actor.SetSpecial(special);
@@ -226,8 +176,6 @@ public sealed class StepPlayer
                 if (_actors.TryGetValue(id.Value, out var actor))
                 {
                     doomed.Add(actor);
-                    // A special gem destroyed by any effect detonates (MECHANICS.md
-                    // chain-detonation rule): one SFX per Destroy step per kind.
                     flameDetonated |= actor.SpecialKind == Special.Flame;
                     starDetonated |= actor.SpecialKind == Special.Star;
                     hypercubeDetonated |= actor.SpecialKind == Special.Hypercube;
@@ -272,8 +220,6 @@ public sealed class StepPlayer
     {
         if (spawned.Count == 0) return;
 
-        // All gems start the same distance above their target so every column's
-        // refill lands simultaneously at constant speed.
         var maxTargetRow = spawned.Max(p => p.Position.Row);
         var distance = maxTargetRow + 1;
 

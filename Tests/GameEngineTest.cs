@@ -8,11 +8,6 @@ public class GameEngineTest
 {
     private static GameEngine Engine() => new(new SeededRandom(1L));
 
-    /// <summary>
-    /// A full 9x9 board with no pre-existing matches where swapping (5,3)&lt;-&gt;(4,3)
-    /// creates a PURPLE run on row 5; displacement then produces a second cascade
-    /// round (BLUE run in column 2) without depending on spawn randomness.
-    /// </summary>
     private static Board CascadeFixture() => Boards.FromRows(
         "RYRYRYRYR",
         "YRYRYRYRY",
@@ -45,25 +40,20 @@ public class GameEngineTest
         var steps = resolution!.Steps;
         Assert.That(steps[0], Is.EqualTo(new Step.Swap(new Position(5, 3), new Position(4, 3))));
 
-        // Round 1 destroys exactly the created PURPLE run.
         var firstDestroy = (Step.Destroy)steps[1];
         Assert.That(firstDestroy.Positions, Is.EquivalentTo(new[]
         {
             new Position(5, 2), new Position(5, 3), new Position(5, 4),
         }));
 
-        // At least one more cascade round follows (column 2 turns BLUE,BLUE,BLUE).
         var destroyCount = steps.OfType<Step.Destroy>().Count();
         Assert.That(destroyCount, Is.GreaterThanOrEqualTo(2), $"expected cascade, got {destroyCount} destroys");
 
-        // A fall step separates the destroy rounds.
         Assert.That(steps.OfType<Step.Fall>(), Is.Not.Empty);
 
-        // Board ends stable: no matches remain.
         var settled = (Step.Settled)steps[^1];
         Assert.That(MatchDetector.FindMatches(settled.Board), Is.Empty);
 
-        // Steps order: Swap, then alternating Destroy/Fall/Spawn, ending Settled.
         var kinds = steps.Select(s => s.GetType().Name).ToList();
         Assert.That(kinds[^1], Is.EqualTo("Settled"));
     }
@@ -82,7 +72,6 @@ public class GameEngineTest
     public void SpawnedGemsGetFreshUniqueIds()
     {
         var engine = Engine();
-        // Consume session ids the way a real game does before any swap.
         var sessionBoard = engine.NewGame();
         var sessionIds = sessionBoard.Positions().Select(p => sessionBoard.GemAt(p)).Where(g => g is not null)
             .Select(g => g!.Value.Id).ToHashSet();
@@ -97,9 +86,9 @@ public class GameEngineTest
             .ToList();
 
         Assert.That(spawnedIds, Is.Not.Empty);
-        Assert.That(spawnedIds.All(id => !fixtureIds.Contains(id)), Is.True); // never clash with pre-existing gems
-        Assert.That(spawnedIds.All(id => !sessionIds.Contains(id)), Is.True); // nor with earlier session gems
-        Assert.That(spawnedIds.Distinct().ToList(), Has.Count.EqualTo(spawnedIds.Count)); // pairwise distinct
+        Assert.That(spawnedIds.All(id => !fixtureIds.Contains(id)), Is.True);
+        Assert.That(spawnedIds.All(id => !sessionIds.Contains(id)), Is.True);
+        Assert.That(spawnedIds.Distinct().ToList(), Has.Count.EqualTo(spawnedIds.Count));
     }
 
     [Test]
@@ -136,7 +125,6 @@ public class GameEngineTest
         Assert.That(paired, Has.Count.GreaterThanOrEqualTo(4));
         for (var index = 0; index < paired.Count; index++)
         {
-            // Destroy and Score strictly alternate, Destroy first, per cascade round.
             var expected = index % 2 == 0 ? "Destroy" : "Score";
             Assert.That(paired[index].GetType().Name, Is.EqualTo(expected));
         }
@@ -146,8 +134,6 @@ public class GameEngineTest
     public void ReshufflePreservesTheGemMultisetAndRestoresLegalMoves()
     {
         var engine = Engine();
-        // A 3x6 checker pattern: no pre-existing matches, and the balanced
-        // 6-color multiset makes a match-free legal rearrangement easy to hit.
         var board = Boards.FromRows(
             "RYRYRY",
             "GBGBGB",
@@ -170,8 +156,6 @@ public class GameEngineTest
     public void ReshuffleReturnsNullWhenTheBoardCannotBeFixed()
     {
         var engine = Engine();
-        // A 2x2 board of a single type: every shuffle has matches from the start
-        // and no 3-run can ever be formed, so no legal move can appear.
         var dead = Board.Create(2, 2, pos => new Gem(pos.Row * 2 + pos.Col, GemTypes.FromIndex(0)));
         Assert.That(engine.Reshuffle(dead), Is.Null);
     }

@@ -2,23 +2,10 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// After gravity, all empty cells sit in the top rows (one contiguous block per
-/// column). Refill gives each a brand-new gem with a fresh <see cref="Gem.Id"/>.
-///
-/// Spawn colors can form new matches — the cascade loop detects and clears them,
-/// which is the intended behaviour inside a resolution (MECHANICS.md: invariants
-/// are checked only after a cascade settles).
-/// </summary>
 public static class Refill
 {
-    /// <summary>The refilled board plus one placement per spawned gem.</summary>
     public sealed record Result(Board Board, List<Step.Spawn.Placement> Spawned);
 
-    /// <param name="board">Post-gravity board; empty cells are top-contiguous per column.</param>
-    /// <param name="gemTypeCount">Color pool size passed to <paramref name="gemType"/>.</param>
-    /// <param name="nextId">Issues fresh stable ids.</param>
-    /// <param name="gemType">Picks a color for a new gem.</param>
     public static Result Fill(Board board, int gemTypeCount, Func<int> nextId, Func<int, GemType> gemType)
     {
         var cells = board.CopyCells();

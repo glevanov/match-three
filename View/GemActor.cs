@@ -3,39 +3,10 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// One instanced scene per gem (GemActor.tscn), keyed by the gem's stable
-/// <see cref="GemId"/> for continuity across falls/spawns.
-///
-/// Node layout:
-///   GemActor (Node2D, this script)
-///   ├── Base (Sprite2D)          color sprite, or the Hypercube art
-///   ├── FireRing (ColorRect)     procedural shader aura over the gem body,
-///   │                            Flame gems only (rect is 1.35x the footprint
-///   │                            so the halo has margin to bleed)
-///   ├── Overlay (Node2D)
-///   │   └── Art (Sprite2D)       Star glow-star art only, 30% alpha, no
-///   │                            outline (user direction) — Flame's
-///   │                            center-icon art is retired (DECISIONS.md)
-///   └── StarGlow (ColorRect)     procedural pulsing-glow shader behind/around
-///                                the star art, Star gems only
-///
-/// Animations are Tween-driven; the async methods complete when the tween's
-/// Finished signal fires, so StepPlayer can sequence steps with async/await.
-/// Easing: Godot's Cubic+Out (fast-out-slow-in style curve).
-/// </summary>
 public partial class GemActor : Node2D
 {
-    /// <summary>FireRing rect vs the base sprite's footprint. The shader maps
-    /// texUV = (UV - 0.5) / rect_scale + 0.5, so the rect is a zoomed-out
-    /// view of the gem texture: margin around the silhouette lets the soft
-    /// halo render past the gem edge without being clipped (uniform set from
-    /// here so the two stay in sync).</summary>
     private const float AuraRectScale = 1.35f;
 
-    /// <summary>StarGlow rect vs the star art's footprint — same idea as
-    /// AuraRectScale, just a bit larger since the glow's outer bloom reaches
-    /// further than the flame's halo.</summary>
     private const float StarGlowRectScale = 1.5f;
 
     private Sprite2D _base = null!;
@@ -46,13 +17,10 @@ public partial class GemActor : Node2D
     private ShaderMaterial _starGlowMaterial = null!;
     private float _cellSizePx;
 
-    /// <summary>Stable gem id; never changes for the lifetime of the actor.</summary>
     public int GemId { get; private set; }
 
-    /// <summary>Gem color.</summary>
     public GemType Type { get; private set; }
 
-    /// <summary>Current special kind, or null (updated in place by SpecialBirth).</summary>
     public Special? SpecialKind { get; private set; }
 
     public override void _Ready()
@@ -61,22 +29,15 @@ public partial class GemActor : Node2D
         var overlay = GetNode<Node2D>("Overlay");
         _art = overlay.GetNode<Sprite2D>("Art");
 
-        // Per-instance material: every GemActor instantiates the same .tscn, so
-        // the shared ShaderMaterial must be duplicated or setting time_offset on
-        // one gem would desync (and then lock-step) all Flame gems at once.
         _fireRing = GetNode<ColorRect>("FireRing");
         _fireRing.Material = (ShaderMaterial)((ShaderMaterial)_fireRing.Material).Duplicate();
         _fireRingMaterial = (ShaderMaterial)_fireRing.Material;
 
-        // Same per-instance duplication as FireRing: every GemActor shares one
-        // .tscn, so setting time_offset on one Star gem would desync every
-        // other Star gem's pulse if the ShaderMaterial weren't unique here.
         _starGlow = GetNode<ColorRect>("StarGlow");
         _starGlow.Material = (ShaderMaterial)((ShaderMaterial)_starGlow.Material).Duplicate();
         _starGlowMaterial = (ShaderMaterial)_starGlow.Material;
     }
 
-    /// <summary>Configures identity + appearance. Called exactly once at spawn/creation.</summary>
     public void Configure(int gemId, GemType type, Special? special, float cellSizePx)
     {
         GemId = gemId;
@@ -85,14 +46,12 @@ public partial class GemActor : Node2D
         SetSpecial(special);
     }
 
-    /// <summary>Changes the appearance without touching identity (special birth).</summary>
     public void SetSpecial(Special? special)
     {
         SpecialKind = special;
         ApplyAppearance();
     }
 
-    /// <summary>Moves to <paramref name="target"/> (pixels) over <paramref name="durationMs"/>.</summary>
     public async Task MoveToAsync(Vector2 target, float durationMs)
     {
         EnsureReady();
@@ -103,7 +62,6 @@ public partial class GemActor : Node2D
         await ToSignal(tween, Tween.SignalName.Finished);
     }
 
-    /// <summary>Shrinks to zero scale and fades out over <paramref name="durationMs"/>.</summary>
     public async Task VanishAsync(float durationMs)
     {
         EnsureReady();
@@ -123,22 +81,11 @@ public partial class GemActor : Node2D
         EnsureReady();
         var span = _cellSizePx * GemSprites.GemWidthFraction;
 
-        // Base: Hypercube has its own sprite; everything else uses the color art.
         var baseTexture = GemSprites.BaseFor(Type, SpecialKind);
         _base.Texture = baseTexture;
-        // Shared scale: Base and the fire-aura rect must use the SAME scale so
-        // FireRing occupies exactly Base's drawn footprint (texture dims x
-        // scale, preserving each gem's real aspect ratio) and the shader's UVs
-        // line up 1:1 with baseTexture's pixels for the alpha mask below.
         var scale = span / Mathf.Max(baseTexture.GetWidth(), baseTexture.GetHeight());
         _base.Scale = Vector2.One * scale;
 
-        // Fire aura: shader covering the gem's own body (Flame only).
-        // Evaluated before the overlay early-return so every appearance state
-        // ends with the aura either on or off. The shader masks with
-        // baseTexture's alpha (docs/DECISIONS.md "Flame aura (visual)"), so
-        // the flame band traces each GemType's actual silhouette; the rect is
-        // AuraRectScale x Base's footprint to leave margin for the soft halo.
         if (SpecialKind == Special.Flame)
         {
             var fireSize = new Vector2(baseTexture.GetWidth(), baseTexture.GetHeight()) * scale * AuraRectScale;
@@ -146,8 +93,6 @@ public partial class GemActor : Node2D
             _fireRing.Position = -fireSize / 2f;
             _fireRingMaterial.SetShaderParameter("mask_texture", baseTexture);
             _fireRingMaterial.SetShaderParameter("rect_scale", AuraRectScale);
-            // Per-gem aura tint: a blue gem glows light blue (GemSprites.
-            // AuraColors derives core/rim from the gem's own art).
             var (coreColor, rimColor) = GemSprites.AuraColors(Type);
             _fireRingMaterial.SetShaderParameter("core_color", coreColor);
             _fireRingMaterial.SetShaderParameter("rim_color", rimColor);
@@ -159,10 +104,6 @@ public partial class GemActor : Node2D
             _fireRing.Visible = false;
         }
 
-        // Overlay: Flame has no overlay art — the aura alone is its cue and the
-        // center-icon art is retired (docs/DECISIONS.md "Flame aura (visual)");
-        // only Star keeps a separate see-through overlay (30% alpha, full gem,
-        // no outline).
         var overlayTexture = SpecialKind == Special.Star ? GemSprites.ArtFor(Special.Star) : null;
         _art.Visible = overlayTexture is not null;
         if (overlayTexture is null)
@@ -176,12 +117,6 @@ public partial class GemActor : Node2D
         _art.Scale = Vector2.One * (overlaySpan / Mathf.Max(overlayTexture.GetWidth(), overlayTexture.GetHeight()));
         _art.Modulate = new Color(1f, 1f, 1f, GemSprites.OverlayAlpha(SpecialKind));
 
-        // Star glow: additive pulsing bloom behind/around the glow-star art
-        // (see gem_star.gdshader). Same mask-from-alpha technique as the fire
-        // aura, just applied to star_06.png instead of the gem's own body —
-        // it's drawn after Overlay in the scene tree so the glow sits on top,
-        // but additive blending means it only ever adds brightness, never
-        // covers the crisp star art underneath.
         if (SpecialKind == Special.Star)
         {
             var glowSize = new Vector2(overlayTexture.GetWidth(), overlayTexture.GetHeight())

@@ -2,15 +2,8 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// Counts swaps that would create a match. A swap is legal iff it is orthogonal
-/// adjacency between two present gems and the swapped board contains a match —
-/// or the swap puts two specials into contact / a Hypercube touches any gem
-/// (MECHANICS.md combo table, handled via <see cref="SpecialRules.SwapContactLegal"/>).
-/// </summary>
 public static class LegalMoveDetector
 {
-    /// <summary>Number of distinct adjacent pairs whose swap is legal.</summary>
     public static int LegalMoveCount(Board board)
     {
         var count = 0;
@@ -21,7 +14,6 @@ public static class LegalMoveDetector
                 var a = new Position(row, col);
                 if (board.GemAt(a) is null) continue;
 
-                // Test each orthogonal neighbor once (right and down).
                 var neighbors = new[] { new Position(row, col + 1), new Position(row + 1, col) };
                 foreach (var b in neighbors)
                 {
@@ -38,6 +30,5 @@ public static class LegalMoveDetector
         return count;
     }
 
-    /// <summary>True if at least one legal swap exists on <paramref name="board"/>.</summary>
     public static bool HasLegalMove(Board board) => LegalMoveCount(board) > 0;
 }

@@ -3,10 +3,6 @@ using MatchThree.Engine.Data;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// Main menu: pick Classic (75 s timer) or Zen (endless), inspect the
-/// persisted high score per mode, or open the debug submenu.
-/// </summary>
 public partial class MenuScreen : Control
 {
     private const string DebugMenuScenePath = "res://Scenes/DebugMenu.tscn";

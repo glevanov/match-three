@@ -11,7 +11,6 @@ public class SwapValidationTest
     [Test]
     public void SwapCompletingAHorizontalRunIsLegal()
     {
-        // Swap (0,1) G with (1,1) R -> row 0 turns into R,R,R.
         var board = Boards.FromRows(
             "RGR",
             "BRB",
@@ -57,7 +56,6 @@ public class SwapValidationTest
     [Test]
     public void SwapCompletingAVerticalRunIsLegal()
     {
-        // Swap (0,1) P with (0,2) G -> column 2 turns into P,P,P.
         var board = Boards.FromRows(
             "RPG",
             "BGP",
@@ -68,8 +66,6 @@ public class SwapValidationTest
     [Test]
     public void FixtureBoardLegalMoveCountMatchesBruteForceScan()
     {
-        // Verified by exhaustive scan: exactly four out of twelve adjacent pairs
-        // create a match (row0 RRR, col0 RRR, col2 RRR, row2 RRR).
         var board = Boards.FromRows(
             "RGR",
             "BRB",

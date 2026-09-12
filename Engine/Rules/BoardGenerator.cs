@@ -2,14 +2,6 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// Generates fresh boards that satisfy MECHANICS.md invariants:
-/// - no pre-existing match (guaranteed by placement rule), and
-/// - at least one legal move (validated; regenerate while none exists).
-///
-/// Placement: left-to-right, top-to-bottom, excluding any color that would extend
-/// a run of 2 with the already-placed neighbors above/left.
-/// </summary>
 public sealed class BoardGenerator
 {
     private readonly int width;
@@ -17,8 +9,6 @@ public sealed class BoardGenerator
     private readonly SeededRandom rng;
     private readonly IdSource idSource;
 
-    /// <param name="gemTypeCount">Accepted for signature consistency; ignored (colors
-    /// draw from all GemType entries).</param>
     public BoardGenerator(int width, int height, int gemTypeCount, SeededRandom rng, IdSource idSource)
     {
         this.width = width;
@@ -27,7 +17,6 @@ public sealed class BoardGenerator
         this.idSource = idSource;
     }
 
-    /// <summary>A fresh board satisfying the generation invariants.</summary>
     public Board NewBoard()
     {
         while (true)
@@ -55,14 +44,12 @@ public sealed class BoardGenerator
     {
         var forbidden = new HashSet<GemType>();
 
-        // Left: cells at (row, col-2) and (row, col-1) both present and equal?
         if (col >= 2)
         {
             var left1 = cells[row, col - 1]?.Type;
             if (left1 is not null && left1 == cells[row, col - 2]?.Type) forbidden.Add(left1.Value);
         }
 
-        // Above: cells at (row-2, col) and (row-1, col) both present and equal?
         if (row >= 2)
         {
             var up1 = cells[row - 1, col]?.Type;

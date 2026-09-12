@@ -2,12 +2,6 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Tests;
 
-/// <summary>
-/// Builds a <see cref="Board"/> from rows of single-character codes for readable
-/// test fixtures: R=RED, G=GREEN, B=BLUE, Y=YELLOW, A/other=PURPLE or ORANGE via
-/// <see cref="CharToType"/>, '.' = empty cell. Gem ids are assigned row-major
-/// starting at <paramref name="idOffset"/>.
-/// </summary>
 public static class Boards
 {
     public static Board FromRows(params string[] rows) => FromRows(rows.ToList());
@@ -41,7 +35,6 @@ public static class Boards
         _ => throw new ArgumentException($"unknown gem char: {c}"),
     };
 
-    /// <summary>Reverse of <see cref="CharToType"/>; PURPLE renders as 'P'.</summary>
     public static char TypeToChar(GemType type) => type switch
     {
         GemType.Red => 'R',

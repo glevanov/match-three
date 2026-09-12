@@ -2,14 +2,8 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// Applies gravity after a clear: every surviving gem in a column drops to the
-/// lowest free row, preserving its column order and its stable
-/// <see cref="Gem.Id"/>.
-/// </summary>
 public static class Gravity
 {
-    /// <summary>The fallen board plus one fall move per moved gem.</summary>
     public sealed record Result(Board Board, List<Step.Fall.FallMove> Falls);
 
     public static Result Apply(Board board, ISet<Position> destroyed)

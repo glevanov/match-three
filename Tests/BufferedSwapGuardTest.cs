@@ -4,11 +4,6 @@ using NUnit.Framework;
 
 namespace MatchThree.Engine.Tests;
 
-/// <summary>
-/// Tests the buffered-swap staleness rule (MECHANICS.md, Input lock): a swap
-/// buffered during input lock goes stale exactly when a Hypercube entered or
-/// left its pair between the gesture and the flush, compared by gem id.
-/// </summary>
 public class BufferedSwapGuardTest
 {
     private int nextId;
@@ -18,8 +13,6 @@ public class BufferedSwapGuardTest
     [Test]
     public void PlainPairWhoseGemsChangedEntirelyIsNotStale()
     {
-        // Fast-player path: a plain buffered swap still executes after a cascade
-        // even when both cells hold different gems by then.
         var submitA = Gem();
         var submitB = Gem();
         Assert.That(BufferedSwapGuard.BufferedSwapIsStale(submitA, submitB, Gem(), Gem()), Is.False);
@@ -36,7 +29,6 @@ public class BufferedSwapGuardTest
     [Test]
     public void HypercubeBornOrFallenIntoThePairIsStale()
     {
-        // The bug case: the buffered gesture never aimed at this Hypercube.
         var plainA = Gem();
         var plainB = Gem();
         var settledHyper = Gem(GemType.Blue, Special.Hypercube);
@@ -55,7 +47,6 @@ public class BufferedSwapGuardTest
     [Test]
     public void HypercubeFallingWithinThePairKeepsTheSwapFresh()
     {
-        // Same gem id, other cell of the pair: still the Hypercube the player targeted.
         var hyper = Gem(GemType.Blue, Special.Hypercube);
         var plain = Gem();
         Assert.That(BufferedSwapGuard.BufferedSwapIsStale(hyper, plain, plain, hyper), Is.False);
@@ -64,7 +55,6 @@ public class BufferedSwapGuardTest
     [Test]
     public void ASecondHypercubeEnteringThePairIsStale()
     {
-        // The flush would fire a Hypercube+Hypercube combo the player never gestured at.
         var hyper = Gem(GemType.Blue, Special.Hypercube);
         var plain = Gem();
         var secondHyper = Gem(GemType.Green, Special.Hypercube);

@@ -4,24 +4,9 @@ using MatchThree.Engine.Rules;
 
 namespace MatchThree.View;
 
-/// <summary>
-/// The board node: square board background + faint grid + selection marker drawn
-/// in _Draw, one GemActor instance per gem managed by a StepPlayer, and input —
-/// drag past 40% of a cell commits a directional swap; tap-tap select-adjacent
-/// is the fallback (MECHANICS.md), both handing a SwapIntent to Game.cs.
-///
-/// Renders the board as per-gem nodes (one GemActor per cell); board math
-/// stays in Engine/, not here.
-/// </summary>
 public partial class BoardView : Node2D
 {
     private const float BoardFillFraction = 0.95f;
-    /// <summary>
-    /// How opaque the board's backdrop is (1 = solid, 0 = fully transparent):
-    /// at ~0.75 the night-sky photo behind shows through as a dark tint,
-    /// while the opaque gems stay fully readable on top. Lower = more
-    /// see-through (DECISIONS.md "Board background (v1)").
-    /// </summary>
     private const float BoardBackgroundAlpha = 0.75f;
     private static readonly Color BoardBackground = new(0x26 / 255f, 0x32 / 255f, 0x38 / 255f, BoardBackgroundAlpha);
     private static readonly Color GridColor = new(1f, 1f, 1f, 0.08f);
@@ -32,10 +17,8 @@ public partial class BoardView : Node2D
     private float _cellSizePx;
     private Vector2 _boardSize;
 
-    // Tap-tap fallback selection.
     private Position? _selected;
 
-    // Drag state.
     private Position? _dragStart;
     private Vector2 _pressPosition;
     private Vector2 _dragAccum;
@@ -53,9 +36,6 @@ public partial class BoardView : Node2D
             onHypercube: () => _audio?.PlayHypercubeSfx(),
             onSpecialBirth: () => _audio?.PlaySpecialBirthSfx());
         Game.Instance.Bind(this);
-        // The autoload outlives this scene: a new round ("Play again") must drop
-        // the selection marker left over from the previous one, which can point
-        // at a cell holding a different gem now (MECHANICS.md).
         Game.Instance.RoundStarted += OnRoundStarted;
     }
 
@@ -66,34 +46,23 @@ public partial class BoardView : Node2D
 
     private void OnRoundStarted() => SetSelected(null);
 
-    /// <summary>Applies a board snapshot without animation (initial load, resync).</summary>
     public void ApplyBoard(Board board) => _player!.ApplyBoard(board);
 
-    /// <summary>Plays a full engine resolution (steps in order, settle at the end).</summary>
     public Task PlayAsync(List<Step> steps, Action<Board>? onSettled, Action<int>? onScore) =>
         _player!.PlayAsync(steps, onSettled, onScore);
 
-    /// <summary>Plays the invalid-swap there-and-back animation.</summary>
     public Task PlayRejectionAsync(Position a, Position b) =>
         _player!.PlayRejectionAsync(a, b);
 
-    /// <summary>True when the cell currently holds a gem (input gating).</summary>
     public bool HasGem(Position position) => _player!.HasGem(position);
 
-    /// <summary>Gem id the view currently renders in the cell (self-test/debug inspection).</summary>
     public int? GemIdAt(Position position) => _player!.GemIdAt(position);
 
-    /// <summary>Forces one redraw (after selection changes).</summary>
     public void RefreshSelection() => QueueRedraw();
 
     private void LayoutBoard()
     {
         var viewport = GetViewportRect().Size;
-        // The HUD bar sits DIRECTLY on top of the board (not pinned to the
-        // top of the screen): the bar + gap + square board are centered as
-        // one block in the area below the device cutout. The board stays in
-        // the middle of the screen and the bar follows its top edge (Hud.cs
-        // reads this position). ~95% of viewport width.
         var clearanceTop = SafeArea.TopInsetPx + SafeArea.MarginPx;
         var hudBlockPx = SafeArea.HudBarHeightPx + SafeArea.HudGapPx;
         var side = Mathf.Min(
@@ -107,7 +76,6 @@ public partial class BoardView : Node2D
 
     public override void _Draw()
     {
-        // Board background + faint grid.
         DrawRect(new Rect2(Vector2.Zero, _boardSize), BoardBackground);
         for (var row = 0; row <= _config.Height; row++)
         {
@@ -120,7 +88,6 @@ public partial class BoardView : Node2D
             DrawLine(new Vector2(x, 0f), new Vector2(x, _boardSize.Y), GridColor, 1f);
         }
 
-        // Selection marker for the tap-tap fallback: white outline around the cell.
         if (_selected is { } selected)
         {
             var topLeft = new Vector2(selected.Col * _cellSizePx, selected.Row * _cellSizePx);
@@ -131,8 +98,6 @@ public partial class BoardView : Node2D
                 width: Mathf.Max(2f, _cellSizePx * 0.035f));
         }
     }
-
-    // --- input (drag-to-swap + tap-tap) --------------------------------------
 
     public override void _UnhandledInput(InputEvent @event)
     {
@@ -173,16 +138,14 @@ public partial class BoardView : Node2D
         if (!HasGem(start)) return;
 
         _dragAccum = local - _pressPosition;
-        // MECHANICS.md: drag past 40% of a cell commits the swap.
         var thresholdPx = Mathf.Min(_boardSize.X, _boardSize.Y) / _config.Width * 0.4f;
         if (_dragAccum.Length() < thresholdPx) return;
 
         var target = NeighborInDominantAxis(start, _dragAccum);
         if (target is not null)
         {
-            _dragStart = null; // gesture consumed: no tap fallback on release
+            _dragStart = null;
             _dragAccum = Vector2.Zero;
-            // The swipe supersedes any pending tap-tap selection (MECHANICS.md).
             SetSelected(null);
             Game.Instance.SubmitSwap(SwapIntent.Of(start, target.Value));
         }
@@ -195,8 +158,6 @@ public partial class BoardView : Node2D
         _dragAccum = Vector2.Zero;
         if (start is null) return;
 
-        // Tap fallback: select / deselect / swap-adjacent. A release outside
-        // the board deselects.
         if (releaseCell is null)
         {
             SetSelected(null);

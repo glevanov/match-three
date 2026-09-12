@@ -3,7 +3,6 @@ using NUnit.Framework;
 
 namespace MatchThree.Engine.Tests;
 
-/// <summary>Tests for the high-score persistence logic (JSON HighScoreStore).</summary>
 public class HighScoreStoreTest
 {
     private string _tempDir = null!;

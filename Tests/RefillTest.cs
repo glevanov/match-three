@@ -11,7 +11,6 @@ public class RefillTest
     [Test]
     public void RefillSpawnsGemsOnlyInTopGaps()
     {
-        // Gaps: entirely empty column 0 (3 cells) and top gap in column 1 (2 cells).
         var board = Boards.FromRows(
             "..G",
             "..B",
@@ -25,11 +24,9 @@ public class RefillTest
             new Position(0, 1), new Position(1, 1),
         }));
 
-        // New ids are unique and issued from the source.
         Assert.That(result.Spawned.Select(s => s.Gem.Id).Distinct().ToList(), Has.Count.EqualTo(5));
-        Assert.That(idSource.Next(), Is.EqualTo(105)); // next id after the five spawns
+        Assert.That(idSource.Next(), Is.EqualTo(105));
 
-        // Survivors keep their identity.
         Assert.That(result.Board.GemAt(0, 2)?.Type, Is.EqualTo(GemType.Green));
         Assert.That(result.Board.GemAt(1, 2)?.Type, Is.EqualTo(GemType.Blue));
         Assert.That(result.Board.GemAt(2, 2)?.Type, Is.EqualTo(GemType.Yellow));

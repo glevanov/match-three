@@ -2,15 +2,6 @@ using MatchThree.Engine.Model;
 
 namespace MatchThree.Engine.Rules;
 
-/// <summary>
-/// The pure-C# game engine (AGENTS.md: engine is pure, no Godot dependency under
-/// Engine/). Consumes a board + swap, and emits an ordered list of
-/// <see cref="Step"/>s which the UI plays back for animation.
-///
-/// The resolution loop also handles special gems — births (one gem per
-/// shape group transforms, precedence 5 &gt; T/L &gt; 4 &gt; 3), cascade/chain
-/// detonation, player swap combos, and Hypercube+Hypercube board regeneration.
-/// </summary>
 public sealed class GameEngine
 {
     private const int MAX_CASCADE_ROUNDS = 1_000;
@@ -20,20 +11,16 @@ public sealed class GameEngine
     private readonly SeededRandom rng;
     private readonly IdSource idSource = new();
 
-    /// <param name="config">Board size / color pool; defaults to 9x9/6.</param>
-    /// <param name="rng">Seeded randomness (AGENTS.md: seeded RNG).</param>
     public GameEngine(BoardConfig config, SeededRandom rng)
     {
         this.config = config;
         this.rng = rng;
     }
 
-    /// <summary>Convenience overload using the default <see cref="BoardConfig"/>.</summary>
     public GameEngine(SeededRandom rng) : this(new BoardConfig(), rng)
     {
     }
 
-    /// <summary>A fresh board satisfying generation invariants (no match, &gt;=1 legal move).</summary>
     public Board NewGame() =>
         new BoardGenerator(
             width: config.Width,
@@ -43,11 +30,6 @@ public sealed class GameEngine
             idSource: idSource
         ).NewBoard();
 
-    /// <summary>
-    /// True if swapping these adjacent cells would create a match, OR the swap
-    /// puts two specials into contact, OR a Hypercube contacts any gem
-    /// (MECHANICS.md: hypercube trigger and the combo table).
-    /// </summary>
     public bool IsLegalSwap(Board board, Position a, Position b)
     {
         if (!board.IsInside(a) || !board.IsInside(b)) return false;
@@ -59,11 +41,6 @@ public sealed class GameEngine
         return SpecialRules.SwapContactLegal(swapped.GemAt(a), swapped.GemAt(b));
     }
 
-    /// <summary>
-    /// Resolves a legal swap into the full cascade of steps, ending with a stable
-    /// board that contains no matches. Returns null when the swap is illegal —
-    /// the caller decides how to animate the rejection.
-    /// </summary>
     public Resolution? ResolveSwap(Board board, Position a, Position b)
     {
         if (!IsLegalSwap(board, a, b)) return null;
@@ -75,8 +52,6 @@ public sealed class GameEngine
         var cascadeDepth = 0;
         var rounds = 0;
 
-        // 1) Player-swap special activation: combos and hypercube triggers fire
-        //    before any match detection (depth-1 round).
         var swapActivation = ComputeSwapActivation(current, a, b);
         if (swapActivation is not null)
         {
@@ -90,8 +65,6 @@ public sealed class GameEngine
                 Scorer.RoundScore(swapActivation.Affected, cascadeDepth),
                 cascadeDepth));
 
-            // Hypercube+Hypercube: full-board clear is followed by an immediate
-            // regeneration (invariant-checked by the generator), not a refill.
             if (swapActivation.Regenerate)
             {
                 var fresh = NewGame();
@@ -112,8 +85,6 @@ public sealed class GameEngine
             rounds++;
         }
 
-        // 2) Standard cascade loop: match -> (births, swept detonations) ->
-        //    gravity -> refill -> re-check, until the board is stable.
         while (true)
         {
             var matches = MatchDetector.FindMatches(current);
@@ -134,10 +105,6 @@ public sealed class GameEngine
             var gravity = Gravity.Apply(current, destroyedEx);
             if (gravity.Falls.Count > 0) steps.Add(new Step.Fall(gravity.Falls));
 
-            // Birth gems are surviving gems: apply their transformations on the
-            // fallen board (same ids, same colors, new special kinds). These
-            // states are impossible by construction (birth cells are excluded
-            // from destruction), so invariant violations abort loudly.
             var afterBirth = gravity.Board;
             foreach (var birth in births)
             {
@@ -168,12 +135,6 @@ public sealed class GameEngine
         return new Resolution(Board: current, Steps: steps);
     }
 
-    /// <summary>
-    /// Fisher-Yates reshuffle of the existing gem multiset (MECHANICS.md):
-    /// re-validates that the result has no pre-existing match and at least one
-    /// legal move. Retries up to <see cref="MAX_RESHUFFLE_ATTEMPTS"/>; returns
-    /// null when the board stays dead, which triggers game over in Zen mode.
-    /// </summary>
     public Board? Reshuffle(Board board)
     {
         for (var attempt = 0; attempt < MAX_RESHUFFLE_ATTEMPTS; attempt++)
@@ -187,7 +148,6 @@ public sealed class GameEngine
         return null;
     }
 
-    /// <summary>Shuffles the gems into a fresh layout, preserving ids and types.</summary>
     private Board ShuffleMultiset(Board board)
     {
         var gems = board.Positions().Select(p => board.GemAt(p)).Where(g => g is not null).Select(g => g!.Value).ToList();
@@ -201,11 +161,6 @@ public sealed class GameEngine
             next < gems.Count ? gems[next++] : null);
     }
 
-    /// <summary>
-    /// Computes what (if anything) a player swap of two gems activates: a combo
-    /// between two specials, or a single hypercube trigger against a normal gem.
-    /// Returns null when neither gem is a special (plain match path).
-    /// </summary>
     private SwapActivation? ComputeSwapActivation(Board board, Position a, Position b)
     {
         var gemA = board.GemAt(a);
@@ -214,8 +169,6 @@ public sealed class GameEngine
         var specB = gemB?.Special;
         if (specA is null && specB is null) return null;
 
-        // Hypercube against a plain gem: clears every gem of the swapped color
-        // plus the hypercube itself (single-activator, no combo partner).
         if ((specA == Special.Hypercube && specB is null) ||
             (specB == Special.Hypercube && specA is null))
         {
@@ -230,7 +183,6 @@ public sealed class GameEngine
                 Regenerate: false);
         }
 
-        // Combo table: the two swapped gems are both specials.
         if (specA is not null && specB is not null)
         {
             var affected = SpecialRules.ComboAffectedCells(board, a, b, specA.Value, specB.Value);
@@ -240,7 +192,6 @@ public sealed class GameEngine
         return null;
     }
 
-    /// <summary>Result of a player-swap special activation.</summary>
     private sealed record SwapActivation(
         Special SpecialA,
         Special? SpecialB,
@@ -248,7 +199,4 @@ public sealed class GameEngine
         bool Regenerate);
 }
 
-/// <summary>Outcome of <see cref="GameEngine.ResolveSwap"/>: the settled board plus its playback steps.</summary>
-/// <param name="Board">Settled board snapshot.</param>
-/// <param name="Steps">Ordered playback steps.</param>
 public sealed record Resolution(Board Board, List<Step> Steps);
