@@ -41,6 +41,10 @@ public partial class GameOverScreen : CanvasLayer
     /// </summary>
     public override void _ExitTree()
     {
+        // See GameAudio._ExitTree: a scene change during scene setup can free
+        // this overlay before _Ready ran, leaving _game null and nothing
+        // subscribed.
+        if (_game is null) return;
         _game.RoundEnded -= OnRoundEnded;
         _game.RoundStarted -= OnRoundStarted;
     }

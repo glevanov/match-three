@@ -93,6 +93,9 @@ public partial class Hud : CanvasLayer
     /// </summary>
     public override void _ExitTree()
     {
+        // See GameAudio._ExitTree: a scene change during scene setup can free
+        // this HUD before _Ready ran, leaving _game null and nothing subscribed.
+        if (_game is null) return;
         _game.ScoreChanged -= OnScoreChanged;
         _game.TimerChanged -= OnTimerChanged;
     }

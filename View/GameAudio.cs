@@ -79,6 +79,10 @@ public partial class GameAudio : Node
     /// </summary>
     public override void _ExitTree()
     {
+        // A scene change during scene setup can free this node before _Ready
+        // ran (headless --selftest runs do), so _game is still null and there
+        // is nothing subscribed to undo.
+        if (_game is null) return;
         _game.RoundStarted -= OnRoundStarted;
         _game.RoundEnded -= OnRoundEnded;
     }
