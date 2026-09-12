@@ -43,6 +43,7 @@ public sealed class StepPlayer
     private readonly Action? _onFlame;
     private readonly Action? _onStar;
     private readonly Action? _onHypercube;
+    private readonly Action? _onSpecialBirth;
     private int _destroyCount;
 
     /// <param name="parent">Node the actor instances are added to (the BoardView).</param>
@@ -62,7 +63,11 @@ public sealed class StepPlayer
     /// consumption, swept chain-detonations, trigger/blast-hit clears - route
     /// through Destroy steps, so inspecting the doomed actors covers every case.
     /// Convention (see onFlame docs): one SFX per Destroy step.</param>
-    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null, Action? onFlame = null, Action? onStar = null, Action? onHypercube = null)
+    /// <param name="onSpecialBirth">Invoked when a <see cref="Step.SpecialBirth"/>
+    /// plays — a matched gem transforms into a special. One chime per birth, so
+    /// several non-overlapping shapes in the same cascade round each trigger it
+    /// (MECHANICS.md birth rule).</param>
+    public StepPlayer(Node parent, BoardConfig config, float cellSizePx, Action? onSwap = null, Action<int>? onDestroy = null, Action? onFlame = null, Action? onStar = null, Action? onHypercube = null, Action? onSpecialBirth = null)
     {
         _parent = parent;
         _config = config;
@@ -73,6 +78,7 @@ public sealed class StepPlayer
         _onFlame = onFlame;
         _onStar = onStar;
         _onHypercube = onHypercube;
+        _onSpecialBirth = onSpecialBirth;
         _actorScene = GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
     }
 
@@ -162,6 +168,7 @@ public sealed class StepPlayer
                 break; // the following Destroy animates the clear
             case Step.SpecialBirth birth:
                 MarkSpecial(birth.GemId, birth.Special);
+                _onSpecialBirth?.Invoke();
                 break;
             case Step.Destroy destroy:
                 _destroyCount++;

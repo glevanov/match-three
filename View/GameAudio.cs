@@ -28,6 +28,7 @@ public partial class GameAudio : Node
     private AudioStreamPlayer _flame = null!;
     private AudioStreamPlayer _star = null!;
     private AudioStreamPlayer _hypercube = null!;
+    private AudioStreamPlayer _birth = null!;
     private SettingsStore _settings = null!;
     private Game _game = null!;
     private bool _roundActive;
@@ -57,6 +58,7 @@ public partial class GameAudio : Node
         _flame = GetNode<AudioStreamPlayer>("Flame");
         _star = GetNode<AudioStreamPlayer>("Star");
         _hypercube = GetNode<AudioStreamPlayer>("Hypercube");
+        _birth = GetNode<AudioStreamPlayer>("Birth");
 
         var game = Game.Instance;
         _game = game;
@@ -139,6 +141,12 @@ public partial class GameAudio : Node
     /// Hypercube gem (swap triggers, combo consumption, blast-hit activations).
     /// Policy: DECISIONS.md "Audio (v1)".</summary>
     public void PlayHypercubeSfx() => _hypercube.Play();
+
+    /// <summary>Glockenspiel "treasure" chime when a matched gem transforms into
+    /// a special (one per <see cref="Step.SpecialBirth"/>; several non-overlapping
+    /// shapes in the same cascade round layer their chimes). Policy:
+    /// DECISIONS.md "Audio (v1)".</summary>
+    public void PlaySpecialBirthSfx() => _birth.Play();
 
     private void StartMusic()
     {

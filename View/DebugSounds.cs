@@ -16,6 +16,7 @@ public partial class DebugSounds : Control
     private AudioStreamPlayer _flame = null!;
     private AudioStreamPlayer _star = null!;
     private AudioStreamPlayer _hypercube = null!;
+    private AudioStreamPlayer _birth = null!;
 
     public override void _Ready()
     {
@@ -28,12 +29,14 @@ public partial class DebugSounds : Control
         _flame = GetNode<AudioStreamPlayer>("Audio/Flame");
         _star = GetNode<AudioStreamPlayer>("Audio/Star");
         _hypercube = GetNode<AudioStreamPlayer>("Audio/Hypercube");
+        _birth = GetNode<AudioStreamPlayer>("Audio/Birth");
 
         GetNode<Button>("VBox/Buttons/SwipeButton").Pressed += () => _swipe.Play();
         GetNode<Button>("VBox/Buttons/PopButton").Pressed += PlayPopPreview;
         GetNode<Button>("VBox/Buttons/FlameButton").Pressed += () => _flame.Play();
         GetNode<Button>("VBox/Buttons/StarButton").Pressed += () => _star.Play();
         GetNode<Button>("VBox/Buttons/HypercubeButton").Pressed += () => _hypercube.Play();
+        GetNode<Button>("VBox/Buttons/BirthButton").Pressed += () => _birth.Play();
     }
 
     private void PlayPopPreview()

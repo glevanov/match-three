@@ -50,7 +50,8 @@ public partial class BoardView : Node2D
             onDestroy: cascade => _audio?.PlayPop(cascade),
             onFlame: () => _audio?.PlayFlameSfx(),
             onStar: () => _audio?.PlayStarSfx(),
-            onHypercube: () => _audio?.PlayHypercubeSfx());
+            onHypercube: () => _audio?.PlayHypercubeSfx(),
+            onSpecialBirth: () => _audio?.PlaySpecialBirthSfx());
         Game.Instance.Bind(this);
         // The autoload outlives this scene: a new round ("Play again") must drop
         // the selection marker left over from the previous one, which can point

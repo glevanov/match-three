@@ -37,7 +37,8 @@ cutover and survive only in git history. Game rules live in
 - Audio: `Assets/Audio/` — `music.mp3` (looping board-music bed, imported
   with `loop=true`), `swipe.mp3` (swap whoosh), `pop.mp3` (gem-clear pop,
   pitched per cascade), `flame.mp3`/`star.mp3`/`hypercube.mp3` (special
-  detonation SFX — Flame whoosh, Star sweep, Hypercube impact). Provenance
+  detonation SFX — Flame whoosh, Star sweep, Hypercube impact) and
+  `birth.mp3` (glockenspiel chime when a special gem is born). Provenance
   and source links: [ASSET_SOURCES.md](ASSET_SOURCES.md); play policy:
   DECISIONS.md "Audio (v1)".
 
@@ -90,7 +91,8 @@ match-three/
 │   │            (random pick per round; sources: ASSET_SOURCES.md)
 │   ├── Audio/   music.mp3 (looping board bed) + swipe.mp3 (swap whoosh)
 │   │            + pop.mp3 (gem-clear pop) + flame/star/hypercube.mp3
-│   │            (special detonations); sources: ASSET_SOURCES.md
+│   │            (special detonations) + birth.mp3 (birth chime);
+│   │            sources: ASSET_SOURCES.md
 │   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
 │   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)

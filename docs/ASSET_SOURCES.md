@@ -15,6 +15,7 @@ store/public distribution).
 | `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-gockenspiel-a-102771/ | `freesound_community-gockenspiel_a-102771.mp3` (freesound_community) — current v9 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-hit-352702/ | `universfield-cinematic-impact-hit-352702.mp3` (universfield) — **retired v10** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — current v10 | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/birth.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-success-sound-glockenspiel-treasure-video-game-6346/ | `freesound_community-short-success-sound-glockenspiel-treasure-video-game-6346.mp3` (freesound_community) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/milky_way.jpg` | https://pixabay.com/photos/milky-way-starry-sky-9859259/ | `studiofriluma-milky-way-9859259.jpg` (6000×4000) | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -23,8 +24,8 @@ store/public distribution).
 Notes:
 
 - `music.mp3` and `swipe.mp3` are byte-identical to the downloaded originals
-  (no transcode/trim). `pop.mp3`, `flame.mp3`, `star.mp3` and `hypercube.mp3`
-  are **trimmed re-encodes** (256 kbps mp3):
+  (no transcode/trim). `pop.mp3`, `flame.mp3`, `star.mp3`, `hypercube.mp3`
+  and `birth.mp3` are **trimmed re-encodes** (256 kbps mp3):
   - pop: 0.72 s source with ~188 ms lead + ~390 ms trail silence (actual pop
     body 0.19–0.31 s), cut to 0.145 s with the attack intact;
   - flame: 5.04 s source with ~848 ms lead + ~2.6 s trail silence, cut to
@@ -55,6 +56,13 @@ Notes:
     -4 → -2 dB — the phone-audible band (≥ 800 Hz) +3.2 dB, effective
     momentary -13.0 LUFS (was -15.2; star -13.8, flame -14.7), effective
     integrated -17.4 LUFS (was -19.7).
+  - birth: 2.54 s source (0.13–0.97 s of glockenspiel chime, then 1.57 s of
+    dead tail), cut to 0.90 s (0.10–1.00 s) and **+6 dB** — no other
+    processing: it is a glockenspiel, so all its energy already sits above
+    800 Hz (hp800 within 0.1 dB of the full-band RMS) and it needs no
+    phone-audibility layer. Peak -5.6 dBFS / -5.5 dBTP, momentary -15.0 LUFS
+    / integrated -18.8 LUFS; the node runs at 0 dB, deliberately just under
+    flame (-14.7) and star (-13.8) because births are frequent.
   Untrimmed originals can be re-fetched from the URLs above (or stay in
   ~/Downloads where the user placed them).
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://902jk3jedubdl"]
+[gd_scene load_steps=13 format=3 uid="uid://902jk3jedubdl"]
 
 [ext_resource type="Script" path="res://View/Background.cs" id="9_bg"]
 [ext_resource type="Script" path="res://View/BoardView.cs" id="1_board"]
@@ -11,6 +11,7 @@
 [ext_resource type="AudioStreamMP3" uid="uid://ktmtd1j4f4t4" path="res://Assets/Audio/flame.mp3" id="8_flame"]
 [ext_resource type="AudioStreamMP3" uid="uid://dcqgky2e4xu17" path="res://Assets/Audio/star.mp3" id="9_star"]
 [ext_resource type="AudioStreamMP3" uid="uid://dqdspv62nfwmy" path="res://Assets/Audio/hypercube.mp3" id="10_hyper"]
+[ext_resource type="AudioStreamMP3" uid="uid://d3v6l8uq8j2v6" path="res://Assets/Audio/birth.mp3" id="11_birth"]
 
 [node name="Main" type="Node2D"]
 
@@ -185,3 +186,10 @@ volume_db = 12.0
 [node name="Hypercube" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("10_hyper")
 volume_db = -2.0
+
+; birth.mp3 (glockenspiel "treasure" chime when a special gem is born; peak
+; ~ -5.6 dBFS and already phone-bright — all energy above 800 Hz): 0 dB,
+; voiced just under the detonations because births are frequent.
+[node name="Birth" type="AudioStreamPlayer" parent="GameAudio"]
+stream = ExtResource("11_birth")
+volume_db = 0.0
