@@ -189,9 +189,9 @@ volume_db = -4.0
 stream = ExtResource("10_hyper")
 volume_db = -3.0
 
-; birth.mp3 ("light bubble pop" chime when a special gem is born; source is
-; pure 100–800 Hz, so it is soft-clipped to add phone-reproducible harmonics;
-; peak ~ -6.0 dBFS): -3 dB, a light accent under the detonations (v16).
+; birth.mp3 (soft two-tone alert when a special gem is born; already
+; phone-friendly — no processing beyond trim + gain; peak ~ -7.8 dBFS):
+; -3 dB, a light accent under the detonations (v17).
 [node name="Birth" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("11_birth")
 volume_db = -3.0

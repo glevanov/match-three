@@ -18,7 +18,8 @@ store/public distribution).
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — **retired v12** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/whoosh-cinematic-sound-effect-376889/ | `dragon-studio-whoosh-cinematic-sound-effect-376889.mp3` (DRAGON-STUDIO, also the `pop.mp3` author) — current v12 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/birth.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-success-sound-glockenspiel-treasure-video-game-6346/ | `freesound_community-short-success-sound-glockenspiel-treasure-video-game-6346.mp3` (freesound_community) — **retired v16** | Pixabay Content License. Attribution **not required** (recorded for reference). |
-| `Audio/birth.mp3` (trimmed; soft-clipped) | https://pixabay.com/sound-effects/film-special-effects-light-bubble-pop-383738/ | `virtual_vibes-light-bubble-pop-383738.mp3` (Virtual_Vibes) — current v16 | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/birth.mp3` (trimmed; soft-clipped) | https://pixabay.com/sound-effects/film-special-effects-light-bubble-pop-383738/ | `virtual_vibes-light-bubble-pop-383738.mp3` (Virtual_Vibes) — **retired v17** (soft-clip harmonics distorted the pop itself) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/birth.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-sample-soft-alert02-kofi-by-miraclei-360125/ | `miraclei-sample_soft_alert02_kofi_by_miraclei-360125.mp3` (miraclei) — current v17 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/click.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-computer-mouse-click-352734/ | `universfield-computer-mouse-click-352734.mp3` (Universfield) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -72,23 +73,22 @@ Notes:
     -0.5 dBFS / true peak -0.4 dBTP. Node **-2 → -3 dB** (v12) keeps the hit
     at v11's loudness (effective momentary -13.1 LUFS, was -13.0) while the
     phone band (≥ 800 Hz) gains ~2.5 dB.
-  - birth: two generations — the v11
-    `freesound_community-short-success-sound-glockenspiel-treasure-video-game-6346.mp3`
-    (2.54 s source: only 0.13–0.97 s of chime + 1.57 s dead tail, cut to
-    0.90 s / 0.10–1.00 s and +6 dB; all energy ≥ 800 Hz so it needed no phone
-    layer; peak -5.6 dBFS; **retired v16**) was **replaced in v16** by
-    `virtual_vibes-light-bubble-pop-383738.mp3`: 2.14 s source holding a single
-    0.13 s pop at 0.845–0.975 s (everything else is silence), cut tightly to
-    0.13 s. The raw pop is **pure 100–800 Hz — nothing above 800 Hz to boost**
-    (39 dB down), so the highpass edge layer used elsewhere does nothing here
-    and a +20 dB high shelf barely moves the meter; instead the pop is
-    **driven +6 dB into a tanh soft clipper (threshold 0.4)** to synthesise
-    the harmonics a phone speaker can reproduce (800 Hz–2 kHz +5.5 dB, 2 kHz+
-    kept mild at -38 dB), then trimmed +1.96 dB to peak -6.0 dBFS. Peak
-    -6.0 dBFS / -6.0 dBTP, full RMS -10.6 dB, hp800 -24.8 dB. Node stays
-    **-3 dB**, so the effective peak (-9.0 dBFS) and phone band (-27.8 dB) land
-    within ~1 dB of the retired chime (-8.6 / -26.8) — the birth stays a light
-    accent under the detonations;
+  - birth: three generations — the v11 glockenspiel "treasure" chime
+    (freesound_community; all energy ≥ 800 Hz; retired v16) and the v16
+    `virtual_vibes-light-bubble-pop-383738.mp3` (pure 100–800 Hz, so it was
+    driven into a tanh soft clipper to synthesise phone harmonics — **retired
+    v17 because that clipper distorted the pop body itself**, THD-like -9 dB
+    against the source, which the user heard as "weird") were **replaced in
+    v17** by `miraclei-sample_soft_alert02_kofi_by_miraclei-360125.mp3`:
+    1.59 s source (soft two-tone alert at 0.06–0.35 s with ring-out to
+    ~0.60 s, then a repeat hit 25 dB down at 1.05 s), cut to 0.555 s
+    (0.045–0.60 s) — the repeat is trimmed off and the cut lands in the
+    decaying tail (-50 dB) — with **+4.56 dB gain only, no other processing**:
+    the alert is already phone-friendly (RMS 0.4 dB down above 300 Hz, 8 dB
+    above 800 Hz), and the rendered file's residual against the gain-matched
+    source is -74 dB (bit-clean, no distortion). Peak -7.8 dBFS / -7.8 dBTP;
+    node stays **-3 dB** (effective peak -10.8 dBFS, integrated -22.8 LUFS vs
+    the retired chime's -21.8) — a light accent under the detonations;
   - click: 0.65 s source holding a mouse **down + up** pair (clicks at 0.16 s
     and 0.25 s); cut to the first click only (0.148–0.215 s → 0.067 s) and
     **+11.1 dB** to peak -2.9 dBFS (true peak -2.3); bright (hp800 only
