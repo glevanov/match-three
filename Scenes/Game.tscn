@@ -190,8 +190,8 @@ stream = ExtResource("10_hyper")
 volume_db = -3.0
 
 ; birth.mp3 (glockenspiel "treasure" chime when a special gem is born; peak
-; ~ -5.6 dBFS and already phone-bright — all energy above 800 Hz): 0 dB,
-; voiced just under the detonations because births are frequent.
+; ~ -5.6 dBFS and already phone-bright — all energy above 800 Hz): -3 dB,
+; a step under the detonations because births are frequent (v15).
 [node name="Birth" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("11_birth")
-volume_db = 0.0
+volume_db = -3.0

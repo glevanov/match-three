@@ -76,8 +76,9 @@ Notes:
     processing: it is a glockenspiel, so all its energy already sits above
     800 Hz (hp800 within 0.1 dB of the full-band RMS) and it needs no
     phone-audibility layer. Peak -5.6 dBFS / -5.5 dBTP, momentary -15.0 LUFS
-    / integrated -18.8 LUFS; the node runs at 0 dB, deliberately just under
-    flame (-14.7) and star (-13.8) because births are frequent.
+    / integrated -18.8 LUFS; the node runs at **-3 dB** (0 dB until v15, when
+    the user asked for a tad quieter), under flame (-14.7) and star (-13.7)
+    because births are frequent — effective momentary -18.0 LUFS.
   - click: 0.65 s source holding a mouse **down + up** pair (clicks at 0.16 s
     and 0.25 s); cut to the first click only (0.148–0.215 s → 0.067 s) and
     **+11.1 dB** to peak -2.9 dBFS (true peak -2.3); bright (hp800 only
