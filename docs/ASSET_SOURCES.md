@@ -12,7 +12,8 @@ store/public distribution).
 | `Audio/pop.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-pop-402324/ | `dragon-studio-pop-402324.mp3` (DRAGON-STUDIO) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/flame.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-fire-whoosh-1-317280/ | `djartmusic-short-fire-whoosh_1-317280.mp3` (djartmusic) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/musical-glockenspiel-up-sweep-502134/ | `yusuf_sfx-glockenspiel-up-sweep-502134.mp3` (yusuf_sfx) — **retired v9** | Pixabay Content License. Attribution **not required** (recorded for reference). |
-| `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-gockenspiel-a-102771/ | `freesound_community-gockenspiel_a-102771.mp3` (freesound_community) — current v9 | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-gockenspiel-a-102771/ | `freesound_community-gockenspiel_a-102771.mp3` (freesound_community) — **retired v14** | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-big-fire-blast-whoosh-sound-effect-561961/ | `biww-big-fire-blast-whoosh-sound-effect-561961.mp3` (biww) — current v14 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-hit-352702/ | `universfield-cinematic-impact-hit-352702.mp3` (universfield) — **retired v10** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — **retired v12** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/whoosh-cinematic-sound-effect-376889/ | `dragon-studio-whoosh-cinematic-sound-effect-376889.mp3` (DRAGON-STUDIO, also the `pop.mp3` author) — current v12 | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -32,13 +33,24 @@ Notes:
     body 0.19–0.31 s), cut to 0.145 s with the attack intact;
   - flame: 5.04 s source with ~848 ms lead + ~2.6 s trail silence, cut to
     1.61 s (the whoosh body 0.84–2.45 s);
-  - star: two generations — v7 `yusuf_sfx-glockenspiel-up-sweep-502134.mp3`
+  - star: three generations — v7 `yusuf_sfx-glockenspiel-up-sweep-502134.mp3`
     (1.91 s source, attack spike at 0.16 s, cut to 0.61 s) was **replaced in
-    v9** by `freesound_community-gockenspiel_a-102771.mp3`: 1.56 s source
-    with ~1.0 s trail silence, attack **at the file start** (misleading
-    silence reading — cut from 0.00 s, not 0.04 s, which clipped the
-    attack), cut to 0.60 s; quiet master (peak ~ -17 dBFS), +12 dB at the
-    Star node;
+    v9** by `freesound_community-gockenspiel_a-102771.mp3` (1.56 s source
+    with ~1.0 s trail silence, attack **at the file start** — cut from
+    0.00 s, not 0.04 s, which clipped the attack — to 0.60 s; quiet master,
+    peak ~ -17 dBFS, +12 dB at the Star node; **retired v14**), which was
+    **replaced in v14** by `biww-big-fire-blast-whoosh-sound-effect-561961.mp3`:
+    2.40 s source (blast body 0.30–1.0 s, whoosh tail to ~1.9 s, then dead
+    tail), cut to 1.83 s (0.12–1.95 s) and given the **phone-audibility edge
+    layer** (highpass ≥ 800 Hz + compressor + makeup, mixed at -7 dB) — this
+    master is bass-heavy (RMS 9.5 dB down above 300 Hz / 13.6 dB above
+    800 Hz), unlike the all-highs glockenspiel it replaces; alimiter 0.92.
+    Peak -1.3 dBFS / true peak -1.3 dBTP; node **+12 → -4 dB** keeps the hit
+    at the old star's momentary loudness (effective -13.7 LUFS vs -13.8) and
+    effective peak (-5.3 vs -5.0 dBFS). It is a darker sound than the old
+    ding (phone band ~6 dB lower), which is the point of a fire blast — the
+    edge-layer gain is the brightness lever if it reads too muffled on
+    device;
   - hypercube: three generations — the v7
     `universfield-cinematic-impact-hit-352702.mp3` (3.05 s source with
     ~105 ms lead + ~0.5 s dead tail, cut to 2.35 s / 0.10–2.45 s; processed
