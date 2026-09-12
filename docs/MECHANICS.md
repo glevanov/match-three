@@ -5,7 +5,7 @@ Concrete rules. If a behavior isn't listed here, it's unspecified — add it bef
 ## Board
 
 - **9×9, 6 gem types** — locked as initial constant, tunable later. Validated via simulated engine tests (random-swap match probability, average legal-move count). Player-feel tuning deferred to a later tuning pass.
-- Swaps: orthogonal adjacency only, via **drag-to-swap** (threshold ~40% of cell size measured at runtime). Tap-tap fallback supported.
+- Swaps: orthogonal adjacency only, via **drag-to-swap** (threshold ~40% of cell size measured at runtime). Tap-tap fallback supported. Both gestures are **mutually exclusive**: any committed swipe clears a pending tap-tap selection, and a committed tap-tap swap clears the selection (invalid swaps included — the marker never survives a swap attempt). Starting a new round ("Play again") also clears the selection.
 - **Input lock:** the engine ignores new swaps while resolving steps. Drag gestures during lock are **buffered** (most recent only) and executed after resolution — no silent drops. Exception: if a **Hypercube entered or left** the buffered swap's two cells during the resolution (by gem id), the intent is **stale and dropped** — a Hypercube is only ever consumed by a gesture made while that Hypercube already sat in the swapped pair.
 - Invalid swaps animate there-and-back (~150ms).
 

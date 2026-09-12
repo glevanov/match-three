@@ -52,7 +52,18 @@ public partial class BoardView : Node2D
             onStar: () => _audio?.PlayStarSfx(),
             onHypercube: () => _audio?.PlayHypercubeSfx());
         Game.Instance.Bind(this);
+        // The autoload outlives this scene: a new round ("Play again") must drop
+        // the selection marker left over from the previous one, which can point
+        // at a cell holding a different gem now (MECHANICS.md).
+        Game.Instance.RoundStarted += OnRoundStarted;
     }
+
+    public override void _ExitTree()
+    {
+        if (Game.Instance is { } game) game.RoundStarted -= OnRoundStarted;
+    }
+
+    private void OnRoundStarted() => SetSelected(null);
 
     /// <summary>Applies a board snapshot without animation (initial load, resync).</summary>
     public void ApplyBoard(Board board) => _player!.ApplyBoard(board);
@@ -170,6 +181,8 @@ public partial class BoardView : Node2D
         {
             _dragStart = null; // gesture consumed: no tap fallback on release
             _dragAccum = Vector2.Zero;
+            // The swipe supersedes any pending tap-tap selection (MECHANICS.md).
+            SetSelected(null);
             Game.Instance.SubmitSwap(SwapIntent.Of(start, target.Value));
         }
     }
