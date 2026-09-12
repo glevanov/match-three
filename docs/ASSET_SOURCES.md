@@ -47,12 +47,14 @@ Notes:
     points sit in near-silence (no clicks) — then the same phone-audibility
     recipe: the raw master is ~all sub-bass (~16 dB down above 300 Hz,
     ~19 dB down above 800 Hz), so an edge layer (highpass ≥ 800 Hz +
-    compressor + makeup, mixed at -9 dB) rides under the sub body, landing
+    compressor + makeup, mixed at -9 dB, re-tuned to -7 dB in v11) rides
+    under the sub body, landing
     the highs ~11 dB under the body (the v8 balance), alimiter 0.92 + a
-    +0.35 dB static trim. Peak -0.5 dBFS / true peak -0.4 dBTP (node runs at
-    -4 dB). Integrated ~-15.7 LUFS is hotter than the old impact's -19.2
-    because the whoosh decays over ~2.6 s instead of ~2 s, but momentary
-    loudness at the hit is within ~1 dB, so the node level did not change.
+    +0.35 dB static trim. Peak -0.5 dBFS / true peak -0.3 dBTP. **Level
+    raised in v11** (user: too quiet on device): edge -9 → -7 dB and node
+    -4 → -2 dB — the phone-audible band (≥ 800 Hz) +3.2 dB, effective
+    momentary -13.0 LUFS (was -15.2; star -13.8, flame -14.7), effective
+    integrated -17.4 LUFS (was -19.7).
   Untrimmed originals can be re-fetched from the URLs above (or stay in
   ~/Downloads where the user placed them).
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS

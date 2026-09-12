@@ -181,7 +181,7 @@ stream = ExtResource("9_star")
 volume_db = 12.0
 
 ; hypercube.mp3 (futuristic-teleport whoosh + phone-speaker edge layer,
-; peak ~ -0.5 dBFS after processing): -4 dB.
+; peak ~ -0.5 dBFS; raised to -2 dB in v11 — at -4 it sat below flame/star).
 [node name="Hypercube" type="AudioStreamPlayer" parent="GameAudio"]
 stream = ExtResource("10_hyper")
-volume_db = -4.0
+volume_db = -2.0
