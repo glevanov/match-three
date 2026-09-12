@@ -17,6 +17,7 @@ store/public distribution).
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — **retired v12** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/whoosh-cinematic-sound-effect-376889/ | `dragon-studio-whoosh-cinematic-sound-effect-376889.mp3` (DRAGON-STUDIO, also the `pop.mp3` author) — current v12 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/birth.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-success-sound-glockenspiel-treasure-video-game-6346/ | `freesound_community-short-success-sound-glockenspiel-treasure-video-game-6346.mp3` (freesound_community) | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/click.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-computer-mouse-click-352734/ | `universfield-computer-mouse-click-352734.mp3` (Universfield) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/milky_way.jpg` | https://pixabay.com/photos/milky-way-starry-sky-9859259/ | `studiofriluma-milky-way-9859259.jpg` (6000×4000) | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -25,8 +26,8 @@ store/public distribution).
 Notes:
 
 - `music.mp3` and `swipe.mp3` are byte-identical to the downloaded originals
-  (no transcode/trim). `pop.mp3`, `flame.mp3`, `star.mp3`, `hypercube.mp3`
-  and `birth.mp3` are **trimmed re-encodes** (256 kbps mp3):
+  (no transcode/trim). `pop.mp3`, `flame.mp3`, `star.mp3`, `hypercube.mp3`,
+  `birth.mp3` and `click.mp3` are **trimmed re-encodes** (256 kbps mp3):
   - pop: 0.72 s source with ~188 ms lead + ~390 ms trail silence (actual pop
     body 0.19–0.31 s), cut to 0.145 s with the attack intact;
   - flame: 5.04 s source with ~848 ms lead + ~2.6 s trail silence, cut to
@@ -65,6 +66,12 @@ Notes:
     phone-audibility layer. Peak -5.6 dBFS / -5.5 dBTP, momentary -15.0 LUFS
     / integrated -18.8 LUFS; the node runs at 0 dB, deliberately just under
     flame (-14.7) and star (-13.8) because births are frequent.
+  - click: 0.65 s source holding a mouse **down + up** pair (clicks at 0.16 s
+    and 0.25 s); cut to the first click only (0.148–0.215 s → 0.067 s) and
+    **+11.1 dB** to peak -2.9 dBFS (true peak -2.3); bright (hp800 only
+    1.3 dB under the full-band RMS) so it carries on phone speakers, and both
+    cut points land in near-silence (no cut artifacts). Plays on the `UiClick`
+    autoload at **-6 dB** (effective peak ~ -9 dBFS), under every board SFX.
   Untrimmed originals can be re-fetched from the URLs above (or stay in
   ~/Downloads where the user placed them).
 - The music track is a full 3:04 song — quiet intro, hot master (~ -11 LUFS

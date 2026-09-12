@@ -121,7 +121,8 @@ The main menu now exposes a single **Debug** entry which opens `Scenes/DebugMenu
   device.
 - `Scenes/DebugSounds.tscn` (+ `View/DebugSounds.cs`) — a button-per-sound SFX
   preview screen for the board's one-shot audio (swipe / pop / flame / star /
-  hypercube / birth). No music on this screen.
+  hypercube / birth). No music on this screen; these preview buttons are in the
+  `no_ui_click` group, so they do not also play the global UI click.
 
 If you want to boot directly into the gem-effect screen on a phone (then
 REVERT the main scene afterwards):

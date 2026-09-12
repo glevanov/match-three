@@ -37,8 +37,9 @@ cutover and survive only in git history. Game rules live in
 - Audio: `Assets/Audio/` — `music.mp3` (looping board-music bed, imported
   with `loop=true`), `swipe.mp3` (swap whoosh), `pop.mp3` (gem-clear pop,
   pitched per cascade), `flame.mp3`/`star.mp3`/`hypercube.mp3` (special
-  detonation SFX — Flame whoosh, Star sweep, Hypercube impact) and
-  `birth.mp3` (glockenspiel chime when a special gem is born). Provenance
+  detonation SFX — Flame whoosh, Star sweep, Hypercube impact),
+  `birth.mp3` (glockenspiel chime when a special gem is born) and `click.mp3`
+  (UI button click, played by the `UiClick` autoload). Provenance
   and source links: [ASSET_SOURCES.md](ASSET_SOURCES.md); play policy:
   DECISIONS.md "Audio (v1)".
 
@@ -78,7 +79,8 @@ match-three/
 │                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
 │                GameOverScreen.cs, MenuScreen.cs, DebugMenuScreen.cs,
-│                GameAudio.cs (round music + swap sfx), Background.cs
+│                GameAudio.cs (round music + swap sfx), UiClick.cs
+│                (autoload: click SFX on every UI button), Background.cs
 │                (per-round random night-sky photo behind the board),
 │                SafeArea.cs, DebugStarGlow.cs / DebugSounds.cs
 │                (debug screens; NOTES.md)
@@ -92,7 +94,7 @@ match-three/
 │   ├── Audio/   music.mp3 (looping board bed) + swipe.mp3 (swap whoosh)
 │   │            + pop.mp3 (gem-clear pop) + flame/star/hypercube.mp3
 │   │            (special detonations) + birth.mp3 (birth chime);
-│   │            sources: ASSET_SOURCES.md
+│   │            + click.mp3 (UI click); sources: ASSET_SOURCES.md
 │   ├── Shaders/ gem_fire.gdshader (flame aura), gem_star.gdshader
 │   │            (star bloom) — visuals per DECISIONS.md
 │   └── Icon/    icon.png (512×512, re-exported from assets/icon.jpg)

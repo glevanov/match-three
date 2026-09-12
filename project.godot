@@ -17,6 +17,7 @@ run/main_scene="res://Scenes/Menu.tscn"
 [autoload]
 
 Game="*res://View/Game.cs"
+UiClick="*res://View/UiClick.cs"
 
 [display]
 

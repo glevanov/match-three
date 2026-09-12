@@ -59,42 +59,42 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SwipeButton" type="Button" parent="VBox/Buttons"]
+[node name="SwipeButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Swipe"
 
-[node name="PopButton" type="Button" parent="VBox/Buttons"]
+[node name="PopButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Pop"
 
-[node name="FlameButton" type="Button" parent="VBox/Buttons"]
+[node name="FlameButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Flame"
 
-[node name="StarButton" type="Button" parent="VBox/Buttons"]
+[node name="StarButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Star"
 
-[node name="HypercubeButton" type="Button" parent="VBox/Buttons"]
+[node name="HypercubeButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Hypercube"
 
-[node name="BirthButton" type="Button" parent="VBox/Buttons"]
+[node name="BirthButton" type="Button" parent="VBox/Buttons" groups=["no_ui_click"]]
 custom_minimum_size = Vector2(320, 56)
 layout_mode = 2
 size_flags_horizontal = 4
