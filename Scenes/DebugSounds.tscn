@@ -128,7 +128,7 @@ volume_db = 12.0
 
 [node name="Hypercube" type="AudioStreamPlayer" parent="Audio"]
 stream = ExtResource("6_hyper")
-volume_db = -2.0
+volume_db = -3.0
 
 [node name="Birth" type="AudioStreamPlayer" parent="Audio"]
 stream = ExtResource("7_birth")

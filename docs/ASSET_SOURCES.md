@@ -14,7 +14,8 @@ store/public distribution).
 | `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/musical-glockenspiel-up-sweep-502134/ | `yusuf_sfx-glockenspiel-up-sweep-502134.mp3` (yusuf_sfx) — **retired v9** | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/star.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-gockenspiel-a-102771/ | `freesound_community-gockenspiel_a-102771.mp3` (freesound_community) — current v9 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-hit-352702/ | `universfield-cinematic-impact-hit-352702.mp3` (universfield) — **retired v10** | Pixabay Content License. Attribution **not required** (recorded for reference). |
-| `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — current v10 | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-transition-futuristic-teleport-121420/ | `trading_nation-transition-futuristic-teleport-121420.mp3` (Trading_Nation) — **retired v12** | Pixabay Content License. Attribution **not required** (recorded for reference). |
+| `Audio/hypercube.mp3` (trimmed) | https://pixabay.com/sound-effects/whoosh-cinematic-sound-effect-376889/ | `dragon-studio-whoosh-cinematic-sound-effect-376889.mp3` (DRAGON-STUDIO, also the `pop.mp3` author) — current v12 | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Audio/birth.mp3` (trimmed) | https://pixabay.com/sound-effects/film-special-effects-short-success-sound-glockenspiel-treasure-video-game-6346/ | `freesound_community-short-success-sound-glockenspiel-treasure-video-game-6346.mp3` (freesound_community) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_night.jpg` | https://pixabay.com/photos/stars-night-sky-starry-sky-2179083/ | `pexels-stars-2179083.jpg` (5638×3748) | Pixabay Content License. Attribution **not required** (recorded for reference). |
 | `Backgrounds/starry_sky.jpg` | https://pixabay.com/photos/stars-sky-night-starry-sky-1837306/ | `pexels-stars-1837306.jpg` (4992×3648) | Pixabay Content License. Attribution **not required** (recorded for reference). |
@@ -37,25 +38,26 @@ Notes:
     silence reading — cut from 0.00 s, not 0.04 s, which clipped the
     attack), cut to 0.60 s; quiet master (peak ~ -17 dBFS), +12 dB at the
     Star node;
-  - hypercube: two generations — the v7
+  - hypercube: three generations — the v7
     `universfield-cinematic-impact-hit-352702.mp3` (3.05 s source with
     ~105 ms lead + ~0.5 s dead tail, cut to 2.35 s / 0.10–2.45 s; processed
     for phone audibility at v8: +13 dB above 300 Hz / +19 dB above 800 Hz,
-    alimiter 0.9, peak -4.3 → -0.6 dBFS) was **replaced in v10** by
-    `trading_nation-transition-futuristic-teleport-121420.mp3`: 3.79 s
-    source with ~0.34 s lead + ~0.5 s tail, cut to 2.61 s (0.34–2.95 s) —
-    the attack ramps in from 0.39 s, so the cut keeps it intact and both cut
-    points sit in near-silence (no clicks) — then the same phone-audibility
-    recipe: the raw master is ~all sub-bass (~16 dB down above 300 Hz,
-    ~19 dB down above 800 Hz), so an edge layer (highpass ≥ 800 Hz +
-    compressor + makeup, mixed at -9 dB, re-tuned to -7 dB in v11) rides
-    under the sub body, landing
-    the highs ~11 dB under the body (the v8 balance), alimiter 0.92 + a
-    +0.35 dB static trim. Peak -0.5 dBFS / true peak -0.3 dBTP. **Level
-    raised in v11** (user: too quiet on device): edge -9 → -7 dB and node
-    -4 → -2 dB — the phone-audible band (≥ 800 Hz) +3.2 dB, effective
-    momentary -13.0 LUFS (was -15.2; star -13.8, flame -14.7), effective
-    integrated -17.4 LUFS (was -19.7).
+    alimiter 0.9, peak -4.3 → -0.6 dBFS; **retired v10**) and the v10
+    `trading_nation-transition-futuristic-teleport-121420.mp3` (3.79 s
+    source with ~0.34 s lead + ~0.5 s tail, cut to 2.61 s / 0.34–2.95 s;
+    the raw master is ~all sub-bass — ~16 dB down above 300 Hz, ~19 dB down
+    above 800 Hz — so an edge layer (highpass ≥ 800 Hz + compressor +
+    makeup, mixed at -9 dB, re-tuned to -7 dB in v11) rode under the sub
+    body, alimiter 0.92; peak -0.5 dBFS; **retired v12**) were **replaced in
+    v12** by `dragon-studio-whoosh-cinematic-sound-effect-376889.mp3`: 3.08 s
+    source with ~0.10 s lead + ~0.85 s dead tail, cut to 2.17 s
+    (0.08–2.25 s) and **no other processing** — unlike its two predecessors
+    this master is not sub-bass-only (RMS just 5.3 dB down above 800 Hz), so
+    it needs no brightened edge layer, and its mono downmix is
+    cancellation-free despite the near-zero L/R correlation (~0.02). Peak
+    -0.5 dBFS / true peak -0.4 dBTP. Node **-2 → -3 dB** (v12) keeps the hit
+    at v11's loudness (effective momentary -13.1 LUFS, was -13.0) while the
+    phone band (≥ 800 Hz) gains ~2.5 dB.
   - birth: 2.54 s source (0.13–0.97 s of glockenspiel chime, then 1.57 s of
     dead tail), cut to 0.90 s (0.10–1.00 s) and **+6 dB** — no other
     processing: it is a glockenspiel, so all its energy already sits above
