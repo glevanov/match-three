@@ -88,15 +88,22 @@ If you still see `FeatureFlagsImplExport ... package android.xr` or `gralloc5`
 lines in device `logcat`, those are platform/driver noise, not this repo's
 export flow.
 
-## Dev tooling: effect debug screen
+## Dev tooling: debug screens
 
-`Scenes/DebugStarGlow.tscn` (+ `View/DebugStarGlow.cs`) is a standalone 3×3
-screen — static gems at ~2.5× game size (dark backdrop): top row Star gems,
-middle row Flame gems, bottom row plain ones (red / orange / blue per column;
-Star ids 12 & 512 are anti-phase so a bright and a dim pulse always coexist).
-Keep it; it is the fast loop for eyeballing gem effects on a device.
+The main menu now exposes a single **Debug** entry which opens `Scenes/DebugMenu.tscn` (+ `View/DebugMenuScreen.cs`), a small debug submenu with two screens:
 
-To launch it on the phone (then REVERT the main scene afterwards):
+- `Scenes/DebugStarGlow.tscn` (+ `View/DebugStarGlow.cs`) — the standalone
+  3×3 gem-effect screen: static gems at ~2.5× game size on a dark backdrop;
+  top row Star, middle Flame, bottom plain (red / orange / blue per column;
+  Star ids 12 & 512 are anti-phase so a bright and a dim pulse always
+  coexist). Keep it; it is the fast loop for eyeballing gem effects on a
+  device.
+- `Scenes/DebugSounds.tscn` (+ `View/DebugSounds.cs`) — a button-per-sound SFX
+  preview screen for the board's one-shot audio (swipe / pop / flame / star /
+  hypercube). No music on this screen.
+
+If you want to boot directly into the gem-effect screen on a phone (then
+REVERT the main scene afterwards):
 
 ```sh
 sed -i 's#run/main_scene="res://Scenes/Menu.tscn"#run/main_scene="res://Scenes/DebugStarGlow.tscn"#' project.godot

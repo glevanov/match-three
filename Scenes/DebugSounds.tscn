@@ -1,0 +1,120 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://View/DebugSounds.cs" id="1_debug"]
+[ext_resource type="AudioStreamMP3" path="res://Assets/Audio/swipe.mp3" id="2_swipe"]
+[ext_resource type="AudioStreamMP3" path="res://Assets/Audio/pop.mp3" id="3_pop"]
+[ext_resource type="AudioStreamMP3" path="res://Assets/Audio/flame.mp3" id="4_flame"]
+[ext_resource type="AudioStreamMP3" path="res://Assets/Audio/star.mp3" id="5_star"]
+[ext_resource type="AudioStreamMP3" path="res://Assets/Audio/hypercube.mp3" id="6_hyper"]
+
+[node name="DebugSounds" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_debug")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.07, 0.09, 0.13, 1)
+
+[node name="BackButton" type="Button" parent="."]
+custom_minimum_size = Vector2(96, 48)
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 116.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 22
+text = "Back"
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Sound effects debug"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+text = "Tap a button to preview the board SFX mix"
+horizontal_alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SwipeButton" type="Button" parent="VBox/Buttons"]
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Swipe"
+
+[node name="PopButton" type="Button" parent="VBox/Buttons"]
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Pop"
+
+[node name="FlameButton" type="Button" parent="VBox/Buttons"]
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Flame"
+
+[node name="StarButton" type="Button" parent="VBox/Buttons"]
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Star"
+
+[node name="HypercubeButton" type="Button" parent="VBox/Buttons"]
+custom_minimum_size = Vector2(320, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Hypercube"
+
+[node name="NoteLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 1, 1, 0.65)
+text = "Pop previews the base cascade pitch. Music is intentionally omitted."
+horizontal_alignment = 1
+
+[node name="Audio" type="Node" parent="."]
+
+[node name="Swipe" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_swipe")
+volume_db = 3.0
+
+[node name="Pop" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_pop")
+volume_db = -3.0
+
+[node name="Flame" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("4_flame")
+volume_db = -4.0
+
+[node name="Star" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("5_star")
+volume_db = 12.0
+
+[node name="Hypercube" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("6_hyper")
+volume_db = -4.0

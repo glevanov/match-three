@@ -76,12 +76,14 @@ match-three/
 ├── View/        Game.cs (autoload) + Game.SelfTests.cs (headless
 │                --selftest-* checks), BoardView.cs, StepPlayer.cs,
 │                GemActor.cs, GemSprites.cs, BoardOp.cs, Hud.cs,
-│                GameOverScreen.cs, MenuScreen.cs, GameAudio.cs (round
-│                music + swap sfx), Background.cs (per-round random
-│                night-sky photo behind the board), SafeArea.cs,
-│                DebugStarGlow.cs (debug effect screen; NOTES.md)
-├── Scenes/      Menu.tscn (main), Game.tscn, GemActor.tscn,
-│                DebugStarGlow.tscn (debug only; NOTES.md)
+│                GameOverScreen.cs, MenuScreen.cs, DebugMenuScreen.cs,
+│                GameAudio.cs (round music + swap sfx), Background.cs
+│                (per-round random night-sky photo behind the board),
+│                SafeArea.cs, DebugStarGlow.cs / DebugSounds.cs
+│                (debug screens; NOTES.md)
+├── Scenes/      Menu.tscn (main), DebugMenu.tscn, Game.tscn,
+│                GemActor.tscn, DebugStarGlow.tscn / DebugSounds.tscn
+│                (debug only; NOTES.md)
 ├── Assets/
 │   ├── Sprites/ the 8 gem/special PNGs (copied from the old app assets)
 │   ├── Backgrounds/ 4 night-sky photos, one per round behind the board
@@ -121,9 +123,11 @@ match-three/
   `gem_star.gdshader` bloom (StarGlow rect). The effect rects are scaled
   up (1.35×/1.5×) so halos bleed past the silhouette, with in-shader UV
   remap keeping the alpha masks aligned 1:1 (DECISIONS.md).
-- `Hud.cs` / `MenuScreen.cs` / `GameOverScreen.cs`: HUD strip, mode menu with
-  per-mode high scores, game-over overlay (Best + New-high-score + Play again
-  / Menu). Exit-to-menu goes through a confirm dialog.
+- `Hud.cs` / `MenuScreen.cs` / `DebugMenuScreen.cs` / `GameOverScreen.cs`:
+  HUD strip, mode menu with per-mode high scores plus one Debug entry that
+  opens a submenu for the gem/sound debug screens, and the game-over overlay
+  (Best + New-high-score + Play again / Menu). Exit-to-menu goes through a
+  confirm dialog.
 - `Background.cs` on Game.tscn: full-screen night-sky photo on a CanvasLayer
   at layer -10 (behind board/HUD/overlay), new random photo per round; the
   menu scene has no such layer, so photos only show while the board is up.

@@ -6,9 +6,9 @@ namespace MatchThree.View;
 /// <summary>
 /// Debug-only 3x3 effect screen: big static gems on a dark backdrop so the
 /// special effects can be eyeballed side by side (gem_star.gdshader /
-/// gem_fire.gdshader) without playing a full board. Not part of the game
-/// flow; launch it by pointing run/main_scene at Scenes/DebugStarGlow.tscn
-/// while exporting (then revert the main scene).
+/// gem_fire.gdshader) without playing a full board. Reachable from the debug
+/// submenu, and still safe to launch directly by pointing run/main_scene at
+/// Scenes/DebugStarGlow.tscn while exporting.
 ///
 /// Layout (design units, portrait 540x1200 canvas):
 ///   top row    : Star gems   (red / orange / blue)
@@ -23,6 +23,8 @@ namespace MatchThree.View;
 /// </summary>
 public partial class DebugStarGlow : Node2D
 {
+    private const string DebugMenuScenePath = "res://Scenes/DebugMenu.tscn";
+
     private static readonly PackedScene GemActorScene =
         GD.Load<PackedScene>("res://Scenes/GemActor.tscn");
 
@@ -61,9 +63,13 @@ public partial class DebugStarGlow : Node2D
         };
         AddChild(bg);
 
+        var top = SafeArea.TopInsetPx + SafeArea.MarginPx;
+        AddChild(MakeBackButton(new Vector2(20f, top)));
+
         var vp = GetViewportRect().Size;
-        AddChild(MakeLabel(20, $"Effect debug 3x3 · cell {CellPx:0}px (game ≈ 57px)", new Vector2(vp.X / 2f, 40f), 700));
-        AddChild(MakeLabel(15, "top: star gems · middle: flame gems · bottom: plain", new Vector2(vp.X / 2f, 68f), 700));
+        var headerY = top + 72f;
+        AddChild(MakeLabel(20, $"Effect debug 3x3 · cell {CellPx:0}px (game ≈ 57px)", new Vector2(vp.X / 2f, headerY), 700));
+        AddChild(MakeLabel(15, "top: star gems · middle: flame gems · bottom: plain", new Vector2(vp.X / 2f, headerY + 28f), 700));
 
         var origin = new Vector2((vp.X - 3f * Pitch) / 2f, (vp.Y - 3f * Pitch) / 2f + 20f);
 
@@ -85,6 +91,19 @@ public partial class DebugStarGlow : Node2D
             AddChild(MakeLabel(15, ColumnTags[col],
                 new Vector2(origin.X + (col + 0.5f) * Pitch, origin.Y + 3.2f * Pitch), 260));
         }
+    }
+
+    private Button MakeBackButton(Vector2 pos)
+    {
+        var button = new Button
+        {
+            Text = "Back",
+            Position = pos,
+            Size = new Vector2(96f, 48f),
+        };
+        button.AddThemeFontSizeOverride("font_size", 22);
+        button.Pressed += () => GetTree().ChangeSceneToFile(DebugMenuScenePath);
+        return button;
     }
 
     private static Label MakeLabel(int size, string text, Vector2 pos, float width)

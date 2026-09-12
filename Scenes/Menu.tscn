@@ -72,3 +72,14 @@ theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 1, 1, 0.7)
 text = "High score: 0"
 horizontal_alignment = 1
+
+[node name="SpacerDebug" type="Control" parent="VBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="DebugButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Debug"
