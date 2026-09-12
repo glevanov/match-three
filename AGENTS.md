@@ -16,8 +16,10 @@ original source art; `Assets/` holds what the game actually loads.
 
 ## Non-negotiable conventions
 
-- **Conventional Commits.** All commit messages use the conventional format:
-  `<type>(<scope>): <subject>`. Types: feat, fix, docs, test, refactor, chore.
+- **Conventional Commits, subject only.** All commit messages use the
+  conventional format `<type>(<scope>): <subject>`. Types: feat, fix, docs,
+  test, refactor, chore. No description/body: the subject line is the whole
+  message, so skip the explaining paragraphs, "Verified:" notes and footers.
 - **Engine is pure C#.** No Godot imports under `Engine/`. It compiles and
   tests on plain `dotnet` (`dotnet test Tests/`), no Godot runtime needed.
 - **Steps, not state.** Engine emits ordered `Step` events; the view plays
