@@ -1,15 +1,16 @@
 <Project Sdk="Godot.NET.Sdk/4.7.2">
   <PropertyGroup>
     <!--
-      Godot 4.7.2's desktop/editor build targets net8.0, but Android exports
-      must target net9.0: .NET 9 is the first release whose Mono runtime packs
-      are 16 KB page aligned (Godot 4.5+ requirement; see docs/DESIGN.md and
-      docs/NOTES.md). Godot sets GodotTargetPlatform=android for Android
-      exports, and Godot.NET.Sdk also infers it from the android-* RID, so
-      plain `dotnet build`/`dotnet test` keep net8.0 on desktop.
+      All projects target net9.0. Godot 4.7.2's generated template would use
+      net8.0 on desktop and switch to net9.0 only under
+      GodotTargetPlatform=android, but this project keeps one TFM everywhere:
+      Android requires net9.0 (Godot 4.5+, and only the .NET 9 Mono runtime
+      packs are 16 KB page aligned — docs/NOTES.md), and on desktop/editor the
+      Godot .NET host rolls forward to the latest installed major runtime
+      (rollForward: LatestMajor), so the net9.0 assembly loads there too.
+      The .NET 9 SDK/runtime is therefore required for every build.
     -->
-    <TargetFramework>net8.0</TargetFramework>
-    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

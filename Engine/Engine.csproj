@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Pure C# game logic: NO Godot dependency (see docs/DESIGN.md). -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>12</LangVersion>
+    <LangVersion>13</LangVersion>
     <RootNamespace>MatchThree.Engine</RootNamespace>
     <AssemblyName>MatchThree.Engine</AssemblyName>
   </PropertyGroup>

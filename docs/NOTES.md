@@ -43,18 +43,13 @@ flipping ELF headers — they need a re-link. .NET 9 ships re-linked packs, and
 Godot 4.5+ requires Android exports to target `net9.0`
 (godotengine/godot#110263).
 
-`MatchThree.csproj` therefore keeps Godot's generated conditional TFM:
-
-```xml
-<TargetFramework>net8.0</TargetFramework>
-<TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
-```
-
-Desktop/editor builds stay on `net8.0` (the Godot 4.7.2 host TFM); Android
-exports resolve `GodotTargetPlatform=android` (Godot sets it, and the SDK
-also infers it from the `android-*` RID, so `dotnet publish -r android-arm64`
-works standalone). **Android builds need the .NET 9 SDK** (`dotnet
---list-sdks`); desktop builds still work with .NET 8.
+The game, `Engine/` and `Tests/` therefore all target `net9.0`
+unconditionally (Godot's generated template would keep `net8.0` for
+non-Android and switch only under `GodotTargetPlatform=android`, but one TFM
+everywhere keeps the engine and tests on the same runtime). On desktop the
+Godot .NET host rolls forward to the latest installed major runtime
+(`rollForward: LatestMajor`), so the net9.0 assembly loads there too.
+**Every build now needs the .NET 9 SDK/runtime** (`dotnet --list-sdks`).
 
 Verify an export with:
 
@@ -76,7 +71,7 @@ needed for this warning.
 
 Use `scripts/export-android.sh` for phone builds. It:
 
-- ensures Godot can find `dotnet` (prepends `$HOME/.dotnet` when needed; Android builds need a 9.0 SDK there — see the 16 KB section)
+- ensures Godot can find `dotnet` (prepends `$HOME/.dotnet` when needed; builds need a 9.0 SDK there — see the 16 KB section)
 - exports with the safe .NET flow: `godot --headless --export-debug "Android"`
 - intentionally avoids `--build-solutions` during export (that previously produced a broken APK with missing managed assemblies)
 - validates that the APK actually contains `MatchThree.dll`, `MatchThree.Engine.dll`, and `GodotSharp.dll`
