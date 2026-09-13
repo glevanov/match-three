@@ -21,7 +21,6 @@ and survive only in git history.
   engine project and contains the view, scenes, and presentation code.
 - **NUnit** backs the engine test suite in `Tests/`.
 - **Assets** live in `Assets/`; original source art is preserved in `original-art/`.
-  Asset provenance is tracked in [ASSET_SOURCES.md](ASSET_SOURCES.md).
 
 ## Architecture
 
